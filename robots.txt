@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://consulta-veicular-bx20.onrender.com/sitemap.xml
