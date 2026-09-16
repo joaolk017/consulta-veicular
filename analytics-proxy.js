@@ -186,13 +186,14 @@ function analyticsMarkup() {
 }
 
 function applyPublicChanges(html){
-  html=html.replace('<a href="#crlv">CRLV-e</a>','<a href="#fipe">Valor FIPE grátis</a>');
+  html=html.replace('<a href="#crlv">CRLV-e</a>','<a href="/consulta-fipe/">Valor FIPE grátis</a>');
   html=html.replace(/<aside class="cv-crlv-hero"[\s\S]*?<\/aside>/i,FIPE_HTML);
   html=html.replace(/<section id="crlv" class="cv-section cv-crlv-section">[\s\S]*?<\/section>/i,'');
   html=html.replace(/<details><summary>Quem pode solicitar o CRLV-e\?<\/summary>[\s\S]*?<\/details>/i,'');
   html=html.replace('Consulta e assessoria documental privada.','Consulta veicular e ferramentas gratuitas de referência.');
-  html=html.replace('<button type="button" onclick="abrirCRLVCV()">📄 CRLV-e · R$ 59,90</button>','<a class="cv-fipe-mobile" href="#fipe">💰 Valor FIPE grátis</a>');
+  html=html.replace('<button type="button" onclick="abrirCRLVCV()">📄 CRLV-e · R$ 59,90</button>','<a class="cv-fipe-mobile" href="/consulta-fipe/">💰 Valor FIPE grátis</a>');
   html=html.replace(/<article>\s*<div class="transparency-clear-icon">📄<\/div>\s*<div><b>CRLV-e SP · R\$ 59,90<\/b>[\s\S]*?<\/article>/i,'<article><div class="transparency-clear-icon">💰</div><div><b>Consulta de valor gratuita</b><small>Consulte um valor médio de referência por tipo, marca, modelo e ano. É uma ferramenta informativa e não substitui a consulta oficial da FIPE.</small></div></article>');
+  html=html.replace(/<span>Antes de contratar, consulte:<\/span>\s*<a href="\/sobre\/">Sobre o Serviço<\/a>\s*<a href="\/termos\.html">Termos de Uso<\/a>\s*<a href="\/privacidade\.html">Política de Privacidade<\/a>\s*<a href="\/contato\.html">Contato e Suporte<\/a>/i,'<span>Ferramentas e informações:</span><a href="/consulta-fipe/">FIPE grátis</a><a href="/consulta-cnpj/">CNPJ grátis</a><a href="/simulador-financiamento/">Financiamento</a><a href="/custo-mensal-veiculo/">Custo mensal</a><a href="/sobre/">Sobre o Serviço</a><a href="/termos.html">Termos de Uso</a><a href="/privacidade.html">Política de Privacidade</a><a href="/contato.html">Contato e Suporte</a>');
   if(!html.includes('id="cv-fipe-style"'))html=html.replace('</head>',FIPE_CSS+'\n</head>');
   if(!html.includes('id="cv-fipe-script"'))html=html.replace('</body>',FIPE_SCRIPT+'\n</body>');
   return html;
