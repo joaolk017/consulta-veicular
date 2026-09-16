@@ -1,9 +1,12 @@
 const http = require('http');
 const zlib = require('zlib');
+const fs = require('fs');
+const path = require('path');
 
 const originalCreateServer = http.createServer.bind(http);
 const HERO_URL = '/ChatGPT%20Image%2016%20de%20set.%20de%202026,%2012_01_50.png?v=8';
 const HERO_DECLARATION = "background-image:url('ChatGPT%20Image%2016%20de%20set.%20de%202026,%2012_01_50.png?v=8')";
+const NOT_FOUND_HTML = fs.readFileSync(path.join(__dirname, '404.html'));
 
 function withHeader(headers, name, value) {
   const out = { ...(headers || {}) };
@@ -26,6 +29,7 @@ http.createServer = function patchedCreateServer(listener) {
 
     const isHome = req.method === 'GET' && (pathname === '/' || pathname === '/index.html');
     const isStatic = /\.(?:png|jpe?g|webp|avif|svg|ico|css|js)$/i.test(pathname);
+    const isApi = pathname.startsWith('/api/');
 
     if (!isHome && isStatic) {
       const writeHead = res.writeHead.bind(res);
@@ -41,6 +45,55 @@ http.createServer = function patchedCreateServer(listener) {
         delete hdrs.expires;
         return message !== undefined ? writeHead(statusCode, message, hdrs) : writeHead(statusCode, hdrs);
       };
+      return listener(req, res);
+    }
+
+    if (!isHome && !isStatic && !isApi && req.method === 'GET' && pathname !== '/404.html') {
+      const writeHead = res.writeHead.bind(res);
+      const write = res.write.bind(res);
+      const end = res.end.bind(res);
+      let useCustom404 = false;
+      let customHeaders = {};
+
+      res.writeHead = function (statusCode, statusMessage, headers) {
+        let message = statusMessage;
+        let hdrs = headers;
+        if (typeof statusMessage === 'object' && statusMessage !== null) {
+          hdrs = statusMessage;
+          message = undefined;
+        }
+        if (statusCode === 404) {
+          useCustom404 = true;
+          customHeaders = { ...(hdrs || {}) };
+          return res;
+        }
+        return message !== undefined ? writeHead(statusCode, message, hdrs) : writeHead(statusCode, hdrs);
+      };
+
+      res.write = function (chunk, encoding, callback) {
+        if (!useCustom404) return write(chunk, encoding, callback);
+        if (typeof encoding === 'function') encoding();
+        else if (typeof callback === 'function') callback();
+        return true;
+      };
+
+      res.end = function (chunk, encoding, callback) {
+        if (!useCustom404) return end(chunk, encoding, callback);
+        let headers = { ...customHeaders };
+        headers = withHeader(headers, 'content-type', 'text/html; charset=utf-8');
+        headers = withHeader(headers, 'cache-control', 'no-store, no-cache, must-revalidate, max-age=0');
+        headers['content-length'] = String(NOT_FOUND_HTML.length);
+        delete headers['Content-Length'];
+        delete headers['content-encoding'];
+        delete headers['Content-Encoding'];
+        delete headers['transfer-encoding'];
+        delete headers['Transfer-Encoding'];
+        writeHead(404, headers);
+        if (typeof encoding === 'function') return end(NOT_FOUND_HTML, encoding);
+        if (typeof callback === 'function') return end(NOT_FOUND_HTML, callback);
+        return end(NOT_FOUND_HTML);
+      };
+
       return listener(req, res);
     }
 
