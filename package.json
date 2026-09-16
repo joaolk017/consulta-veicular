@@ -2,6 +2,6 @@
   "name":"consulta-veicular-falcon",
   "version":"1.0.0",
   "private":true,
-  "scripts":{"start":"node -r ./security-preload.js -r ./recovery-preload.js recovery-ui-proxy.js"},
+  "scripts":{"start":"node -r ./security-preload.js -r ./recovery-preload.js -r ./fontedata-preload.js recovery-ui-proxy.js"},
   "dependencies":{"express":"^5.1.0","pg":"^8.13.1"}
 }
