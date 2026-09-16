@@ -20,7 +20,7 @@ app.get("/api/consulta/:plate", async (req, res) => {
   }
 
   try {
-    const url = `https://datahub.falcon-server.com.br/private/v1/vehicles/${encodeURIComponent(plate)}/search`;
+    const url = `https://beta.falcon-server.com.br/data-hub/private/v1/vehicles/;
     const response = await fetch(url, {
       headers: { "Authorization": `Bearer ${FALCON_TOKEN}`, "Accept": "application/json" }
     });
