@@ -13,24 +13,32 @@ html,body{min-height:100%}
 body{
   margin:0!important;
   background-color:#05080d!important;
-  background-image:
-    linear-gradient(180deg,rgba(3,7,13,.04) 0%,rgba(3,7,13,.10) 46%,rgba(3,7,13,.58) 76%,#05080d 100%),
-    url('ChatGPT%20Image%2016%20de%20set.%20de%202026,%2010_58_27.png?v=9')!important;
-  background-position:center top,center top!important;
-  background-size:cover,cover!important;
-  background-repeat:no-repeat,no-repeat!important;
-  background-attachment:fixed,fixed!important;
   color:#f7f9fc;
   overflow-x:hidden;
+}
+
+/* Primeira tela: somente a imagem, sem nenhum conteúdo sobreposto */
+body::before{
+  content:"";
+  display:block;
+  width:100%;
+  height:100svh;
+  min-height:100vh;
+  background-image:url('ChatGPT%20Image%2016%20de%20set.%20de%202026,%2010_58_27.png?v=10');
+  background-position:center top;
+  background-size:cover;
+  background-repeat:no-repeat;
+  background-color:#05080d;
 }
 
 body > .wrap{
   display:block!important;
   position:relative;
   z-index:1;
-  padding-top:clamp(280px,56vh,620px)!important;
+  padding-top:0!important;
 }
 
+/* Remove tudo que existia no topo antigo */
 .top,.hero,.private-notice{display:none!important}
 
 /* Mantém a consulta antiga oculta */
@@ -42,32 +50,34 @@ body > .wrap{
 }
 .services-grid > main.card{display:none!important}
 
-/* CRLV continua visível */
+/* O conteúdo restante começa apenas depois da tela inicial */
 .services-grid > .crlv{
   width:100%;
   position:relative!important;
   top:auto!important;
-  background:rgba(7,20,35,.92)!important;
+  background:rgba(7,20,35,.96)!important;
   backdrop-filter:blur(12px)!important;
   -webkit-backdrop-filter:blur(12px)!important;
 }
-
 .details-panel,.benefit{
-  background-color:rgba(7,13,22,.92)!important;
+  background-color:rgba(7,13,22,.96)!important;
   backdrop-filter:blur(8px);
   -webkit-backdrop-filter:blur(8px);
 }
 
 @media(max-width:650px){
-  body{
-    background-attachment:scroll,scroll!important;
-    background-position:center top,center top!important;
-    background-size:auto 100vh,auto 100vh!important;
+  body::before{
+    height:100svh;
+    min-height:100vh;
+    background-position:center top;
+    background-size:cover;
   }
-  body > .wrap{padding-top:72vh!important}
 }
 
-@media print{body{background:#fff!important}}
+@media print{
+  body{background:#fff!important}
+  body::before{display:none!important}
+}
 </style>`;
 
 function waitForPort(port, timeoutMs = 25000) {
@@ -146,7 +156,7 @@ async function start() {
     if(req.method==='GET'&&(pathname==='/'||pathname==='/index.html')) return serveThemedHtml(req,res);
     return proxyStream(req,res);
   });
-  server.listen(PUBLIC_PORT,()=>console.log(`Imagem de fundo sem consulta sobreposta ativa na porta ${PUBLIC_PORT}`));
+  server.listen(PUBLIC_PORT,()=>console.log(`Tela inicial limpa com somente a imagem ativa na porta ${PUBLIC_PORT}`));
 }
 
 start();
