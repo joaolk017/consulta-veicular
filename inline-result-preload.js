@@ -10,15 +10,50 @@ if (IS_OUTER_UI) {
 
   const INJECT = `
 <style id="cv-inline-result-style">
-#cv-inline-result{width:min(100%,780px);margin:16px auto 0;position:relative;z-index:6}
+#cv-inline-result{width:min(100%,780px);margin:16px auto 0;position:relative;z-index:6;overflow-anchor:none}
 #cv-inline-result #status{margin:0 0 10px}
-#cv-inline-result #result{margin:0!important;width:100%}
+#cv-inline-result #result{margin:0!important;width:100%;overflow-anchor:none}
 #cv-inline-result #result:not(.hidden){animation:cvInlineAppear .28s ease}
 @keyframes cvInlineAppear{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media(max-width:700px){#cv-inline-result{margin-top:12px}}
 </style>
 <script id="cv-inline-result-script">
 (function(){
+  var anchorY=null;
+  var anchorUntil=0;
+
+  function isInlineTarget(el){
+    return !!(el&&(el.id==='result'||el.id==='status'||el.id==='cv-inline-result'));
+  }
+
+  try{
+    var nativeScrollIntoView=Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView=function(){
+      if(isInlineTarget(this))return;
+      return nativeScrollIntoView.apply(this,arguments);
+    };
+  }catch(e){}
+
+  function armPosition(){
+    anchorY=window.scrollY||window.pageYOffset||0;
+    anchorUntil=Date.now()+30000;
+  }
+
+  function restorePosition(){
+    if(anchorY===null||Date.now()>anchorUntil)return;
+    var current=window.scrollY||window.pageYOffset||0;
+    if(Math.abs(current-anchorY)>1){
+      try{window.scrollTo({top:anchorY,left:0,behavior:'auto'});}catch(e){window.scrollTo(0,anchorY);}
+    }
+  }
+
+  function finishRestore(){
+    restorePosition();
+    setTimeout(restorePosition,80);
+    setTimeout(restorePosition,180);
+    setTimeout(function(){anchorY=null;anchorUntil=0;},260);
+  }
+
   function placeInline(){
     var search=document.querySelector('.cv-search-card');
     var result=document.getElementById('result');
@@ -37,10 +72,36 @@ if (IS_OUTER_UI) {
     if(result.parentNode!==holder)holder.appendChild(result);
 
     try{result.scrollIntoView=function(){};}catch(e){}
+
+    if(!result.dataset.cvNoScrollObserver){
+      result.dataset.cvNoScrollObserver='1';
+      new MutationObserver(function(){
+        if(anchorY===null)return;
+        if(!result.classList.contains('hidden')&&result.children.length){finishRestore();}
+      }).observe(result,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+    }
     return true;
   }
 
+  function bindNoScroll(){
+    document.addEventListener('click',function(e){
+      var btn=e.target&&e.target.closest?e.target.closest('#cv-consult-btn'):null;
+      if(!btn)return;
+      armPosition();
+      setTimeout(restorePosition,0);
+      setTimeout(restorePosition,120);
+    },true);
+
+    document.addEventListener('keydown',function(e){
+      if(e.key!=='Enter'||!e.target||e.target.id!=='cv-plate')return;
+      armPosition();
+      setTimeout(restorePosition,0);
+      setTimeout(restorePosition,120);
+    },true);
+  }
+
   function init(){
+    bindNoScroll();
     if(placeInline())return;
     var tries=0;
     var timer=setInterval(function(){
