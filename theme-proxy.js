@@ -11,10 +11,49 @@ const HERO_HTML = `
 <section id="main-visual-hero-live" class="main-visual-hero" aria-label="Consulta veicular">
   <div class="main-visual-overlay"></div>
   <div class="main-visual-actions">
-    <a class="hero-consult-btn" href="#consulta-area">🔎 CONSULTAR PLACA</a>
-    <span>Role para continuar e usar a consulta real do site</span>
+    <div class="hero-search-card">
+      <div class="hero-search-title">Consulte a placa agora</div>
+      <div class="hero-search-subtitle">Digite a placa do veículo no padrão antigo ou Mercosul.</div>
+      <div class="hero-plate-shell">
+        <div class="hero-plate-top"><span>🇧🇷 BRASIL</span><span>BR</span></div>
+        <input id="hero-plate" class="hero-plate-input" maxlength="8" autocomplete="off" placeholder="ABC1D23" inputmode="text" aria-label="Digite a placa do veículo">
+      </div>
+      <button class="hero-consult-btn" type="button" onclick="heroConsultar()">🔎 CONSULTAR VEÍCULO</button>
+      <div id="hero-search-error" class="hero-search-error" aria-live="polite"></div>
+    </div>
+    <span>Consulta rápida • resultado exibido no próprio site</span>
   </div>
-</section>`;
+</section>
+<script>
+(function(){
+  var heroInput=document.getElementById('hero-plate');
+  if(heroInput){
+    heroInput.addEventListener('input',function(e){e.target.value=String(e.target.value||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,7)});
+    heroInput.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();window.heroConsultar();}});
+  }
+  window.heroConsultar=function(){
+    var input=document.getElementById('hero-plate');
+    var error=document.getElementById('hero-search-error');
+    var plate=String(input&&input.value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+    var valid=/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(plate)||/^[A-Z]{3}[0-9]{4}$/.test(plate);
+    if(!valid){if(error)error.textContent='Digite uma placa válida, como ABC1D23.';return;}
+    if(error)error.textContent='';
+    var original=document.getElementById('plate');
+    if(!original){if(error)error.textContent='A consulta está temporariamente indisponível.';return;}
+    original.value=plate;
+    var area=document.getElementById('consulta-area');
+    if(area)area.scrollIntoView({behavior:'smooth',block:'start'});
+    setTimeout(function(){
+      if(typeof window.consultar==='function') window.consultar();
+      else {
+        var btn=document.getElementById('btn');
+        if(btn)btn.click();
+        else if(error)error.textContent='Não foi possível iniciar a consulta.';
+      }
+    },280);
+  };
+})();
+</script>`;
 
 const THEME_CSS = `
 <style id="professional-background-theme">
@@ -59,12 +98,12 @@ body::after{
 }
 .main-visual-hero{
   width:100%;
-  min-height:clamp(560px,100svh,920px);
+  min-height:clamp(620px,100svh,960px);
   position:relative;
   display:flex;
   align-items:flex-end;
   justify-content:center;
-  background-image:url('ChatGPT%20Image%2016%20de%20set.%20de%202026,%2010_58_27.png?v=2');
+  background-image:url('ChatGPT%20Image%2016%20de%20set.%20de%202026,%2010_58_27.png?v=3');
   background-size:cover;
   background-position:center top;
   background-repeat:no-repeat;
@@ -78,35 +117,94 @@ body::after{
   inset:0;
   z-index:0;
   pointer-events:none;
-  background:linear-gradient(to bottom,rgba(2,6,12,.02) 0%,rgba(2,6,12,.03) 55%,rgba(2,6,12,.68) 88%,#05080d 100%);
+  background:linear-gradient(to bottom,rgba(2,6,12,.02) 0%,rgba(2,6,12,.03) 48%,rgba(2,6,12,.72) 83%,#05080d 100%);
 }
 .main-visual-actions{
   position:relative;
   z-index:2;
+  width:min(100% - 28px,560px);
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:9px;
-  padding:28px 18px 34px;
+  gap:10px;
+  padding:28px 0 34px;
+}
+.hero-search-card{
+  width:100%;
+  padding:18px;
+  border-radius:20px;
+  background:rgba(5,12,22,.84);
+  border:1px solid rgba(77,154,226,.55);
+  box-shadow:0 20px 55px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.05);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+.hero-search-title{
+  text-align:center;
+  color:#fff;
+  font-size:20px;
+  font-weight:950;
+  letter-spacing:-.3px;
+  margin-bottom:5px;
+}
+.hero-search-subtitle{
+  text-align:center;
+  color:#aebfd2;
+  font-size:12px;
+  line-height:1.45;
+  margin-bottom:13px;
+}
+.hero-plate-shell{
+  overflow:hidden;
+  border:2px solid #d7dce2;
+  border-radius:14px;
+  background:#eef1f4;
+  box-shadow:0 12px 35px rgba(0,0,0,.45);
+}
+.hero-plate-top{
+  height:25px;
+  background:#1556a6;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 13px;
+  font-size:10px;
+  font-weight:900;
+}
+.hero-plate-input{
+  width:100%;
+  border:0;
+  outline:0;
+  background:#f4f5f6;
+  color:#10151d;
+  text-align:center;
+  font-size:clamp(29px,5vw,38px);
+  font-weight:950;
+  letter-spacing:5px;
+  text-transform:uppercase;
+  padding:13px 10px;
 }
 .hero-consult-btn{
-  display:inline-flex;
+  width:100%;
+  margin-top:12px;
+  display:flex;
   align-items:center;
   justify-content:center;
-  min-width:260px;
-  padding:16px 26px;
-  border-radius:14px;
-  text-decoration:none;
+  padding:16px 22px;
+  border-radius:13px;
+  border:1px solid rgba(118,191,255,.72);
   color:#fff;
   font-size:15px;
   font-weight:950;
-  letter-spacing:.25px;
+  letter-spacing:.2px;
+  cursor:pointer;
   background:linear-gradient(135deg,#168fff,#0567d7);
-  border:1px solid rgba(118,191,255,.7);
   box-shadow:0 15px 38px rgba(0,116,255,.36),inset 0 1px 0 rgba(255,255,255,.2);
 }
 .hero-consult-btn:hover{transform:translateY(-1px);filter:brightness(1.06)}
-.main-visual-actions span{font-size:11px;color:#b8c8d9;text-shadow:0 2px 8px #000}
+.hero-search-error{min-height:16px;margin-top:8px;text-align:center;color:#ffb7c0;font-size:11px;font-weight:700}
+.main-visual-actions>span{font-size:11px;color:#b8c8d9;text-shadow:0 2px 8px #000}
 #consulta-area{scroll-margin-top:18px}
 .card,.details-panel,.benefit,.private-notice{
   backdrop-filter:blur(14px);
@@ -117,16 +215,19 @@ body::after{
 .logo{box-shadow:0 12px 34px rgba(229,29,60,.28),0 0 0 1px rgba(255,255,255,.03)!important}
 .eyebrow,.badge{box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
 @media(max-width:900px){
-  .main-visual-hero{min-height:72svh;background-position:center top}
+  .main-visual-hero{min-height:78svh;background-position:center top}
 }
 @media(max-width:650px){
   body{background-attachment:scroll!important}
   body::before{background-size:40px 40px;opacity:.72}
   body::after{right:-55vw;bottom:-20vw}
-  .main-visual-hero{min-height:62svh;background-position:center top}
-  .main-visual-actions{padding-bottom:22px}
-  .hero-consult-btn{min-width:230px;padding:14px 20px;font-size:14px}
-  .main-visual-actions span{font-size:10px}
+  .main-visual-hero{min-height:72svh;background-position:center top}
+  .main-visual-actions{padding-bottom:20px}
+  .hero-search-card{padding:14px;border-radius:17px}
+  .hero-search-title{font-size:18px}
+  .hero-plate-input{font-size:31px;padding:12px 8px}
+  .hero-consult-btn{padding:14px 18px;font-size:14px}
+  .main-visual-actions>span{font-size:10px}
 }
 @media print{
   body{background:#fff!important}
