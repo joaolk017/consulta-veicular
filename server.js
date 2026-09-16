@@ -214,6 +214,20 @@ app.get("/api/crlv/sp/info", (req, res) => {
   });
 });
 
+// Diagnóstico seguro: informa somente se as variáveis necessárias existem.
+// Nunca retorna o conteúdo de nenhuma chave/token.
+app.get("/api/crlv/sp/diagnostico", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  const desphubConfigurada = Boolean(DESPHUB_API_KEY);
+  const protecaoConfigurada = Boolean(CRLV_ADMIN_TOKEN);
+  return res.json({
+    servico: "crlv-sp",
+    desphub_configurada: desphubConfigurada,
+    protecao_crlv_configurada: protecaoConfigurada,
+    pronto_para_emissao: desphubConfigurada && protecaoConfigurada
+  });
+});
+
 // CRLV-e SP / Desphub.
 // Esta rota é deliberadamente protegida: a chave da Desphub e o CRLV_ADMIN_TOKEN nunca vão ao navegador.
 // O fluxo público deve chamar esta rota somente a partir de um backend/webhook depois da confirmação do pagamento.
