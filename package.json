@@ -2,7 +2,7 @@
   "name": "consulta-veicular-falcon",
   "version": "1.0.0",
   "private": true,
-  "scripts": {"start":"node perf-start.js"},
+  "scripts": {"start":"node why-proxy.js"},
   "dependencies": {
     "express":"^5.1.0",
     "pg":"^8.13.1"
