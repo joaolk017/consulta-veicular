@@ -6,6 +6,28 @@ const PUBLIC_PORT = Number(process.env.PORT || 3000);
 const INNER_PORT = Number(process.env.PAYMENT_INNER_PORT || 12001);
 const MAX_HTML_BYTES = 3 * 1024 * 1024;
 
+const TRUST_BAND = `
+<section id="trust-band" class="trust-band" aria-label="Informações de confiança">
+  <div class="trust-band-shell">
+    <div class="trust-band-item">
+      <span class="trust-band-icon">💠</span>
+      <div><b>Pagamento via PIX</b><small>Cobrança identificada pelo sistema</small></div>
+    </div>
+    <div class="trust-band-item">
+      <span class="trust-band-icon">🔐</span>
+      <div><b>Credenciais no servidor</b><small>Chaves de integração não ficam expostas no navegador</small></div>
+    </div>
+    <div class="trust-band-item">
+      <span class="trust-band-icon">📄</span>
+      <div><b>Relatório organizado</b><small>Opção de PDF quando o recurso estiver disponível</small></div>
+    </div>
+    <div class="trust-band-item">
+      <span class="trust-band-icon">✓</span>
+      <div><b>Serviço privado</b><small>Independente de DETRAN, SENATRAN e GOV.BR</small></div>
+    </div>
+  </div>
+</section>`;
+
 const PAYMENT_CSS = `
 <style id="payment-cta-style">
 .unlock .paybtn,
@@ -46,9 +68,61 @@ const PAYMENT_CSS = `
   font-weight:800;
 }
 #pixCreateBtn{margin-top:8px!important}
+
+/* Faixa de confiança separada do hero para não competir com a consulta. */
+.cv-hero .cv-trustbar{display:none!important}
+.trust-band{
+  position:relative;
+  z-index:8;
+  border-top:1px solid #1d334b;
+  border-bottom:1px solid #1d334b;
+  background:linear-gradient(180deg,#081522,#06101b);
+  color:#f4f8ff;
+}
+.trust-band-shell{
+  width:min(1160px,92vw);
+  margin:auto;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+}
+.trust-band-item{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:17px 18px;
+  border-right:1px solid #1d334b;
+}
+.trust-band-item:first-child{border-left:1px solid #1d334b}
+.trust-band-icon{
+  flex:0 0 auto;
+  display:grid;
+  place-items:center;
+  width:36px;
+  height:36px;
+  border:1px solid #27547e;
+  border-radius:11px;
+  background:#0d2944;
+  font-size:17px;
+}
+.trust-band-item div{display:grid;gap:3px;min-width:0}
+.trust-band-item b{font-size:11px;line-height:1.25;color:#f6f9fd}
+.trust-band-item small{color:#7f94aa;font-size:9px;line-height:1.4}
+
+@media(max-width:900px){
+  .trust-band-shell{grid-template-columns:repeat(2,1fr)}
+  .trust-band-item:nth-child(2){border-right:1px solid #1d334b}
+  .trust-band-item:nth-child(3){border-left:1px solid #1d334b;border-top:1px solid #1d334b}
+  .trust-band-item:nth-child(4){border-top:1px solid #1d334b}
+}
 @media(max-width:560px){
   .unlock .paybtn,#pixCreateBtn{min-height:56px!important;font-size:12px!important;padding:15px 12px!important}
   .unlock .secure{font-size:9px}
+  .trust-band-shell{grid-template-columns:1fr 1fr;width:100%}
+  .trust-band-item{padding:13px 10px;gap:8px}
+  .trust-band-icon{width:31px;height:31px;border-radius:9px;font-size:14px}
+  .trust-band-item b{font-size:9.5px}
+  .trust-band-item small{font-size:8px}
 }
 </style>`;
 
@@ -110,6 +184,10 @@ function proxy(req, res, injectHome) {
       html = html.replace('💠 GERAR PIX DE R$ 18,90', '💠 GERAR PIX E CONTINUAR · R$ 18,90');
       html = html.replace('🔒 Pagamento via PIX • Liberação após confirmação', '🔒 PIX seguro • pagamento único • liberação após confirmação');
       if (!html.includes('id="payment-cta-style"')) html = html.replace('</head>', `${PAYMENT_CSS}\n</head>`);
+      if (!html.includes('id="trust-band"')) {
+        const resultMarker = '<div id="cv-result" class="cv-result"></div>';
+        if (html.includes(resultMarker)) html = html.replace(resultMarker, `${TRUST_BAND}\n${resultMarker}`);
+      }
 
       const body = Buffer.from(html, 'utf8');
       const out = {
@@ -159,7 +237,7 @@ async function start() {
     proxy(req, res, isHome);
   });
 
-  server.listen(PUBLIC_PORT, () => console.log(`Botão de pagamento otimizado na porta ${PUBLIC_PORT}`));
+  server.listen(PUBLIC_PORT, () => console.log(`Pagamento e faixa de confiança ativos na porta ${PUBLIC_PORT}`));
 }
 
 start();
