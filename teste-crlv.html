@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <title>Teste CRLV-e SP</title>
   <style>
-    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:#07101b;color:#eef4fb;min-height:100vh;padding:22px}.box{max-width:620px;margin:20px auto;background:#0d1826;border:1px solid #263a50;border-radius:22px;padding:24px;box-shadow:0 24px 70px #0007}h1{margin:0 0 8px;font-size:28px}.sub{color:#9aabba;line-height:1.5;margin:0 0 20px}.warn{background:#291d0a;border:1px solid #6a4b15;color:#f7d993;padding:14px;border-radius:12px;font-size:13px;line-height:1.5;margin-bottom:18px}label{display:block;font-weight:800;font-size:13px;margin:15px 0 7px}input,textarea{width:100%;border:1px solid #31465d;border-radius:12px;background:#08121e;color:#fff;padding:14px;font-size:16px;outline:none}textarea{min-height:100px;resize:vertical}.price{font-size:27px;font-weight:900;margin:16px 0;color:#6ee7a4}.check{display:flex;gap:10px;align-items:flex-start;margin:16px 0;color:#c4cfda;font-size:13px;line-height:1.45}.check input{width:auto;margin-top:3px}button{width:100%;border:0;border-radius:13px;padding:17px;background:linear-gradient(135deg,#2ac978,#12864d);color:white;font-weight:900;font-size:15px;cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}.status{margin-top:16px;padding:14px;border-radius:12px;display:none;white-space:pre-wrap;line-height:1.45}.ok{display:block;background:#0d2a1d;border:1px solid #236640;color:#a8f0c4}.err{display:block;background:#351218;border:1px solid #7d2937;color:#ffc0c8}.info{display:block;background:#0d1d2d;border:1px solid #315070;color:#bdd7ef}.mini{font-size:11px;color:#7e91a4;line-height:1.5;margin-top:12px}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:#07101b;color:#eef4fb;min-height:100vh;padding:18px}.box{max-width:620px;margin:10px auto;background:#0d1826;border:1px solid #263a50;border-radius:22px;padding:22px;box-shadow:0 24px 70px #0007}h1{margin:0 0 8px;font-size:28px}.sub{color:#9aabba;line-height:1.5;margin:0 0 18px}.warn{background:#291d0a;border:1px solid #6a4b15;color:#f7d993;padding:14px;border-radius:12px;font-size:13px;line-height:1.5;margin-bottom:16px}label{display:block;font-weight:800;font-size:13px;margin:14px 0 7px}input,textarea{width:100%;border:1px solid #31465d;border-radius:12px;background:#08121e;color:#fff;padding:14px;font-size:16px;outline:none}textarea{min-height:82px;resize:vertical}.price{font-size:27px;font-weight:900;margin:14px 0;color:#6ee7a4}.check{display:flex;gap:10px;align-items:flex-start;margin:16px 0;color:#c4cfda;font-size:13px;line-height:1.45}.check input{width:auto;margin-top:3px}button{width:100%;border:0;border-radius:13px;padding:17px;background:linear-gradient(135deg,#2ac978,#12864d);color:white;font-weight:900;font-size:15px;cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}.status{margin-top:16px;padding:14px;border-radius:12px;display:none;white-space:pre-wrap;line-height:1.45;font-weight:700}.ok{display:block;background:#0d2a1d;border:1px solid #236640;color:#a8f0c4}.err{display:block;background:#351218;border:1px solid #7d2937;color:#ffc0c8}.info{display:block;background:#0d1d2d;border:1px solid #315070;color:#bdd7ef}.mini{font-size:11px;color:#7e91a4;line-height:1.5;margin-top:12px}
   </style>
 </head>
 <body>
@@ -36,26 +36,34 @@
   <script>
     function normalizarPlaca(v){return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,7)}
     const placa=document.getElementById('placa');
+    const statusBox=document.getElementById('status');
     placa.addEventListener('input',()=>placa.value=normalizarPlaca(placa.value));
+
+    function mostrarStatus(tipo,texto){
+      statusBox.className='status '+tipo;
+      statusBox.textContent=texto;
+      statusBox.style.display='block';
+      setTimeout(()=>statusBox.scrollIntoView({behavior:'smooth',block:'center'}),80);
+    }
 
     async function emitirCRLV(){
       const btn=document.getElementById('emitir');
-      const status=document.getElementById('status');
       const token=document.getElementById('token').value.trim();
       const p=normalizarPlaca(placa.value);
       const finalidade=document.getElementById('finalidade').value.trim();
       const autorizado=document.getElementById('autorizado').checked;
 
-      status.className='status';status.style.display='none';status.textContent='';
-      if(!/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(p) && !/^[A-Z]{3}[0-9]{4}$/.test(p)){
-        status.className='status err';status.textContent='Placa inválida.';return;
-      }
-      if(finalidade.length<10){status.className='status err';status.textContent='Informe uma finalidade legítima.';return;}
-      if(!token){status.className='status err';status.textContent='Digite o CRLV_ADMIN_TOKEN.';return;}
-      if(!autorizado){status.className='status err';status.textContent='Confirme a autorização para a emissão.';return;}
+      statusBox.className='status';statusBox.style.display='none';statusBox.textContent='';
+      if(!/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(p) && !/^[A-Z]{3}[0-9]{4}$/.test(p)) return mostrarStatus('err','Placa inválida.');
+      if(finalidade.length<10) return mostrarStatus('err','Informe uma finalidade legítima.');
+      if(!token) return mostrarStatus('err','Digite o CRLV_ADMIN_TOKEN salvo no Render.');
+      if(!autorizado) return mostrarStatus('err','Marque a confirmação de autorização para a emissão.');
       if(!confirm('Esta consulta pode gerar cobrança na Desphub. Deseja realizar a emissão agora?')) return;
 
-      btn.disabled=true;btn.textContent='EMITINDO...';status.className='status info';status.textContent='Consultando a Desphub. Aguarde sem atualizar a página.';
+      btn.disabled=true;
+      btn.textContent='EMITINDO...';
+      mostrarStatus('info','Consultando a Desphub. Aguarde sem atualizar a página.');
+
       try{
         const r=await fetch('/api/crlv/sp',{
           method:'POST',
@@ -63,25 +71,30 @@
           body:JSON.stringify({placa:p,finalidade,autorizado:true})
         });
         const ct=(r.headers.get('content-type')||'').toLowerCase();
+
         if(r.ok && ct.includes('application/pdf')){
           const blob=await r.blob();
           const url=URL.createObjectURL(blob);
           const a=document.createElement('a');
-          a.href=url;a.download='CRLV-'+p+'.pdf';document.body.appendChild(a);a.click();a.remove();
+          a.href=url;
+          a.download='CRLV-'+p+'.pdf';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
           setTimeout(()=>URL.revokeObjectURL(url),5000);
-          status.className='status ok';
-          status.textContent='CRLV-e recebido com sucesso. O PDF foi preparado para download.';
+          mostrarStatus('ok','CRLV-e recebido com sucesso. O PDF foi preparado para download.');
           return;
         }
+
         let data={};
         try{data=await r.json()}catch{}
         const msg=data.mensagem||data.error||('Erro HTTP '+r.status);
-        status.className='status err';
-        status.textContent=msg+(data.consulta_id?'\nConsulta ID: '+data.consulta_id:'')+(data.preco_cobrado!=null?'\nCusto informado pela Desphub: R$ '+Number(data.preco_cobrado).toFixed(2).replace('.',','):'');
+        mostrarStatus('err',msg+(data.consulta_id?'\nConsulta ID: '+data.consulta_id:'')+(data.preco_cobrado!=null?'\nCusto informado pela Desphub: R$ '+Number(data.preco_cobrado).toFixed(2).replace('.',','):''));
       }catch(e){
-        status.className='status err';status.textContent='Falha de comunicação com o servidor: '+e.message;
+        mostrarStatus('err','Falha de comunicação com o servidor: '+e.message);
       }finally{
-        btn.disabled=false;btn.textContent='EMITIR CRLV-e SP';
+        btn.disabled=false;
+        btn.textContent='EMITIR CRLV-e SP';
       }
     }
   </script>
