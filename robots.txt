@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://consulta-veicular-bx20.onrender.com/sitemap.xml
+Sitemap: https://consultaveicular360.com.br/sitemap.xml
