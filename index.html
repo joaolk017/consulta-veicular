@@ -1,54 +1,39 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Consulta Veicular</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#070b12">
+<title>Consulta Veicular | Consulte antes de comprar</title>
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#080b10;color:#fff}.wrap{max-width:760px;margin:auto;padding:24px}
-.card{background:#111722;border:1px solid #2a3444;border-radius:16px;padding:28px;margin-top:35px}
-h1{font-size:42px;margin:0 0 12px}p{color:#b8c0cc;line-height:1.5}.red{color:#e63946}
-input{width:100%;padding:16px;box-sizing:border-box;background:#090e15;border:1px solid #354052;border-radius:10px;color:#fff;font-size:20px;text-transform:uppercase;margin:15px 0}
-button{width:100%;padding:16px;border:0;border-radius:10px;background:#e63946;color:white;font-size:16px;font-weight:bold;cursor:pointer}
-button:disabled{opacity:.6}.hidden{display:none}.result{margin-top:20px}.row{display:flex;justify-content:space-between;border-bottom:1px solid #273142;padding:13px 0;gap:20px}.label{color:#9da8b8}.value{font-weight:bold;text-align:right}.error{background:#3a171b;border:1px solid #7d3038;padding:14px;border-radius:10px;color:#ffb3b8}
-small{color:#818c9d}
-</style></head>
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 50% 0,#16243a 0,#0a101a 35%,#05080d 75%);color:#f7f9fc;min-height:100vh}.wrap{width:min(100% - 32px,920px);margin:auto;padding:28px 0 48px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:38px}.brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:.2px}.logo{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,#ff354d,#b90f2b);box-shadow:0 10px 30px #e51d3c40;font-size:20px}.badge{font-size:12px;color:#9fabbc;border:1px solid #273347;background:#0d1420;padding:7px 10px;border-radius:999px}.hero{text-align:center;max-width:760px;margin:0 auto 28px}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;background:#121b29;border:1px solid #29374b;color:#c7d1df;font-size:13px;font-weight:700}.dot{width:7px;height:7px;border-radius:50%;background:#35d07f;box-shadow:0 0 12px #35d07f}h1{font-size:clamp(38px,7vw,64px);line-height:1.02;letter-spacing:-2.5px;margin:20px 0 16px}.red{background:linear-gradient(90deg,#ff4960,#ff1f42);-webkit-background-clip:text;background-clip:text;color:transparent}.lead{max-width:610px;margin:auto;color:#aeb9c8;font-size:17px;line-height:1.65}.card{position:relative;overflow:hidden;background:linear-gradient(180deg,#111925e8,#0b111be8);border:1px solid #293548;border-radius:24px;padding:clamp(22px,5vw,38px);box-shadow:0 30px 80px #0008,0 0 0 1px #ffffff05}.card:before{content:"";position:absolute;width:260px;height:260px;border-radius:50%;background:#e8294530;filter:blur(80px);right:-120px;top:-150px;pointer-events:none}.section-title{font-size:20px;font-weight:800;margin:0 0 6px}.section-sub{color:#8f9bad;margin:0 0 20px;font-size:14px}.input-wrap{position:relative}.plate-label{display:block;font-size:12px;font-weight:800;color:#9eabba;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}input{width:100%;padding:18px 18px;background:#070c13;border:1px solid #334156;border-radius:13px;color:#fff;font-size:24px;font-weight:800;letter-spacing:3px;text-transform:uppercase;outline:none;transition:.2s}input:focus{border-color:#f23850;box-shadow:0 0 0 4px #f2385018}input::placeholder{color:#465164}button{width:100%;margin-top:13px;padding:18px;border:0;border-radius:13px;background:linear-gradient(135deg,#f43a51,#c91535);color:#fff;font-size:15px;font-weight:900;letter-spacing:.4px;cursor:pointer;box-shadow:0 12px 28px #e3224040;transition:transform .18s,filter .18s}button:hover{transform:translateY(-1px);filter:brightness(1.08)}button:active{transform:translateY(1px)}button:disabled{opacity:.6;cursor:wait;transform:none}.trust{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}.trust-item{padding:12px 8px;border:1px solid #222e40;border-radius:12px;background:#0b121d;text-align:center;color:#9eabba;font-size:12px}.trust-item b{display:block;color:#e7ecf3;font-size:13px;margin-top:4px}.hidden{display:none}.result{margin-top:24px;padding-top:22px;border-top:1px solid #283446}.result h2{font-size:21px;margin:0 0 12px}.row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #202b3b;padding:14px 2px;gap:20px}.label{color:#8f9bad;font-size:14px}.value{font-weight:800;text-align:right;color:#f4f7fb}.error{margin-top:14px;background:#351218;border:1px solid #7d2937;padding:14px 16px;border-radius:12px;color:#ffc0c8;font-size:14px}.loading{margin:14px 0 0;color:#aeb9c8;display:flex;align-items:center;gap:9px;font-size:14px}.spinner{width:17px;height:17px;border:2px solid #39475b;border-top-color:#ff3c55;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.notice{margin-top:20px;padding:15px 17px;background:#09101a;border:1px solid #202c3d;border-radius:13px;color:#7f8b9d;font-size:12px;line-height:1.55}.footer{text-align:center;color:#566274;font-size:12px;margin-top:26px}@media(max-width:560px){.wrap{width:min(100% - 22px,920px);padding-top:18px}.top{margin-bottom:27px}.badge{display:none}h1{letter-spacing:-1.6px}.trust{grid-template-columns:1fr}.card{border-radius:19px}.row{align-items:flex-start}.value{max-width:60%;word-break:break-word}}
+</style>
+</head>
 <body>
 <div class="wrap">
-<div class="card">
-<h1>Consulte a placa <span class="red">antes de fechar negócio.</span></h1>
-<p>Digite a placa para consultar os dados disponíveis na base integrada.</p>
-<input id="plate" maxlength="8" placeholder="ABC1D23">
-<button id="btn" onclick="consultar()">CONSULTAR VEÍCULO</button>
-<div id="status"></div>
-<div id="result" class="result hidden"></div>
-<p><small>As informações dependem da disponibilidade e atualização da fonte de dados. Esta página é um modelo de integração e não substitui consultas oficiais.</small></p>
-</div>
+<header class="top"><div class="brand"><div class="logo">🚘</div><span>Consulta Veicular</span></div><div class="badge">Consulta online</div></header>
+<section class="hero"><div class="eyebrow"><span class="dot"></span> Consulta rápida e online</div><h1>Consulte a placa <span class="red">antes de fechar negócio.</span></h1><p class="lead">Tenha acesso aos dados disponíveis do veículo em poucos instantes e compre com mais informação.</p></section>
+<main class="card">
+<p class="section-title">Consultar veículo</p><p class="section-sub">Informe a placa no padrão antigo ou Mercosul.</p>
+<label class="plate-label" for="plate">Placa do veículo</label>
+<div class="input-wrap"><input id="plate" maxlength="8" autocomplete="off" inputmode="text" placeholder="ABC1D23" aria-label="Placa do veículo"></div>
+<button id="btn" onclick="consultar()">🔎 CONSULTAR VEÍCULO</button>
+<div id="status"></div><div id="result" class="result hidden"></div>
+<div class="trust"><div class="trust-item">⚡<b>Consulta rápida</b></div><div class="trust-item">🔒<b>Conexão segura</b></div><div class="trust-item">📱<b>100% online</b></div></div>
+<div class="notice">As informações exibidas dependem da disponibilidade e atualização das fontes integradas. A consulta tem caráter informativo e não substitui documentos ou consultas oficiais dos órgãos competentes.</div>
+</main>
+<div class="footer">Consulta Veicular • Informação para uma negociação mais segura</div>
 </div>
 <script>
 function normalizar(p){return p.toUpperCase().replace(/[^A-Z0-9]/g,'')}
+document.getElementById('plate').addEventListener('keydown',e=>{if(e.key==='Enter')consultar()});
+document.getElementById('plate').addEventListener('input',e=>{e.target.value=normalizar(e.target.value)});
+function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
 async function consultar(){
- const plate=normalizar(document.getElementById('plate').value), btn=document.getElementById('btn');
- const status=document.getElementById('status'), result=document.getElementById('result');
- if(!/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(plate) && !/^[A-Z]{3}[0-9]{4}$/.test(plate)){
-   status.innerHTML='<div class="error">Digite uma placa válida, como ABC1D23.</div>'; return;
- }
- btn.disabled=true; status.innerHTML='<p>Consultando...</p>'; result.classList.add('hidden');
- try{
-   const r=await fetch('/api/consulta/'+encodeURIComponent(plate));
-   const data=await r.json();
-   if(!r.ok) throw new Error(data.error||'Não foi possível realizar a consulta.');
-   const v=data.vehicle||data.data||data;
-   const fields=[
-    ['Placa',v.plate||v.placa],['Marca',v.brand||v.marca],['Modelo',v.model||v.modelo],
-    ['Ano',v.year||v.ano],['Ano-modelo',v.modelYear||v.ano_modelo||v.anoModelo],
-    ['Cor',v.color||v.cor],['Município',v.city||v.municipio],['UF',v.state||v.uf],
-    ['Combustível',v.fuel||v.combustivel],['Tipo',v.type||v.tipo]
-   ];
-   result.innerHTML='<h2>Resultado da consulta</h2>'+fields.filter(x=>x[1]!==undefined&&x[1]!==null&&x[1]!=='')
-   .map(x=>`<div class="row"><span class="label">${x[0]}</span><span class="value">${String(x[1])}</span></div>`).join('');
-   result.classList.remove('hidden'); status.innerHTML='';
- }catch(e){status.innerHTML='<div class="error">'+e.message+'</div>'}
- finally{btn.disabled=false}
-}
+ const plate=normalizar(document.getElementById('plate').value),btn=document.getElementById('btn'),status=document.getElementById('status'),result=document.getElementById('result');
+ if(!/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(plate)&&!/^[A-Z]{3}[0-9]{4}$/.test(plate)){status.innerHTML='<div class="error">⚠️ Digite uma placa válida, como ABC1D23.</div>';return}
+ btn.disabled=true;btn.textContent='CONSULTANDO...';status.innerHTML='<div class="loading"><span class="spinner"></span>Buscando informações do veículo...</div>';result.classList.add('hidden');
+ try{const r=await fetch('/api/consulta/'+encodeURIComponent(plate));const data=await r.json();if(!r.ok)throw new Error(data.error||'Não foi possível realizar a consulta.');const v=data.vehicle||data.data||data;const fields=[['Placa',v.plate||v.placa],['Marca',v.brand||v.marca],['Modelo',v.model||v.modelo],['Ano',v.year||v.ano],['Ano-modelo',v.modelYear||v.ano_modelo||v.anoModelo],['Cor',v.color||v.cor],['Município',v.city||v.municipio],['UF',v.state||v.uf],['Combustível',v.fuel||v.combustivel],['Tipo',v.type||v.tipo]];result.innerHTML='<h2>✅ Resultado da consulta</h2>'+fields.filter(x=>x[1]!==undefined&&x[1]!==null&&x[1]!=='').map(x=>`<div class="row"><span class="label">${esc(x[0])}</span><span class="value">${esc(x[1])}</span></div>`).join('');result.classList.remove('hidden');status.innerHTML=''}catch(e){status.innerHTML='<div class="error">⚠️ '+esc(e.message)+'</div>'}finally{btn.disabled=false;btn.textContent='🔎 CONSULTAR VEÍCULO'}}
 </script>
-</body></html>
+</body>
+</html>
