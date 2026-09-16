@@ -176,6 +176,7 @@ const TRANSPARENCY_HTML = `
     </div>
     <div class="transparency-clear-links">
       <span>Antes de contratar, consulte:</span>
+      <a href="/sobre/">Sobre o Serviço</a>
       <a href="/termos.html">Termos de Uso</a>
       <a href="/privacidade.html">Política de Privacidade</a>
       <a href="/contato.html">Contato e Suporte</a>
