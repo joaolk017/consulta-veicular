@@ -87,9 +87,63 @@ const FINANCE_HTML = `
           <input id="finance-rate" inputmode="decimal" autocomplete="off" placeholder="Ex.: 1,59">
         </label>
       </div>
-      <button id="finance-button" class="finance-button" type="button">CALCULAR FINANCIAMENTO</button>
+      <button id="finance-button" class="tool-action-button" type="button">CALCULAR FINANCIAMENTO</button>
       <div id="finance-status" class="tool-status" aria-live="polite"></div>
       <div id="finance-result" class="finance-result" hidden></div>
+    </div>
+  </div>
+</section>`;
+
+const MONTHLY_COST_HTML = `
+<section id="custo-mensal" class="monthly-cost-free" aria-labelledby="monthly-cost-title">
+  <div class="tool-shell tool-grid monthly-cost-grid">
+    <div class="tool-copy">
+      <span class="tool-kicker">CALCULADORA GRATUITA</span>
+      <h2 id="monthly-cost-title">Descubra quanto seu veículo custa por mês</h2>
+      <p>Some combustível, seguro, manutenção, IPVA, financiamento e outros gastos para visualizar uma estimativa do custo real de manter o veículo.</p>
+      <div class="tool-benefits">
+        <span>✓ Custo mensal estimado</span>
+        <span>✓ Custo anual estimado</span>
+        <span>✓ Gasto mensal com combustível</span>
+        <span>✓ Custo aproximado por km</span>
+      </div>
+      <small>Os valores são estimativas informadas pelo próprio usuário. Depreciação, imprevistos, multas e despesas não preenchidas não entram no cálculo.</small>
+    </div>
+
+    <div class="tool-card monthly-cost-card">
+      <div class="tool-card-head">
+        <div><span>🧮</span><b>Calcular custo mensal</b></div>
+        <strong>GRÁTIS</strong>
+      </div>
+      <div class="monthly-cost-form">
+        <label>Km rodados por mês
+          <input id="monthly-km" inputmode="decimal" autocomplete="off" placeholder="Ex.: 1.000">
+        </label>
+        <label>Consumo médio (km/L)
+          <input id="monthly-consumption" inputmode="decimal" autocomplete="off" placeholder="Ex.: 10,5">
+        </label>
+        <label>Preço do combustível (R$/L)
+          <input id="monthly-fuel-price" inputmode="decimal" autocomplete="off" placeholder="Ex.: 6,20">
+        </label>
+        <label>Seguro anual (R$)
+          <input id="monthly-insurance" inputmode="decimal" autocomplete="off" placeholder="Ex.: 2.400,00">
+        </label>
+        <label>Manutenção anual (R$)
+          <input id="monthly-maintenance" inputmode="decimal" autocomplete="off" placeholder="Ex.: 2.000,00">
+        </label>
+        <label>IPVA anual estimado (R$)
+          <input id="monthly-ipva" inputmode="decimal" autocomplete="off" placeholder="Ex.: 2.400,00">
+        </label>
+        <label>Parcela do financiamento (R$)
+          <input id="monthly-financing" inputmode="decimal" autocomplete="off" placeholder="Opcional">
+        </label>
+        <label>Outros custos mensais (R$)
+          <input id="monthly-other" inputmode="decimal" autocomplete="off" placeholder="Estacionamento, pedágio etc.">
+        </label>
+      </div>
+      <button id="monthly-cost-button" class="tool-action-button monthly-cost-button" type="button">CALCULAR CUSTO MENSAL</button>
+      <div id="monthly-cost-status" class="tool-status" aria-live="polite"></div>
+      <div id="monthly-cost-result" class="monthly-cost-result" hidden></div>
     </div>
   </div>
 </section>`;
@@ -117,7 +171,7 @@ const TRANSPARENCY_HTML = `
       </article>
       <article>
         <div class="transparency-clear-icon">🎁</div>
-        <div><b>Ferramentas gratuitas</b><small>Valor de referência, CNPJ e simulador de financiamento são recursos informativos gratuitos, sujeitos às condições e fontes indicadas em cada ferramenta.</small></div>
+        <div><b>Ferramentas gratuitas</b><small>Valor de referência, CNPJ, financiamento e custo mensal são recursos informativos gratuitos, sujeitos às condições e fontes indicadas em cada ferramenta.</small></div>
       </article>
     </div>
     <div class="transparency-clear-links">
@@ -136,20 +190,21 @@ const WHATSAPP_CSS = `
 .floating-whatsapp-label{padding:9px 11px;border:1px solid #234d37;border-radius:10px;background:rgba(6,21,14,.93);color:#dff8e9;opacity:0;transform:translateX(7px);pointer-events:none;transition:opacity .16s ease,transform .16s ease}
 .floating-whatsapp:hover .floating-whatsapp-label,.floating-whatsapp:focus-visible .floating-whatsapp-label{opacity:1;transform:none}.floating-whatsapp:hover .floating-whatsapp-icon{transform:translateY(-1px);filter:brightness(1.05)}.floating-whatsapp:focus-visible{outline:2px solid #7ee7a7;outline-offset:4px;border-radius:999px}
 
-.cnpj-free,.finance-free{position:relative;padding:70px 0;border-bottom:1px solid #1a2e45;color:#f4f8ff}.cnpj-free{background:radial-gradient(circle at 78% 25%,rgba(20,127,232,.16),transparent 28%),linear-gradient(180deg,#06111f,#081624)}.finance-free{background:radial-gradient(circle at 20% 30%,rgba(37,155,113,.12),transparent 28%),linear-gradient(180deg,#07141f,#06101b)}
-.tool-shell{width:min(1160px,92vw);margin:auto}.tool-grid{display:grid;grid-template-columns:.82fr 1.18fr;gap:52px;align-items:center}.finance-grid{grid-template-columns:.86fr 1.14fr}.tool-kicker{color:#5dbaff;font-size:10px;font-weight:950;letter-spacing:1.7px}.tool-copy h2{margin:9px 0 13px;font-size:clamp(31px,4vw,48px);line-height:1.04;letter-spacing:-1.5px}.tool-copy>p{margin:0;color:#94a8bd;font-size:13px;line-height:1.7}.tool-benefits{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:20px 0}.tool-benefits span{color:#d2ddea;font-size:11px;font-weight:750}.tool-copy>small{display:block;color:#657d94;font-size:9px;line-height:1.55}
-.tool-card{padding:24px;border:1px solid #2a5278;border-radius:22px;background:linear-gradient(180deg,#0d2033,#081525);box-shadow:0 28px 75px rgba(0,0,0,.36)}.finance-card{border-color:#315c66;background:linear-gradient(180deg,#0c2027,#08161f)}.tool-card-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}.tool-card-head>div{display:flex;align-items:center;gap:9px}.tool-card-head span{font-size:24px}.tool-card-head b{font-size:17px}.tool-card-head strong{padding:7px 10px;border:1px solid #2f744f;border-radius:999px;background:#0a2d1d;color:#75dda5;font-size:9px;letter-spacing:1px}.tool-card label{display:block;color:#9db0c3;font-size:10px;font-weight:850}
-.cnpj-free-row{display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:9px}.cnpj-free-row input,.finance-form input,.finance-form select{width:100%;height:54px;border:1px solid #d8e2eb;border-radius:12px;background:#f7f9fb;color:#111b25;outline:0;padding:0 14px;font-size:16px;font-weight:850}.cnpj-free-row input{font-size:18px;letter-spacing:1px}.cnpj-free-row input:focus,.finance-form input:focus,.finance-form select:focus{box-shadow:0 0 0 4px rgba(39,145,245,.18)}
-.cnpj-free-row button,.finance-button{height:54px!important;width:100%!important;margin:0!important;border:0!important;border-radius:12px!important;background:linear-gradient(135deg,#1c98ff,#0866db)!important;color:#fff!important;font-size:11px!important;font-weight:950!important;box-shadow:0 12px 30px rgba(15,117,229,.25)!important;cursor:pointer}.cnpj-free-row button:disabled,.finance-button:disabled{opacity:.55;cursor:wait}
+.cnpj-free,.finance-free,.monthly-cost-free{position:relative;padding:70px 0;border-bottom:1px solid #1a2e45;color:#f4f8ff}.cnpj-free{background:radial-gradient(circle at 78% 25%,rgba(20,127,232,.16),transparent 28%),linear-gradient(180deg,#06111f,#081624)}.finance-free{background:radial-gradient(circle at 20% 30%,rgba(37,155,113,.12),transparent 28%),linear-gradient(180deg,#07141f,#06101b)}.monthly-cost-free{background:radial-gradient(circle at 78% 28%,rgba(138,98,255,.12),transparent 30%),linear-gradient(180deg,#08111f,#07101b)}
+.tool-shell{width:min(1160px,92vw);margin:auto}.tool-grid{display:grid;grid-template-columns:.82fr 1.18fr;gap:52px;align-items:center}.finance-grid,.monthly-cost-grid{grid-template-columns:.86fr 1.14fr}.tool-kicker{color:#5dbaff;font-size:10px;font-weight:950;letter-spacing:1.7px}.tool-copy h2{margin:9px 0 13px;font-size:clamp(31px,4vw,48px);line-height:1.04;letter-spacing:-1.5px}.tool-copy>p{margin:0;color:#94a8bd;font-size:13px;line-height:1.7}.tool-benefits{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:20px 0}.tool-benefits span{color:#d2ddea;font-size:11px;font-weight:750}.tool-copy>small{display:block;color:#657d94;font-size:9px;line-height:1.55}
+.tool-card{padding:24px;border:1px solid #2a5278;border-radius:22px;background:linear-gradient(180deg,#0d2033,#081525);box-shadow:0 28px 75px rgba(0,0,0,.36)}.finance-card{border-color:#315c66;background:linear-gradient(180deg,#0c2027,#08161f)}.monthly-cost-card{border-color:#474c76;background:linear-gradient(180deg,#121b2d,#091522)}.tool-card-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}.tool-card-head>div{display:flex;align-items:center;gap:9px}.tool-card-head span{font-size:24px}.tool-card-head b{font-size:17px}.tool-card-head strong{padding:7px 10px;border:1px solid #2f744f;border-radius:999px;background:#0a2d1d;color:#75dda5;font-size:9px;letter-spacing:1px}.tool-card label{display:block;color:#9db0c3;font-size:10px;font-weight:850}
+.cnpj-free-row{display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:9px}.cnpj-free-row input,.finance-form input,.finance-form select,.monthly-cost-form input{width:100%;height:54px;border:1px solid #d8e2eb;border-radius:12px;background:#f7f9fb;color:#111b25;outline:0;padding:0 14px;font-size:16px;font-weight:850}.cnpj-free-row input{font-size:18px;letter-spacing:1px}.cnpj-free-row input:focus,.finance-form input:focus,.finance-form select:focus,.monthly-cost-form input:focus{box-shadow:0 0 0 4px rgba(39,145,245,.18)}
+.cnpj-free-row button,.tool-action-button{height:54px!important;width:100%!important;margin:0!important;border:0!important;border-radius:12px!important;background:linear-gradient(135deg,#1c98ff,#0866db)!important;color:#fff!important;font-size:11px!important;font-weight:950!important;box-shadow:0 12px 30px rgba(15,117,229,.25)!important;cursor:pointer}.cnpj-free-row button:disabled,.tool-action-button:disabled{opacity:.55;cursor:wait}.monthly-cost-button{background:linear-gradient(135deg,#6f78ff,#3d55d8)!important;box-shadow:0 12px 30px rgba(72,84,218,.24)!important}
 .tool-status{min-height:18px;margin-top:8px;color:#91a5b9;font-size:10px;font-weight:750}.tool-status.is-error{color:#ffafb9}
-.cnpj-free-result,.finance-result{margin-top:13px;padding:17px;border:1px solid #284660;border-radius:15px;background:#07121f}.cnpj-free-result-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding-bottom:13px;border-bottom:1px solid #1d3348}.cnpj-free-result-head div{display:grid;gap:3px}.cnpj-free-result-head small{color:#71879c;font-size:8px}.cnpj-free-result-head b{font-size:16px;line-height:1.25}.cnpj-free-result-head span{color:#9eb0c2;font-size:10px}.cnpj-free-status-badge{flex:0 0 auto;padding:6px 9px;border-radius:999px;background:#102a43;color:#9ed5ff;font-size:8px!important;font-weight:950}.cnpj-free-status-badge.is-active{background:#0c3020;color:#7de2aa}.cnpj-free-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}.cnpj-free-field{padding:11px;border:1px solid #1c3145;border-radius:11px;background:#091827}.cnpj-free-field small{display:block;margin-bottom:3px;color:#6f8498;font-size:8px}.cnpj-free-field b{display:block;color:#dce7f2;font-size:10px;line-height:1.4}.cnpj-free-cta,.finance-cta{display:flex;align-items:center;justify-content:space-between;gap:13px;margin-top:13px;padding-top:13px;border-top:1px solid #1d3348}.cnpj-free-cta span,.finance-cta span{color:#8196aa;font-size:9px;line-height:1.45}.cnpj-free-cta a,.finance-cta a{flex:0 0 auto;padding:10px 12px;border-radius:9px;background:#168cff;color:#fff;text-decoration:none;font-size:9px;font-weight:950}
-.finance-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:13px}.finance-form label{display:grid;gap:7px}.finance-result-main{display:grid;grid-template-columns:1.15fr .85fr;gap:10px}.finance-result-hero{padding:16px;border:1px solid #246079;border-radius:13px;background:linear-gradient(135deg,#0c2634,#0a1c27)}.finance-result-hero small{display:block;color:#7894a8;font-size:8px}.finance-result-hero strong{display:block;margin-top:3px;color:#fff;font-size:28px;line-height:1}.finance-result-hero span{display:block;margin-top:6px;color:#8aa2b6;font-size:9px}.finance-result-side{display:grid;gap:8px}.finance-mini{padding:10px;border:1px solid #1c3546;border-radius:10px;background:#091824}.finance-mini small{display:block;color:#71899d;font-size:8px}.finance-mini b{display:block;margin-top:3px;color:#e3edf6;font-size:11px}.finance-note{margin-top:10px;color:#6f8499;font-size:8.5px;line-height:1.5}
+.cnpj-free-result,.finance-result,.monthly-cost-result{margin-top:13px;padding:17px;border:1px solid #284660;border-radius:15px;background:#07121f}.cnpj-free-result-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding-bottom:13px;border-bottom:1px solid #1d3348}.cnpj-free-result-head div{display:grid;gap:3px}.cnpj-free-result-head small{color:#71879c;font-size:8px}.cnpj-free-result-head b{font-size:16px;line-height:1.25}.cnpj-free-result-head span{color:#9eb0c2;font-size:10px}.cnpj-free-status-badge{flex:0 0 auto;padding:6px 9px;border-radius:999px;background:#102a43;color:#9ed5ff;font-size:8px!important;font-weight:950}.cnpj-free-status-badge.is-active{background:#0c3020;color:#7de2aa}.cnpj-free-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}.cnpj-free-field{padding:11px;border:1px solid #1c3145;border-radius:11px;background:#091827}.cnpj-free-field small{display:block;margin-bottom:3px;color:#6f8498;font-size:8px}.cnpj-free-field b{display:block;color:#dce7f2;font-size:10px;line-height:1.4}
+.cnpj-free-cta,.finance-cta,.monthly-cost-cta{display:flex;align-items:center;justify-content:space-between;gap:13px;margin-top:13px;padding-top:13px;border-top:1px solid #1d3348}.cnpj-free-cta span,.finance-cta span,.monthly-cost-cta span{color:#8196aa;font-size:9px;line-height:1.45}.cnpj-free-cta a,.finance-cta a,.monthly-cost-cta a{flex:0 0 auto;padding:10px 12px;border-radius:9px;background:#168cff;color:#fff;text-decoration:none;font-size:9px;font-weight:950}
+.finance-form,.monthly-cost-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:13px}.finance-form label,.monthly-cost-form label{display:grid;gap:7px}.finance-result-main,.monthly-cost-result-main{display:grid;grid-template-columns:1.15fr .85fr;gap:10px}.finance-result-hero,.monthly-cost-result-hero{padding:16px;border:1px solid #246079;border-radius:13px;background:linear-gradient(135deg,#0c2634,#0a1c27)}.monthly-cost-result-hero{border-color:#414e82;background:linear-gradient(135deg,#171d3b,#0c1930)}.finance-result-hero small,.monthly-cost-result-hero small{display:block;color:#7894a8;font-size:8px}.finance-result-hero strong,.monthly-cost-result-hero strong{display:block;margin-top:3px;color:#fff;font-size:28px;line-height:1}.finance-result-hero span,.monthly-cost-result-hero span{display:block;margin-top:6px;color:#8aa2b6;font-size:9px}.finance-result-side,.monthly-cost-result-side{display:grid;gap:8px}.finance-mini,.monthly-cost-mini{padding:10px;border:1px solid #1c3546;border-radius:10px;background:#091824}.monthly-cost-mini{border-color:#293550}.finance-mini small,.monthly-cost-mini small{display:block;color:#71899d;font-size:8px}.finance-mini b,.monthly-cost-mini b{display:block;margin-top:3px;color:#e3edf6;font-size:11px}.finance-note,.monthly-cost-note{margin-top:10px;color:#6f8499;font-size:8.5px;line-height:1.5}.monthly-cost-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.monthly-cost-breakdown .monthly-cost-mini{text-align:left}
 
 .transparency-clear{position:relative;padding:54px 0;background:linear-gradient(180deg,#07111d,#050b13);border-bottom:1px solid #172a40;color:#f4f8ff}.transparency-clear-shell{width:min(1160px,92vw);margin:auto}.transparency-clear-head{text-align:center;max-width:760px;margin:0 auto 24px}.transparency-clear-head>span{color:#65bfff;font-size:10px;font-weight:950;letter-spacing:1.6px}.transparency-clear-head h2{margin:8px 0 9px;font-size:clamp(26px,3.6vw,40px);line-height:1.05;letter-spacing:-1px}.transparency-clear-head p{margin:0;color:#8498ae;font-size:12px;line-height:1.65}.transparency-clear-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.transparency-clear-grid article{display:flex;align-items:flex-start;gap:12px;padding:18px;border:1px solid #20364e;border-radius:15px;background:linear-gradient(180deg,#0a1827,#07131f)}.transparency-clear-icon{flex:0 0 auto;width:40px;height:40px;display:grid;place-items:center;border:1px solid #2a5c89;border-radius:11px;background:#0d2944;font-size:18px}.transparency-clear-grid article>div:last-child{display:grid;gap:5px}.transparency-clear-grid b{font-size:12px;color:#f7fbff}.transparency-clear-grid small{font-size:10px;line-height:1.55;color:#8195aa}.transparency-clear-links{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px;padding-top:17px;border-top:1px solid #182b40;color:#72869b;font-size:10px}.transparency-clear-links a{color:#9fd6ff;text-decoration:none;font-weight:850}.transparency-clear-links a:hover{text-decoration:underline}
 
-@media(max-width:900px){.tool-grid,.finance-grid{grid-template-columns:1fr;gap:28px}}
-@media(max-width:700px){.transparency-clear{padding:42px 0}.transparency-clear-grid{grid-template-columns:1fr}.transparency-clear-grid article{padding:15px}.transparency-clear-links{justify-content:flex-start}.cnpj-free,.finance-free{padding:54px 0}.tool-benefits{grid-template-columns:1fr}.cnpj-free-row{grid-template-columns:1fr}.cnpj-free-fields,.finance-form,.finance-result-main{grid-template-columns:1fr}.cnpj-free-cta,.finance-cta{display:grid}.cnpj-free-cta a,.finance-cta a{text-align:center}}
-@media(max-width:560px){.floating-whatsapp{right:13px;bottom:82px}.floating-whatsapp-icon{width:46px;height:46px;font-size:20px;box-shadow:0 8px 18px rgba(0,0,0,.24)}.floating-whatsapp-label{display:none}.transparency-clear-head{text-align:left}.transparency-clear-head h2{font-size:29px}.tool-card{padding:17px;border-radius:17px}.tool-copy h2{font-size:34px}.cnpj-free-row input{font-size:16px}.finance-result-hero strong{font-size:25px}}
+@media(max-width:900px){.tool-grid,.finance-grid,.monthly-cost-grid{grid-template-columns:1fr;gap:28px}}
+@media(max-width:700px){.transparency-clear{padding:42px 0}.transparency-clear-grid{grid-template-columns:1fr}.transparency-clear-grid article{padding:15px}.transparency-clear-links{justify-content:flex-start}.cnpj-free,.finance-free,.monthly-cost-free{padding:54px 0}.tool-benefits{grid-template-columns:1fr}.cnpj-free-row{grid-template-columns:1fr}.cnpj-free-fields,.finance-form,.finance-result-main,.monthly-cost-form,.monthly-cost-result-main{grid-template-columns:1fr}.monthly-cost-breakdown{grid-template-columns:1fr 1fr}.cnpj-free-cta,.finance-cta,.monthly-cost-cta{display:grid}.cnpj-free-cta a,.finance-cta a,.monthly-cost-cta a{text-align:center}}
+@media(max-width:560px){.floating-whatsapp{right:13px;bottom:82px}.floating-whatsapp-icon{width:46px;height:46px;font-size:20px;box-shadow:0 8px 18px rgba(0,0,0,.24)}.floating-whatsapp-label{display:none}.transparency-clear-head{text-align:left}.transparency-clear-head h2{font-size:29px}.tool-card{padding:17px;border-radius:17px}.tool-copy h2{font-size:34px}.cnpj-free-row input{font-size:16px}.finance-result-hero strong,.monthly-cost-result-hero strong{font-size:25px}.monthly-cost-breakdown{grid-template-columns:1fr}}
 </style>`;
 
 const CNPJ_SCRIPT = `
@@ -204,6 +259,30 @@ const FINANCE_SCRIPT = `
 })();
 </script>`;
 
+const MONTHLY_COST_SCRIPT = `
+<script id="monthly-cost-script">
+(function(){
+  function parseNumber(v){var s=String(v||'').trim().replace(/R\\$/gi,'').replace(/\\s/g,'');if(!s)return 0;if(s.indexOf(',')>=0)s=s.replace(/\\./g,'').replace(',','.');else if((s.match(/\\./g)||[]).length>1)s=s.replace(/\\./g,'');s=s.replace(/[^0-9.-]/g,'');var n=Number(s);return Number.isFinite(n)?n:0}
+  function brl(v){return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v)}
+  function setStatus(text,error){var s=document.getElementById('monthly-cost-status');if(!s)return;s.textContent=text||'';s.className='tool-status'+(error?' is-error':'')}
+  function get(id){var el=document.getElementById(id);return parseNumber(el&&el.value)}
+  function calcular(){
+    var km=get('monthly-km'),consumption=get('monthly-consumption'),fuelPrice=get('monthly-fuel-price'),insurance=get('monthly-insurance'),maintenance=get('monthly-maintenance'),ipva=get('monthly-ipva'),financing=get('monthly-financing'),other=get('monthly-other'),result=document.getElementById('monthly-cost-result');
+    if(km<=0){setStatus('Informe quantos quilômetros você roda por mês.',true);if(result)result.hidden=true;return}
+    if(consumption<=0){setStatus('Informe o consumo médio do veículo em km/L.',true);if(result)result.hidden=true;return}
+    if(fuelPrice<=0){setStatus('Informe o preço do combustível por litro.',true);if(result)result.hidden=true;return}
+    if(km>20000||consumption>100||fuelPrice>50){setStatus('Confira os valores informados para km, consumo e combustível.',true);if(result)result.hidden=true;return}
+    var values=[insurance,maintenance,ipva,financing,other];if(values.some(function(v){return v<0||v>1000000})){setStatus('Confira os valores dos demais custos.',true);if(result)result.hidden=true;return}
+    var fuel=(km/consumption)*fuelPrice,monthlyInsurance=insurance/12,monthlyMaintenance=maintenance/12,monthlyIpva=ipva/12,total=fuel+monthlyInsurance+monthlyMaintenance+monthlyIpva+financing+other,annual=total*12,costPerKm=total/km;
+    var html='<div class="monthly-cost-result-main"><div class="monthly-cost-result-hero"><small>CUSTO MENSAL ESTIMADO</small><strong>'+brl(total)+'</strong><span>'+brl(annual)+' por ano · '+brl(costPerKm)+' por km</span></div><div class="monthly-cost-result-side"><div class="monthly-cost-mini"><small>Combustível / mês</small><b>'+brl(fuel)+'</b></div><div class="monthly-cost-mini"><small>Custos anuais rateados / mês</small><b>'+brl(monthlyInsurance+monthlyMaintenance+monthlyIpva)+'</b></div><div class="monthly-cost-mini"><small>Financiamento + outros / mês</small><b>'+brl(financing+other)+'</b></div></div></div>';
+    html+='<div class="monthly-cost-breakdown"><div class="monthly-cost-mini"><small>Seguro mensalizado</small><b>'+brl(monthlyInsurance)+'</b></div><div class="monthly-cost-mini"><small>Manutenção mensalizada</small><b>'+brl(monthlyMaintenance)+'</b></div><div class="monthly-cost-mini"><small>IPVA mensalizado</small><b>'+brl(monthlyIpva)+'</b></div></div>';
+    html+='<div class="monthly-cost-note">Estimativa baseada nos valores informados. Não inclui depreciação do veículo, multas, imprevistos ou despesas que não tenham sido preenchidas.</div><div class="monthly-cost-cta"><span>Está avaliando comprar esse veículo? Consulte o histórico antes de fechar negócio.</span><a href="#consulta">CONSULTAR VEÍCULO · R$ 18,90</a></div>';
+    result.innerHTML=html;result.hidden=false;setStatus('Cálculo concluído com base nos valores informados.',false);if(typeof window.cvTrack==='function')window.cvTrack('custo_mensal_calculado',{monthly_cost:Math.round(total),monthly_km:Math.round(km),fuel_cost:Math.round(fuel)});
+  }
+  document.addEventListener('DOMContentLoaded',function(){var btn=document.getElementById('monthly-cost-button');if(btn)btn.addEventListener('click',calcular);['monthly-km','monthly-consumption','monthly-fuel-price','monthly-insurance','monthly-maintenance','monthly-ipva','monthly-financing','monthly-other'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();calcular()}})});});
+})();
+</script>`;
+
 function waitForPort(port, timeoutMs = 30000) {
   const started = Date.now();
   return new Promise((resolve, reject) => {
@@ -234,11 +313,13 @@ function proxy(req, res, injectHome) {
         const pieces = [];
         if (!html.includes('id="cnpj-gratis"')) pieces.push(CNPJ_HTML);
         if (!html.includes('id="simulador-financiamento"')) pieces.push(FINANCE_HTML);
+        if (!html.includes('id="custo-mensal"')) pieces.push(MONTHLY_COST_HTML);
         if (!html.includes('id="transparencia-clara"')) pieces.push(TRANSPARENCY_HTML);
         if (pieces.length) html = html.replace(resultMarker, `${pieces.join('\n')}\n${resultMarker}`);
       }
       if (!html.includes('id="cnpj-free-script"')) html = html.replace('</body>', `${CNPJ_SCRIPT}\n</body>`);
       if (!html.includes('id="finance-free-script"')) html = html.replace('</body>', `${FINANCE_SCRIPT}\n</body>`);
+      if (!html.includes('id="monthly-cost-script"')) html = html.replace('</body>', `${MONTHLY_COST_SCRIPT}\n</body>`);
       if (!html.includes('id="floating-whatsapp"')) html = html.replace('</body>', `${WHATSAPP_HTML}\n</body>`);
       const body = Buffer.from(html, 'utf8');
       const out = { ...upstreamRes.headers, 'content-length': String(body.length), 'cache-control': 'no-store, no-cache, must-revalidate, max-age=0' };
@@ -254,7 +335,7 @@ async function start() {
   child.on('exit', code => { console.error(`WHATSAPP_PROXY: aplicação interna encerrou (código ${code}).`); process.exit(code || 1); });
   try { await waitForPort(INNER_PORT); } catch (err) { console.error('WHATSAPP_PROXY:', err.message); process.exit(1); }
   const server = http.createServer((req, res) => { const pathname = new URL(req.url, 'http://localhost').pathname; const isHome = req.method === 'GET' && (pathname === '/' || pathname === '/index.html'); proxy(req, res, isHome); });
-  server.listen(PUBLIC_PORT, () => console.log(`WhatsApp, CNPJ, simulador e transparência ativos na porta ${PUBLIC_PORT}`));
+  server.listen(PUBLIC_PORT, () => console.log(`WhatsApp, CNPJ, simuladores e transparência ativos na porta ${PUBLIC_PORT}`));
 }
 
 start();
