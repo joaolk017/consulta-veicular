@@ -88,8 +88,11 @@
 
         let data={};
         try{data=await r.json()}catch{}
-        const msg=data.mensagem||data.error||('Erro HTTP '+r.status);
-        mostrarStatus('err',msg+(data.consulta_id?'\nConsulta ID: '+data.consulta_id:'')+(data.preco_cobrado!=null?'\nCusto informado pela Desphub: R$ '+Number(data.preco_cobrado).toFixed(2).replace('.',','):''));
+        const codigo=data.error||'erro_http';
+        let msg=data.mensagem||('Erro HTTP '+r.status);
+        if(codigo==='saldo_insuficiente') msg='Saldo insuficiente na Desphub. Adicione saldo antes de realizar uma nova tentativa. Esta resposta 402 não deve gerar cobrança.';
+        const detalhes='\n\nCódigo: '+codigo+'\nHTTP: '+r.status+(data.consulta_id?'\nConsulta ID: '+data.consulta_id:'')+(data.preco_cobrado!=null?'\nCusto informado pela Desphub: R$ '+Number(data.preco_cobrado).toFixed(2).replace('.',','):'');
+        mostrarStatus('err',msg+detalhes);
       }catch(e){
         mostrarStatus('err','Falha de comunicação com o servidor: '+e.message);
       }finally{
