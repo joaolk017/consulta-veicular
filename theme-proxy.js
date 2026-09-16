@@ -7,6 +7,11 @@ const APP_PORT = Number(process.env.THEME_INTERNAL_PORT || 10001);
 const ORDERS_INTERNAL_PORT = Number(process.env.INTERNAL_APP_PORT || 10002);
 const MAX_HTML_BYTES = 2 * 1024 * 1024;
 
+const BANNER_HTML = `
+<div class="vehicle-promo-banner" id="vehicle-promo-banner">
+  <img src="ChatGPT%20Image%2016%20de%20set.%20de%202026,%2010_58_27.png" alt="Consulta veicular - confira a placa antes de comprar" loading="eager">
+</div>`;
+
 const THEME_CSS = `
 <style id="professional-background-theme">
 body{
@@ -58,14 +63,40 @@ body::after{
 .top,.hero,.private-notice,.services-grid,.details-panel,.why,.footer{position:relative;z-index:1}
 .logo{box-shadow:0 12px 34px rgba(229,29,60,.28),0 0 0 1px rgba(255,255,255,.03)!important}
 .eyebrow,.badge{box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+.vehicle-promo-banner{
+  margin:18px 0 2px;
+  border-radius:18px;
+  overflow:hidden;
+  border:1px solid rgba(58,124,190,.45);
+  background:#070d15;
+  box-shadow:0 18px 42px rgba(0,0,0,.5),0 0 34px rgba(28,125,220,.12);
+  position:relative;
+}
+.vehicle-promo-banner::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.025),inset 0 -55px 70px rgba(0,0,0,.12);
+}
+.vehicle-promo-banner img{
+  display:block;
+  width:100%;
+  height:auto;
+  aspect-ratio:16/10;
+  object-fit:cover;
+  object-position:center;
+}
 @media(max-width:650px){
   body{background-attachment:scroll!important}
   body::before{background-size:40px 40px;opacity:.72}
   body::after{right:-55vw;bottom:-20vw}
+  .vehicle-promo-banner{margin-top:15px;border-radius:14px}
+  .vehicle-promo-banner img{aspect-ratio:16/11}
 }
 @media print{
   body{background:#fff!important}
-  body::before,body::after{display:none!important}
+  body::before,body::after,.vehicle-promo-banner{display:none!important}
 }
 </style>`;
 
@@ -124,6 +155,9 @@ function serveThemedHtml(req, res) {
       let html = Buffer.concat(chunks).toString('utf8');
       if (!html.includes('professional-background-theme')) {
         html = html.replace('</head>', `${THEME_CSS}\n</head>`);
+      }
+      if (!html.includes('vehicle-promo-banner')) {
+        html = html.replace(/(<button class="mainbtn"[^>]*>[\s\S]*?<\/button>)/, `$1\n${BANNER_HTML}`);
       }
       const body = Buffer.from(html);
       const outHeaders = { ...upstreamRes.headers, 'content-length': String(body.length) };
