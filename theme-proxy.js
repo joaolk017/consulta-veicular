@@ -13,27 +13,107 @@ html,body{min-height:100%}
 body{
   margin:0!important;
   background-color:#05080d!important;
-  background-image:url('ChatGPT%20Image%2016%20de%20set.%20de%202026,%2010_58_27.png?v=6')!important;
-  background-position:center top!important;
-  background-size:cover!important;
-  background-repeat:no-repeat!important;
-  background-attachment:fixed!important;
+  background-image:
+    linear-gradient(180deg,rgba(3,7,13,.08) 0%,rgba(3,7,13,.16) 48%,rgba(3,7,13,.72) 78%,#05080d 100%),
+    url('ChatGPT%20Image%2016%20de%20set.%20de%202026,%2010_58_27.png?v=7')!important;
+  background-position:center top,center top!important;
+  background-size:cover,cover!important;
+  background-repeat:no-repeat,no-repeat!important;
+  background-attachment:fixed,fixed!important;
   color:#f7f9fc;
   overflow-x:hidden;
 }
-body > .wrap{display:block!important;position:relative;z-index:1}
-.card,.details-panel,.benefit,.private-notice{
-  background-color:rgba(7,13,22,.90)!important;
+
+body > .wrap{
+  display:block!important;
+  position:relative;
+  z-index:1;
+  padding-top:clamp(150px,30vh,320px)!important;
+}
+
+/* Remove o topo antigo e o bloco textual "Consulta Veicular" */
+.top,.hero,.private-notice{display:none!important}
+
+/* Consulta diretamente sobre a imagem de fundo */
+.services-grid{
+  grid-template-columns:minmax(0,1.08fr) minmax(320px,.92fr)!important;
+  gap:22px!important;
+  align-items:start!important;
+}
+.services-grid > main.card{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  padding:0!important;
+}
+.services-grid > main.card > .section-head{display:none!important}
+.services-grid > main.card > .progress{display:none!important}
+
+.services-grid > main.card .plate-shell{
+  max-width:560px;
+  margin:0 auto;
+  border:2px solid #eef3f7!important;
+  box-shadow:0 20px 55px rgba(0,0,0,.62),0 0 0 1px rgba(255,255,255,.08)!important;
+}
+.services-grid > main.card .mainbtn{
+  display:block;
+  max-width:560px;
+  margin:14px auto 0!important;
+  min-height:58px;
+  background:linear-gradient(135deg,#168fff,#0567d7)!important;
+  box-shadow:0 16px 38px rgba(0,116,255,.34)!important;
+  border:1px solid rgba(125,194,255,.6)!important;
+}
+.services-grid > main.card #status,
+.services-grid > main.card #result{
+  max-width:620px;
+  margin-left:auto;
+  margin-right:auto;
+}
+.services-grid > main.card #result:not(.hidden),
+.services-grid > main.card #status:not(:empty){
+  margin-top:16px!important;
+  padding:16px;
+  border-radius:18px;
+  background:rgba(5,12,20,.92);
+  border:1px solid rgba(65,116,165,.48);
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+
+/* CRLV permanece visível, integrado à mesma tela */
+.crlv{
+  background:rgba(7,20,35,.90)!important;
+  backdrop-filter:blur(12px)!important;
+  -webkit-backdrop-filter:blur(12px)!important;
+}
+
+.details-panel,.benefit{
+  background-color:rgba(7,13,22,.91)!important;
   backdrop-filter:blur(8px);
   -webkit-backdrop-filter:blur(8px);
 }
+
+@media(max-width:860px){
+  body > .wrap{padding-top:clamp(120px,23vh,220px)!important}
+  .services-grid{grid-template-columns:1fr!important}
+  .crlv{margin-top:10px!important}
+}
+
 @media(max-width:650px){
   body{
-    background-attachment:scroll!important;
-    background-position:center top!important;
-    background-size:auto 100vh!important;
+    background-attachment:scroll,scroll!important;
+    background-position:center top,center top!important;
+    background-size:auto 100vh,auto 100vh!important;
   }
+  body > .wrap{padding-top:clamp(110px,20vh,180px)!important}
+  .services-grid > main.card .plate-shell,
+  .services-grid > main.card .mainbtn{max-width:100%}
 }
+
 @media print{
   body{background:#fff!important}
 }
@@ -169,7 +249,7 @@ async function start() {
   });
 
   server.listen(PUBLIC_PORT, () => {
-    console.log(`Imagem aplicada apenas como fundo na porta ${PUBLIC_PORT}`);
+    console.log(`Consulta exibida diretamente sobre a imagem de fundo na porta ${PUBLIC_PORT}`);
   });
 }
 
