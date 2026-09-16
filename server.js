@@ -8,6 +8,7 @@ const PORT = process.env.PORT || 3000;
 const FALCON_TOKEN = process.env.FALCON_TOKEN;
 const DESPHUB_API_KEY = process.env.DESPHUB_API_KEY;
 const CRLV_ADMIN_TOKEN = process.env.CRLV_ADMIN_TOKEN;
+const CRLV_SP_SALE_PRICE = 59.90;
 
 if (!FALCON_TOKEN) console.warn("FALCON_TOKEN não configurado.");
 if (!DESPHUB_API_KEY) console.warn("DESPHUB_API_KEY não configurado.");
@@ -18,9 +19,6 @@ app.set("trust proxy", 1);
 app.use(express.json({ limit: "20kb" }));
 app.use(express.static(path.join(__dirname), { dotfiles: "deny", index: "index.html" }));
 
-// Proteção simples da prévia: limita consultas por IP e evita repetir chamadas
-// à Falcon para a mesma placa em um curto período. Em instâncias com múltiplos
-// servidores, o ideal é migrar estes controles para Redis/banco compartilhado.
 const RATE_WINDOW_MS = 60 * 60 * 1000;
 const MAX_PREVIEWS_PER_HOUR = 3;
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -98,7 +96,6 @@ function desphubRequest(payload) {
     }, response => {
       const chunks = [];
       let size = 0;
-
       response.on("data", chunk => {
         size += chunk.length;
         if (size > 25_000_000) {
@@ -107,7 +104,6 @@ function desphubRequest(payload) {
         }
         chunks.push(chunk);
       });
-
       response.on("end", () => {
         const raw = Buffer.concat(chunks).toString("utf8");
         let data = null;
@@ -115,7 +111,6 @@ function desphubRequest(payload) {
         resolve({ status: response.statusCode || 502, data });
       });
     });
-
     request.setTimeout(65000, () => request.destroy(new Error("Tempo limite da API Desphub excedido.")));
     request.on("error", reject);
     request.write(body);
@@ -189,9 +184,18 @@ app.get("/api/consulta/:plate", async (req, res) => {
   }
 });
 
+app.get("/api/crlv/sp/info", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  return res.json({
+    produto: "crlv-sp",
+    estado: "SP",
+    preco: CRLV_SP_SALE_PRICE,
+    currency: "BRL"
+  });
+});
+
 // CRLV-e SP: rota administrativa/protegida. Não coloque CRLV_ADMIN_TOKEN no navegador.
-// A chamada à Desphub pode ser cobrada mesmo quando tem_dados=false, então esta rota
-// não deve ser ligada diretamente a um botão público antes da confirmação de pagamento.
+// A Desphub pode cobrar a consulta mesmo quando tem_dados=false; não repetir automaticamente.
 app.post("/api/crlv/sp", async (req, res) => {
   res.set("Cache-Control", "no-store");
 
@@ -227,7 +231,6 @@ app.post("/api/crlv/sp", async (req, res) => {
       parametros: { Placa: plate },
       finalidade
     });
-
     const data = response.data;
 
     if (response.status < 200 || response.status >= 300) {
@@ -241,8 +244,6 @@ app.post("/api/crlv/sp", async (req, res) => {
       return res.status(502).json({ error: "Resposta inválida da Desphub." });
     }
 
-    // A Desphub documenta que 201 + tem_dados=false também é uma consulta cobrada.
-    // Não fazemos nova tentativa automática nesse cenário.
     if (data.tem_dados !== true) {
       return res.status(200).json({
         ok: false,
@@ -250,6 +251,8 @@ app.post("/api/crlv/sp", async (req, res) => {
         cobrado: true,
         consulta_id: data.consulta_id || null,
         preco_cobrado: data.preco_cobrado ?? null,
+        preco_venda: CRLV_SP_SALE_PRICE,
+        currency: "BRL",
         mensagem: "A consulta foi concluída, mas a base não retornou o CRLV-e. Não repita automaticamente esta emissão."
       });
     }
@@ -264,6 +267,8 @@ app.post("/api/crlv/sp", async (req, res) => {
         cobrado: true,
         consulta_id: data.consulta_id || null,
         preco_cobrado: data.preco_cobrado ?? null,
+        preco_venda: CRLV_SP_SALE_PRICE,
+        currency: "BRL",
         mensagem: "A consulta retornou dados, mas o PDF do CRLV-e não veio na resposta. Não repita automaticamente."
       });
     }
@@ -275,12 +280,15 @@ app.post("/api/crlv/sp", async (req, res) => {
         cobrado: true,
         consulta_id: data.consulta_id || null,
         preco_cobrado: data.preco_cobrado ?? null,
+        preco_venda: CRLV_SP_SALE_PRICE,
+        currency: "BRL",
         mensagem: "A Desphub respondeu, mas o arquivo recebido não parece ser um PDF válido. Não repita automaticamente."
       });
     }
 
     if (data.consulta_id) res.set("X-Consulta-Id", String(data.consulta_id));
     if (data.preco_cobrado != null) res.set("X-Preco-Cobrado", String(data.preco_cobrado));
+    res.set("X-Preco-Venda", CRLV_SP_SALE_PRICE.toFixed(2));
     res.set("Content-Type", "application/pdf");
     res.set("Content-Disposition", `attachment; filename="CRLV-${plate}.pdf"`);
     return res.send(pdf);
