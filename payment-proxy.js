@@ -11,7 +11,7 @@ const TRUST_BAND = `
   <div class="trust-band-shell">
     <div class="trust-band-item">
       <span class="trust-band-icon">💠</span>
-      <div><b>Pagamento via PIX</b><small>Cobrança identificada pelo sistema</small></div>
+      <div><b>Pagamento via PIX</b><small>Relatório liberado por até 24h neste navegador</small></div>
     </div>
     <div class="trust-band-item">
       <span class="trust-band-icon">🔐</span>
@@ -68,6 +68,18 @@ const PAYMENT_CSS = `
   font-weight:800;
 }
 #pixCreateBtn{margin-top:8px!important}
+.cv-report-24h{
+  margin:12px 0 0;
+  padding:12px 14px;
+  border:1px solid #2f7350;
+  border-radius:12px;
+  background:#0a2117;
+  color:#a8d9bd;
+  font-size:11px;
+  line-height:1.55;
+  text-align:center;
+}
+.cv-report-24h b{color:#d9f7e6}
 
 /* Faixa de confiança separada do hero para não competir com a consulta. */
 .cv-hero .cv-trustbar{display:none!important}
@@ -123,8 +135,115 @@ const PAYMENT_CSS = `
   .trust-band-icon{width:31px;height:31px;border-radius:9px;font-size:14px}
   .trust-band-item b{font-size:9.5px}
   .trust-band-item small{font-size:8px}
+  .cv-report-24h{font-size:10px;padding:11px}
 }
 </style>`;
+
+const REPORT_RETENTION_SCRIPT = `
+<script id="cv-report-retention-script">
+(function(){
+  var PREFIX='cv_relatorio_pago_24h_';
+  var baseFetch=window.fetch.bind(window);
+
+  function normalPlate(v){return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,7)}
+  function key(plate){return PREFIX+normalPlate(plate)}
+  function removeSaved(plate){try{localStorage.removeItem(key(plate))}catch(e){}}
+  function getSaved(plate){
+    plate=normalPlate(plate);if(!plate)return null;
+    try{
+      var raw=localStorage.getItem(key(plate));if(!raw)return null;
+      var data=JSON.parse(raw);
+      if(!data||data.plate!==plate||!data.accessToken||!data.expiresAt||Date.now()>=Number(data.expiresAt)){removeSaved(plate);return null}
+      return data;
+    }catch(e){removeSaved(plate);return null}
+  }
+  function saveAccess(data){
+    try{
+      if(!data||!data.reportAccessToken||!data.reportAccessExpiresAt||!data.vehicle)return;
+      var plate=normalPlate(data.vehicle.plate);if(!plate)return;
+      localStorage.setItem(key(plate),JSON.stringify({
+        plate:plate,
+        accessToken:data.reportAccessToken,
+        expiresAt:Number(data.reportAccessExpiresAt),
+        savedAt:Date.now()
+      }));
+    }catch(e){}
+  }
+  function formatExpiry(ms){
+    try{return new Date(Number(ms)).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}catch(e){return ''}
+  }
+  function showNote(plate){
+    var saved=getSaved(plate),result=document.getElementById('result');if(!saved||!result)return;
+    var old=document.getElementById('cv-report-24h-note');if(old)old.remove();
+    var note=document.createElement('div');note.id='cv-report-24h-note';note.className='cv-report-24h';
+    note.innerHTML='🔓 <b>Acesso salvo por 24 horas neste navegador.</b><br>Você pode consultar esta mesma placa novamente sem pagar até '+formatExpiry(saved.expiresAt)+'.';
+    var actions=result.querySelector('.report-actions');if(actions)actions.insertAdjacentElement('beforebegin',note);else result.appendChild(note);
+  }
+
+  window.fetch=async function(input,init){
+    var response=await baseFetch(input,init);
+    try{
+      var rawUrl=typeof input==='string'?input:(input&&input.url?input.url:'');
+      var pathname=new URL(rawUrl,location.href).pathname;
+      if(pathname==='/api/consulta-completa'&&response.ok){
+        var copy=response.clone();
+        var data=await copy.json();
+        saveAccess(data);
+      }
+    }catch(e){}
+    return response;
+  };
+
+  async function restoreSavedReport(plate){
+    var saved=getSaved(plate);if(!saved)return false;
+    var btn=document.getElementById('btn'),status=document.getElementById('status'),result=document.getElementById('result');
+    if(btn){btn.disabled=true;btn.textContent='ABRINDO RELATÓRIO...'}
+    if(status)status.innerHTML='<div class="loading"><span class="spinner"></span>Abrindo sua consulta já paga...</div>';
+    try{
+      var r=await baseFetch('/api/consulta-salva',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accessToken:saved.accessToken}),cache:'no-store'});
+      var data={};try{data=await r.json()}catch(e){}
+      if(!r.ok||!data||data.paid!==true||!data.vehicle){removeSaved(plate);return false}
+      ultimaPlacaConsultada=plate;
+      if(typeof renderRelatorioCompleto==='function')renderRelatorioCompleto(data.vehicle);
+      if(status)status.innerHTML='';
+      if(typeof steps==='function')steps(3);
+      showNote(plate);
+      if(result){result.classList.remove('hidden');setTimeout(function(){result.scrollIntoView({behavior:'smooth',block:'start'})},100)}
+      return true;
+    }catch(e){
+      removeSaved(plate);
+      return false;
+    }finally{
+      if(btn){btn.disabled=false;btn.textContent='🔎 CONSULTAR VEÍCULO'}
+    }
+  }
+
+  if(typeof window.consultar==='function'){
+    var originalConsultar=window.consultar;
+    window.consultar=async function(){
+      var input=document.getElementById('plate');
+      var plate=normalPlate(input&&input.value);
+      if(plate&&getSaved(plate)){
+        var restored=await restoreSavedReport(plate);
+        if(restored)return;
+      }
+      return originalConsultar.apply(this,arguments);
+    };
+  }
+
+  var observer=new MutationObserver(function(){
+    try{
+      var badge=document.querySelector('#result .paid-badge');
+      if(!badge)return;
+      var plate=normalPlate((document.querySelector('#result .plate-result')||{}).textContent||'');
+      if(plate)getSaved(plate)&&showNote(plate);
+    }catch(e){}
+  });
+  document.addEventListener('DOMContentLoaded',function(){
+    var result=document.getElementById('result');if(result)observer.observe(result,{childList:true,subtree:true});
+  });
+})();
+</script>`;
 
 function waitForPort(port, timeoutMs = 30000) {
   const started = Date.now();
@@ -182,12 +301,13 @@ function proxy(req, res, injectHome) {
       let html = Buffer.concat(chunks).toString('utf8');
       html = html.replace('💠 PAGAR COM PIX E DESBLOQUEAR', '🔓 LIBERAR RELATÓRIO COMPLETO · R$ 18,90');
       html = html.replace('💠 GERAR PIX DE R$ 18,90', '💠 GERAR PIX E CONTINUAR · R$ 18,90');
-      html = html.replace('🔒 Pagamento via PIX • Liberação após confirmação', '🔒 PIX seguro • pagamento único • liberação após confirmação');
+      html = html.replace('🔒 Pagamento via PIX • Liberação após confirmação', '🔒 PIX seguro • pagamento único • acesso salvo por 24 horas');
       if (!html.includes('id="payment-cta-style"')) html = html.replace('</head>', `${PAYMENT_CSS}\n</head>`);
       if (!html.includes('id="trust-band"')) {
         const resultMarker = '<div id="cv-result" class="cv-result"></div>';
         if (html.includes(resultMarker)) html = html.replace(resultMarker, `${TRUST_BAND}\n${resultMarker}`);
       }
+      if (!html.includes('id="cv-report-retention-script"')) html = html.replace('</body>', `${REPORT_RETENTION_SCRIPT}\n</body>`);
 
       const body = Buffer.from(html, 'utf8');
       const out = {
