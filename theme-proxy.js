@@ -9,11 +9,13 @@ const MAX_HTML_BYTES = 2 * 1024 * 1024;
 
 const CONSULT_UI = `
 <section id="image-stage" class="image-stage" aria-label="Consulta veicular">
-  <div class="image-live-form">
-    <input id="image-plate" maxlength="8" autocomplete="off" inputmode="text" placeholder="Digite a placa do veículo" aria-label="Digite a placa do veículo">
-    <button id="image-consult-btn" type="button" onclick="consultarPelaImagem()">🔎 CONSULTAR</button>
-    <div id="image-consult-error" aria-live="polite"></div>
-    <div id="image-result-panel"></div>
+  <div class="image-artboard">
+    <div class="image-live-form">
+      <input id="image-plate" maxlength="8" autocomplete="off" inputmode="text" placeholder="Digite a placa do veículo" aria-label="Digite a placa do veículo">
+      <button id="image-consult-btn" type="button" onclick="consultarPelaImagem()">🔎 CONSULTAR</button>
+      <div id="image-consult-error" aria-live="polite"></div>
+      <div id="image-result-panel"></div>
+    </div>
   </div>
 </section>
 <script id="image-consult-script">
@@ -66,63 +68,219 @@ const CONSULT_UI = `
 const THEME_CSS = `
 <style id="background-image-theme">
 html,body{
-  width:100%;height:100%;min-height:100%;margin:0!important;padding:0!important;
-  overflow:hidden!important;background:#05080d!important;
+  width:100%;
+  height:100%;
+  min-height:100%;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  background:#05080d!important;
 }
 body > .wrap{display:none!important}
+
 .image-stage{
-  position:fixed;inset:0;z-index:10;width:100vw;height:100vh;height:100svh;
-  background-image:url('ChatGPT%20Image%2016%20de%20set.%20de%202026,%2010_58_27.png?v=13');
-  background-position:center center;background-size:100% 100%;background-repeat:no-repeat;background-color:#05080d;
+  position:fixed;
+  inset:0;
+  z-index:10;
+  width:100vw;
+  height:100vh;
+  height:100dvh;
+  overflow:hidden;
+  background:#05080d;
   font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
 }
-/* O formulário vivo ocupa exatamente o campo e o botão já desenhados na imagem. */
+
+/* Mantém a arte original em proporção 3:2 e recorta apenas o excesso da tela. */
+.image-artboard{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:max(100vw,150dvh);
+  aspect-ratio:3/2;
+  transform:translate(-50%,-50%);
+  background-image:url('ChatGPT%20Image%2016%20de%20set.%20de%202026,%2010_58_27.png?v=14');
+  background-position:center center;
+  background-size:100% 100%;
+  background-repeat:no-repeat;
+  background-color:#05080d;
+}
+
+/* Desktop: encaixa os controles exatamente no campo desenhado na arte. */
 .image-live-form{
-  position:absolute;left:31.35%;top:35.15%;width:40.55%;height:6.85%;
-  display:grid;grid-template-columns:60.8% 36.2%;column-gap:3%;align-items:stretch;
+  position:absolute;
+  left:31.35%;
+  top:35.15%;
+  width:40.55%;
+  height:6.85%;
+  display:grid;
+  grid-template-columns:60.8% 36.2%;
+  column-gap:3%;
+  align-items:stretch;
 }
 #image-plate{
-  width:100%;height:100%;min-width:0;box-sizing:border-box;border:0;outline:0;
-  border-radius:7px;background:#fff;color:#18202a;padding:0 18px;
-  text-transform:uppercase;font:700 clamp(14px,1.25vw,22px)/1 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  width:100%;
+  height:100%;
+  min-width:0;
+  box-sizing:border-box;
+  border:0;
+  outline:0;
+  border-radius:7px;
+  background:#fff;
+  color:#18202a;
+  padding:0 clamp(10px,1.2vw,20px);
+  text-transform:uppercase;
+  font:700 clamp(13px,1.18vw,22px)/1 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
   box-shadow:none;
 }
 #image-plate::placeholder{color:#7f8792;text-transform:none;opacity:1}
 #image-consult-btn{
-  width:100%!important;height:100%;min-width:0;margin:0!important;padding:0 10px!important;
-  border:0!important;border-radius:7px!important;background:linear-gradient(135deg,#149cff,#0873f2)!important;
-  color:#fff!important;font:950 clamp(10px,1.05vw,18px)/1 Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important;
-  box-shadow:none!important;cursor:pointer;white-space:nowrap;
+  width:100%!important;
+  height:100%;
+  min-width:0;
+  margin:0!important;
+  padding:0 clamp(6px,1vw,16px)!important;
+  border:0!important;
+  border-radius:7px!important;
+  background:linear-gradient(135deg,#149cff,#0873f2)!important;
+  color:#fff!important;
+  font:950 clamp(9px,1vw,18px)/1 Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important;
+  box-shadow:none!important;
+  cursor:pointer;
+  white-space:nowrap;
 }
 #image-consult-btn:disabled{opacity:.65;cursor:not-allowed}
 #image-consult-error{
-  position:absolute;left:0;right:0;top:112%;text-align:center;color:#ffd0d6;
+  position:absolute;
+  left:0;
+  right:0;
+  top:112%;
+  text-align:center;
+  color:#ffd0d6;
   font:800 clamp(10px,.75vw,12px)/1.35 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
   text-shadow:0 2px 8px #000;
 }
 #image-result-panel{
-  position:absolute;left:-8%;top:155%;width:116%;max-height:46vh;overflow:auto;scrollbar-width:thin;
+  position:absolute;
+  left:-8%;
+  top:155%;
+  width:116%;
+  max-height:46vh;
+  max-height:46dvh;
+  overflow:auto;
+  scrollbar-width:thin;
+  overscroll-behavior:contain;
 }
-#image-result-panel>#status:not(:empty),#image-result-panel>#result:not(.hidden){
-  margin-top:8px!important;padding:14px!important;border-radius:15px!important;
-  background:rgba(5,12,20,.96)!important;border:1px solid rgba(65,116,165,.52)!important;
+#image-result-panel>#status:not(:empty),
+#image-result-panel>#result:not(.hidden){
+  margin-top:8px!important;
+  padding:14px!important;
+  border-radius:15px!important;
+  background:rgba(5,12,20,.96)!important;
+  border:1px solid rgba(65,116,165,.52)!important;
   box-shadow:0 18px 45px rgba(0,0,0,.55)!important;
 }
+
+/* Modais de pagamento continuam acima da imagem. */
 body > .flow-overlay{z-index:99999!important}
 
-@media(max-width:700px){
-  .image-stage{background-size:cover;background-position:center top}
-  .image-live-form{
-    left:8%;top:36%;width:84%;height:auto;display:grid;grid-template-columns:1fr;gap:8px;
-    padding:8px;border-radius:14px;background:rgba(3,9,17,.82);border:1px solid rgba(126,183,235,.5);
-    box-shadow:0 16px 45px rgba(0,0,0,.5);box-sizing:border-box;
-  }
-  #image-plate,#image-consult-btn{height:50px}
-  #image-plate{font-size:20px;border-radius:10px}
-  #image-consult-btn{font-size:14px;border-radius:10px!important}
-  #image-consult-error{position:static;grid-column:1;margin-top:-2px;min-height:0}
-  #image-result-panel{position:static;grid-column:1;width:100%;max-height:37vh}
+/* Tablets e notebooks menores. */
+@media(min-width:701px) and (max-width:1100px){
+  .image-live-form{width:44%;left:29%;}
+  #image-plate{font-size:clamp(13px,1.7vw,19px)}
+  #image-consult-btn{font-size:clamp(10px,1.35vw,15px)!important}
+  #image-result-panel{left:-12%;width:124%;max-height:42dvh}
 }
+
+/* Celulares: mantém a imagem preenchendo a tela e deixa a consulta confortável para toque. */
+@media(max-width:700px){
+  .image-stage{
+    height:100vh;
+    height:100svh;
+  }
+  .image-artboard{
+    left:50%;
+    top:0;
+    width:150svh;
+    min-width:100vw;
+    height:100svh;
+    aspect-ratio:auto;
+    transform:translateX(-50%);
+    background-size:cover;
+    background-position:center top;
+  }
+  .image-live-form{
+    left:50%;
+    top:34.5%;
+    width:min(90vw,520px);
+    height:auto;
+    transform:translateX(-50%);
+    display:grid;
+    grid-template-columns:1fr;
+    gap:8px;
+    padding:9px;
+    border-radius:14px;
+    background:rgba(3,9,17,.88);
+    border:1px solid rgba(126,183,235,.55);
+    box-shadow:0 16px 45px rgba(0,0,0,.58);
+    box-sizing:border-box;
+    backdrop-filter:blur(7px);
+    -webkit-backdrop-filter:blur(7px);
+  }
+  #image-plate,
+  #image-consult-btn{
+    height:50px;
+    min-height:50px;
+  }
+  #image-plate{
+    padding:0 12px;
+    font-size:18px;
+    text-align:center;
+    border-radius:10px;
+  }
+  #image-consult-btn{
+    width:100%!important;
+    font-size:14px!important;
+    border-radius:10px!important;
+  }
+  #image-consult-error{
+    position:static;
+    grid-column:1;
+    margin-top:-2px;
+    min-height:0;
+    font-size:11px;
+  }
+  #image-result-panel{
+    position:static;
+    grid-column:1;
+    width:100%;
+    max-height:34vh;
+    max-height:34dvh;
+  }
+}
+
+/* Celulares pequenos. */
+@media(max-width:420px){
+  .image-live-form{width:92vw;top:33.5%;padding:8px}
+  #image-plate,#image-consult-btn{height:48px;min-height:48px}
+  #image-plate{font-size:17px}
+  #image-consult-btn{font-size:13px!important}
+  #image-result-panel{max-height:32dvh}
+}
+
+/* Celular deitado: campo e botão lado a lado para economizar altura. */
+@media(max-height:540px) and (orientation:landscape){
+  .image-live-form{
+    top:31%;
+    width:min(82vw,680px);
+    grid-template-columns:minmax(0,1fr) 180px;
+    padding:7px;
+    gap:7px;
+  }
+  #image-plate,#image-consult-btn{height:46px;min-height:46px}
+  #image-consult-error,#image-result-panel{grid-column:1/-1}
+  #image-result-panel{max-height:30dvh}
+}
+
 @media print{.image-stage{display:none!important}}
 </style>`;
 
@@ -188,7 +346,7 @@ async function start(){
     if(req.method==='GET'&&(pathname==='/'||pathname==='/index.html')) return serveThemedHtml(req,res);
     return proxyStream(req,res);
   });
-  server.listen(PUBLIC_PORT,()=>console.log(`Consulta integrada ao campo da imagem inicial na porta ${PUBLIC_PORT}`));
+  server.listen(PUBLIC_PORT,()=>console.log(`Site responsivo para computador, tablet e celular na porta ${PUBLIC_PORT}`));
 }
 
 start();
