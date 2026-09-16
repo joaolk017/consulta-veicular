@@ -194,6 +194,21 @@ function applyPublicChanges(html){
   html=html.replace('<button type="button" onclick="abrirCRLVCV()">📄 CRLV-e · R$ 59,90</button>','<a class="cv-fipe-mobile" href="/consulta-fipe/">💰 Valor FIPE grátis</a>');
   html=html.replace(/<article>\s*<div class="transparency-clear-icon">📄<\/div>\s*<div><b>CRLV-e SP · R\$ 59,90<\/b>[\s\S]*?<\/article>/i,'<article><div class="transparency-clear-icon">💰</div><div><b>Consulta de valor gratuita</b><small>Consulte um valor médio de referência por tipo, marca, modelo e ano. É uma ferramenta informativa e não substitui a consulta oficial da FIPE.</small></div></article>');
   html=html.replace(/<span>Antes de contratar, consulte:<\/span>\s*<a href="\/sobre\/">Sobre o Serviço<\/a>\s*<a href="\/termos\.html">Termos de Uso<\/a>\s*<a href="\/privacidade\.html">Política de Privacidade<\/a>\s*<a href="\/contato\.html">Contato e Suporte<\/a>/i,'<span>Ferramentas e informações:</span><a href="/consulta-fipe/">FIPE grátis</a><a href="/consulta-cnpj/">CNPJ grátis</a><a href="/simulador-financiamento/">Financiamento</a><a href="/custo-mensal-veiculo/">Custo mensal</a><a href="/sobre/">Sobre o Serviço</a><a href="/termos.html">Termos de Uso</a><a href="/privacidade.html">Política de Privacidade</a><a href="/contato.html">Contato e Suporte</a>');
+  if(!html.includes('id="cv-brand-meta"'))html=html.replace('</head>',`<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta id="cv-brand-meta" name="description" content="Consulta veicular privada e independente. Consulte informações disponíveis do veículo antes de fechar negócio.">
+<meta property="og:site_name" content="Consulta Veicular 360">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:title" content="Consulta Veicular 360 | Consulte antes de comprar">
+<meta property="og:description" content="Consulte informações disponíveis do veículo antes de fechar negócio. Serviço privado e independente.">
+<meta property="og:url" content="https://consulta-veicular-bx20.onrender.com/">
+<meta property="og:image" content="https://consulta-veicular-bx20.onrender.com/ChatGPT%20Image%2016%20de%20set.%20de%202026,%2012_01_50.png">
+<meta property="og:image:type" content="image/png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Consulta Veicular 360 | Consulte antes de comprar">
+<meta name="twitter:description" content="Consulte informações disponíveis do veículo antes de fechar negócio. Serviço privado e independente.">
+<meta name="twitter:image" content="https://consulta-veicular-bx20.onrender.com/ChatGPT%20Image%2016%20de%20set.%20de%202026,%2012_01_50.png">
+</head>`);
   if(!html.includes('id="cv-fipe-style"'))html=html.replace('</head>',FIPE_CSS+'\n</head>');
   if(!html.includes('id="cv-fipe-script"'))html=html.replace('</body>',FIPE_SCRIPT+'\n</body>');
   return html;
