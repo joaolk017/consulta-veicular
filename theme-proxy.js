@@ -8,7 +8,7 @@ const ORDERS_INTERNAL_PORT = Number(process.env.INTERNAL_APP_PORT || 10002);
 const MAX_HTML_BYTES = 2 * 1024 * 1024;
 
 const HERO_HTML = `
-<section class="main-visual-hero" aria-label="Consulta veicular">
+<section id="main-visual-hero-live" class="main-visual-hero" aria-label="Consulta veicular">
   <div class="main-visual-overlay"></div>
   <div class="main-visual-actions">
     <a class="hero-consult-btn" href="#consulta-area">🔎 CONSULTAR PLACA</a>
@@ -64,7 +64,7 @@ body::after{
   display:flex;
   align-items:flex-end;
   justify-content:center;
-  background-image:url('ChatGPT%20Image%2016%20de%20set.%20de%202026,%2010_58_27.png');
+  background-image:url('ChatGPT%20Image%2016%20de%20set.%20de%202026,%2010_58_27.png?v=2');
   background-size:cover;
   background-position:center top;
   background-repeat:no-repeat;
@@ -78,7 +78,7 @@ body::after{
   inset:0;
   z-index:0;
   pointer-events:none;
-  background:linear-gradient(to bottom,rgba(2,6,12,.03) 0%,rgba(2,6,12,.04) 55%,rgba(2,6,12,.72) 88%,#05080d 100%);
+  background:linear-gradient(to bottom,rgba(2,6,12,.02) 0%,rgba(2,6,12,.03) 55%,rgba(2,6,12,.68) 88%,#05080d 100%);
 }
 .main-visual-actions{
   position:relative;
@@ -112,28 +112,18 @@ body::after{
   backdrop-filter:blur(14px);
   -webkit-backdrop-filter:blur(14px);
 }
-.card{
-  box-shadow:0 28px 90px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.035)!important;
-}
+.card{box-shadow:0 28px 90px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.035)!important}
 .top,.hero,.private-notice,.services-grid,.details-panel,.why,.footer{position:relative;z-index:1}
 .logo{box-shadow:0 12px 34px rgba(229,29,60,.28),0 0 0 1px rgba(255,255,255,.03)!important}
 .eyebrow,.badge{box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
 @media(max-width:900px){
-  .main-visual-hero{
-    min-height:72svh;
-    background-size:cover;
-    background-position:center top;
-  }
+  .main-visual-hero{min-height:72svh;background-position:center top}
 }
 @media(max-width:650px){
   body{background-attachment:scroll!important}
   body::before{background-size:40px 40px;opacity:.72}
   body::after{right:-55vw;bottom:-20vw}
-  .main-visual-hero{
-    min-height:62svh;
-    background-size:cover;
-    background-position:center top;
-  }
+  .main-visual-hero{min-height:62svh;background-position:center top}
   .main-visual-actions{padding-bottom:22px}
   .hero-consult-btn{min-width:230px;padding:14px 20px;font-size:14px}
   .main-visual-actions span{font-size:10px}
@@ -197,10 +187,10 @@ function serveThemedHtml(req, res) {
         return res.end('Página excedeu o limite de renderização.');
       }
       let html = Buffer.concat(chunks).toString('utf8');
-      if (!html.includes('professional-background-theme')) {
+      if (!html.includes('id="professional-background-theme"')) {
         html = html.replace('</head>', `${THEME_CSS}\n</head>`);
       }
-      if (!html.includes('main-visual-hero')) {
+      if (!html.includes('id="main-visual-hero-live"')) {
         html = html.replace('<body>', `<body>\n${HERO_HTML}`);
       }
       if (!html.includes('id="consulta-area"')) {
@@ -209,7 +199,9 @@ function serveThemedHtml(req, res) {
       const body = Buffer.from(html);
       const outHeaders = { ...upstreamRes.headers, 'content-length': String(body.length) };
       delete outHeaders['transfer-encoding'];
-      outHeaders['cache-control'] = 'no-cache';
+      outHeaders['cache-control'] = 'no-store, no-cache, must-revalidate';
+      outHeaders['pragma'] = 'no-cache';
+      outHeaders['expires'] = '0';
       res.writeHead(upstreamRes.statusCode || 200, outHeaders);
       res.end(body);
     });
