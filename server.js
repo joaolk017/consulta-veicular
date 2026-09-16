@@ -1,12 +1,17 @@
 const express = require("express");
 const path = require("path");
 const https = require("https");
+const crypto = require("crypto");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const FALCON_TOKEN = process.env.FALCON_TOKEN;
+const DESPHUB_API_KEY = process.env.DESPHUB_API_KEY;
+const CRLV_ADMIN_TOKEN = process.env.CRLV_ADMIN_TOKEN;
 
 if (!FALCON_TOKEN) console.warn("FALCON_TOKEN não configurado.");
+if (!DESPHUB_API_KEY) console.warn("DESPHUB_API_KEY não configurado.");
+if (!CRLV_ADMIN_TOKEN) console.warn("CRLV_ADMIN_TOKEN não configurado. A emissão de CRLV ficará bloqueada.");
 
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
@@ -55,6 +60,12 @@ function validPlate(plate) {
   return /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(plate) || /^[A-Z]{3}[0-9]{4}$/.test(plate);
 }
 
+function secureEqual(a, b) {
+  const left = Buffer.from(String(a || ""));
+  const right = Buffer.from(String(b || ""));
+  return left.length === right.length && crypto.timingSafeEqual(left, right);
+}
+
 function falconRequest(url, token) {
   return new Promise((resolve, reject) => {
     const request = https.get(url, {
@@ -70,6 +81,45 @@ function falconRequest(url, token) {
     });
     request.setTimeout(15000, () => request.destroy(new Error("Tempo limite da API Falcon excedido.")));
     request.on("error", reject);
+  });
+}
+
+function desphubRequest(payload) {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify(payload);
+    const request = https.request("https://painel.desphub.com/api/v1/consultas", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${DESPHUB_API_KEY}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "Content-Length": Buffer.byteLength(body)
+      }
+    }, response => {
+      const chunks = [];
+      let size = 0;
+
+      response.on("data", chunk => {
+        size += chunk.length;
+        if (size > 25_000_000) {
+          request.destroy(new Error("Resposta da API Desphub excedeu o limite permitido."));
+          return;
+        }
+        chunks.push(chunk);
+      });
+
+      response.on("end", () => {
+        const raw = Buffer.concat(chunks).toString("utf8");
+        let data = null;
+        try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
+        resolve({ status: response.statusCode || 502, data });
+      });
+    });
+
+    request.setTimeout(65000, () => request.destroy(new Error("Tempo limite da API Desphub excedido.")));
+    request.on("error", reject);
+    request.write(body);
+    request.end();
   });
 }
 
@@ -136,6 +186,107 @@ app.get("/api/consulta/:plate", async (req, res) => {
   } catch (err) {
     console.error("Erro na consulta pública:", err.message);
     return res.status(err.status || 502).json({ error: err.message || "Falha ao realizar a consulta." });
+  }
+});
+
+// CRLV-e SP: rota administrativa/protegida. Não coloque CRLV_ADMIN_TOKEN no navegador.
+// A chamada à Desphub pode ser cobrada mesmo quando tem_dados=false, então esta rota
+// não deve ser ligada diretamente a um botão público antes da confirmação de pagamento.
+app.post("/api/crlv/sp", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+
+  if (!DESPHUB_API_KEY) {
+    return res.status(503).json({ error: "DESPHUB_API_KEY não configurado no servidor." });
+  }
+  if (!CRLV_ADMIN_TOKEN) {
+    return res.status(503).json({ error: "CRLV_ADMIN_TOKEN não configurado. Emissão bloqueada por segurança." });
+  }
+
+  const accessToken = req.get("X-CRLV-Access");
+  if (!secureEqual(accessToken, CRLV_ADMIN_TOKEN)) {
+    return res.status(401).json({ error: "Não autorizado." });
+  }
+
+  const plate = normalizePlate(req.body && req.body.placa);
+  if (!validPlate(plate)) {
+    return res.status(400).json({ error: "Placa inválida. Use 7 caracteres, sem hífen." });
+  }
+
+  const finalidade = String((req.body && req.body.finalidade) || "").trim();
+  if (finalidade.length < 10 || finalidade.length > 300) {
+    return res.status(400).json({ error: "Informe uma finalidade legítima para a emissão (10 a 300 caracteres)." });
+  }
+
+  if (!req.body || req.body.autorizado !== true) {
+    return res.status(400).json({ error: "Confirme que a emissão foi solicitada pelo proprietário ou por pessoa devidamente autorizada." });
+  }
+
+  try {
+    const response = await desphubRequest({
+      produto: "crlv-sp",
+      parametros: { Placa: plate },
+      finalidade
+    });
+
+    const data = response.data;
+
+    if (response.status < 200 || response.status >= 300) {
+      const codigo = data && data.erro && data.erro.codigo ? data.erro.codigo : "erro_desphub";
+      const mensagem = data && data.erro && data.erro.mensagem ? data.erro.mensagem : "Falha ao emitir CRLV-e.";
+      console.error("Desphub respondeu com erro", response.status, codigo);
+      return res.status(response.status).json({ error: codigo, mensagem });
+    }
+
+    if (!data || typeof data !== "object") {
+      return res.status(502).json({ error: "Resposta inválida da Desphub." });
+    }
+
+    // A Desphub documenta que 201 + tem_dados=false também é uma consulta cobrada.
+    // Não fazemos nova tentativa automática nesse cenário.
+    if (data.tem_dados !== true) {
+      return res.status(200).json({
+        ok: false,
+        tem_dados: false,
+        cobrado: true,
+        consulta_id: data.consulta_id || null,
+        preco_cobrado: data.preco_cobrado ?? null,
+        mensagem: "A consulta foi concluída, mas a base não retornou o CRLV-e. Não repita automaticamente esta emissão."
+      });
+    }
+
+    const crlv = data.secoes && data.secoes["VEICULAR.CRLV"];
+    const pdfInfo = crlv && crlv.PDF_FILE;
+    const pdfBase64 = pdfInfo && pdfInfo.FILE_BASE64;
+
+    if (!pdfBase64 || typeof pdfBase64 !== "string") {
+      return res.status(502).json({
+        error: "documento_indisponivel",
+        cobrado: true,
+        consulta_id: data.consulta_id || null,
+        preco_cobrado: data.preco_cobrado ?? null,
+        mensagem: "A consulta retornou dados, mas o PDF do CRLV-e não veio na resposta. Não repita automaticamente."
+      });
+    }
+
+    const pdf = Buffer.from(pdfBase64, "base64");
+    if (pdf.length < 100 || pdf.subarray(0, 5).toString("ascii") !== "%PDF-") {
+      return res.status(502).json({
+        error: "pdf_invalido",
+        cobrado: true,
+        consulta_id: data.consulta_id || null,
+        preco_cobrado: data.preco_cobrado ?? null,
+        mensagem: "A Desphub respondeu, mas o arquivo recebido não parece ser um PDF válido. Não repita automaticamente."
+      });
+    }
+
+    if (data.consulta_id) res.set("X-Consulta-Id", String(data.consulta_id));
+    if (data.preco_cobrado != null) res.set("X-Preco-Cobrado", String(data.preco_cobrado));
+    res.set("Content-Type", "application/pdf");
+    res.set("Content-Disposition", `attachment; filename="CRLV-${plate}.pdf"`);
+    return res.send(pdf);
+  } catch (err) {
+    console.error("Erro ao consultar CRLV-e na Desphub:", err.message);
+    return res.status(502).json({ error: "Falha de comunicação com a Desphub. Não houve repetição automática da consulta." });
   }
 });
 
