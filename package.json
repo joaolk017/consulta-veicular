@@ -2,6 +2,6 @@
   "name":"consulta-veicular-falcon",
   "version":"1.0.0",
   "private":true,
-  "scripts":{"start":"node -r ./security-preload.js -r ./recovery-preload.js -r ./fontedata-preload.js -r ./falcon-preview-ui-preload.js -r ./gravame-preload.js -r ./gravame-home-preload.js -r ./ads-cleanup-preload.js -r ./swap-fipe-gravame-preload.js -r ./inline-result-preload.js -r ./no-auto-scroll-preload.js recovery-ui-proxy.js"},
+  "scripts":{"start":"node -r ./security-preload.js -r ./recovery-preload.js -r ./fontedata-preload.js -r ./falcon-preview-ui-preload.js -r ./gravame-preload.js -r ./gravame-home-preload.js -r ./ads-cleanup-preload.js -r ./swap-fipe-gravame-preload.js -r ./inline-result-preload.js -r ./no-auto-scroll-preload.js -r ./google-ads-conversion-preload.js recovery-ui-proxy.js"},
   "dependencies":{"express":"^5.1.0","pg":"^8.13.1"}
 }
