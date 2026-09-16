@@ -9,74 +9,44 @@ const MAX_HTML_BYTES = 2 * 1024 * 1024;
 
 const THEME_CSS = `
 <style id="background-image-theme">
-html,body{min-height:100%}
-body{
+html,body{
+  width:100%;
+  height:100%;
+  min-height:100%;
   margin:0!important;
-  background-color:#05080d!important;
-  color:#f7f9fc;
-  overflow-x:hidden;
+  padding:0!important;
+  overflow:hidden!important;
+  background:#05080d!important;
 }
 
-/* Primeira tela: somente a imagem, sem nenhum conteúdo sobreposto */
 body::before{
   content:"";
-  display:block;
-  width:100%;
+  position:fixed;
+  inset:0;
+  width:100vw;
+  height:100vh;
   height:100svh;
-  min-height:100vh;
-  background-image:url('ChatGPT%20Image%2016%20de%20set.%20de%202026,%2010_58_27.png?v=10');
+  background-image:url('ChatGPT%20Image%2016%20de%20set.%20de%202026,%2010_58_27.png?v=11');
   background-position:center top;
   background-size:cover;
   background-repeat:no-repeat;
   background-color:#05080d;
+  z-index:999999;
 }
 
-body > .wrap{
-  display:block!important;
-  position:relative;
-  z-index:1;
-  padding-top:0!important;
-}
-
-/* Remove tudo que existia no topo antigo */
-.top,.hero,.private-notice{display:none!important}
-
-/* Mantém a consulta antiga oculta */
-.services-grid{
-  grid-template-columns:1fr!important;
-  max-width:620px;
-  margin-left:auto!important;
-  margin-right:auto!important;
-}
-.services-grid > main.card{display:none!important}
-
-/* O conteúdo restante começa apenas depois da tela inicial */
-.services-grid > .crlv{
-  width:100%;
-  position:relative!important;
-  top:auto!important;
-  background:rgba(7,20,35,.96)!important;
-  backdrop-filter:blur(12px)!important;
-  -webkit-backdrop-filter:blur(12px)!important;
-}
-.details-panel,.benefit{
-  background-color:rgba(7,13,22,.96)!important;
-  backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px);
+body > *:not(style):not(script){
+  display:none!important;
 }
 
 @media(max-width:650px){
   body::before{
-    height:100svh;
-    min-height:100vh;
     background-position:center top;
     background-size:cover;
   }
 }
 
 @media print{
-  body{background:#fff!important}
-  body::before{display:none!important}
+  body::before{display:block!important}
 }
 </style>`;
 
@@ -156,7 +126,7 @@ async function start() {
     if(req.method==='GET'&&(pathname==='/'||pathname==='/index.html')) return serveThemedHtml(req,res);
     return proxyStream(req,res);
   });
-  server.listen(PUBLIC_PORT,()=>console.log(`Tela inicial limpa com somente a imagem ativa na porta ${PUBLIC_PORT}`));
+  server.listen(PUBLIC_PORT,()=>console.log(`Site exibindo apenas a imagem inicial na porta ${PUBLIC_PORT}`));
 }
 
 start();
