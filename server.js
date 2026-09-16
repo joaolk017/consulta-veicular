@@ -67,8 +67,6 @@ async function getVehicle(plate) {
   return data.vehicle || data.data || data;
 }
 
-// Rota pública: retorna SOMENTE os campos autorizados para a prévia.
-// Nenhum dado bloqueado é enviado ao navegador antes do pagamento.
 app.get("/api/consulta/:plate", async (req, res) => {
   const plate = normalizePlate(req.params.plate);
   if (!validPlate(plate)) return res.status(400).json({ error: "Placa inválida." });
@@ -93,10 +91,9 @@ app.get("/api/consulta/:plate", async (req, res) => {
   }
 });
 
-// A consulta completa NÃO possui rota pública neste momento.
-// Ela só deverá ser adicionada quando o backend puder validar, no servidor,
-// que um pagamento específico foi realmente confirmado pelo provedor PIX.
-app.all("/api/consulta-completa/*", (req, res) => {
+// Bloqueia qualquer caminho de consulta completa até existir validação de pagamento.
+// RegExp evita a sintaxe de wildcard incompatível com versões recentes do Express/path-to-regexp.
+app.all(/^\/api\/consulta-completa(?:\/.*)?$/, (req, res) => {
   res.set("Cache-Control", "no-store");
   return res.status(402).json({ error: "Consulta completa disponível somente após confirmação do pagamento." });
 });
