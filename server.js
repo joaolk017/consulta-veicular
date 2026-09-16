@@ -6,12 +6,13 @@ const crypto = require("crypto");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const FALCON_TOKEN = process.env.FALCON_TOKEN;
-const DESPHUB_API_KEY = process.env.DESPHUB_API_KEY;
+// Aceita o nome usado na documentação da Desphub e mantém compatibilidade com a variável antiga.
+const DESPHUB_API_KEY = process.env.DESPHUB_CHAVE || process.env.DESPHUB_API_KEY;
 const CRLV_ADMIN_TOKEN = process.env.CRLV_ADMIN_TOKEN;
 const CRLV_SP_SALE_PRICE = 59.90;
 
 if (!FALCON_TOKEN) console.warn("FALCON_TOKEN não configurado.");
-if (!DESPHUB_API_KEY) console.warn("DESPHUB_API_KEY não configurado.");
+if (!DESPHUB_API_KEY) console.warn("DESPHUB_CHAVE/DESPHUB_API_KEY não configurada.");
 if (!CRLV_ADMIN_TOKEN) console.warn("CRLV_ADMIN_TOKEN não configurado. A emissão de CRLV ficará bloqueada.");
 
 app.disable("x-powered-by");
@@ -24,6 +25,8 @@ const MAX_PREVIEWS_PER_HOUR = 3;
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const rateStore = new Map();
 const previewCache = new Map();
+// Evita duas emissões simultâneas da mesma placa por duplo clique/requisições concorrentes.
+const crlvInFlight = new Set();
 
 function clientIp(req) {
   return req.ip || req.socket.remoteAddress || "unknown";
@@ -118,6 +121,20 @@ function desphubRequest(payload) {
   });
 }
 
+function desphubPublicMessage(code, fallback) {
+  const messages = {
+    requisicao_invalida: "Os dados enviados para a emissão são inválidos.",
+    nao_autenticado: "A integração de emissão está temporariamente indisponível.",
+    saldo_insuficiente: "A emissão está temporariamente indisponível. Tente novamente mais tarde.",
+    produto_desconhecido: "O serviço de CRLV-e está temporariamente indisponível.",
+    produto_sem_preco: "O serviço de CRLV-e está temporariamente indisponível.",
+    limite_excedido: "O limite de emissões foi atingido. Tente novamente mais tarde.",
+    produto_indisponivel: "O serviço de CRLV-e está temporariamente indisponível.",
+    provedor_indisponivel: "A base de emissão não respondeu. Nada deve ser repetido automaticamente."
+  };
+  return messages[code] || fallback || "Não foi possível processar a emissão do CRLV-e.";
+}
+
 async function getVehicle(plate) {
   const cached = previewCache.get(plate);
   if (cached && Date.now() < cached.expiresAt) return cached.vehicle;
@@ -188,43 +205,53 @@ app.get("/api/crlv/sp/info", (req, res) => {
   res.set("Cache-Control", "no-store");
   return res.json({
     produto: "crlv-sp",
+    codigo: "1942",
     estado: "SP",
     preco: CRLV_SP_SALE_PRICE,
-    currency: "BRL"
+    currency: "BRL",
+    pagamento_obrigatorio: true,
+    finalidade_obrigatoria_no_site: true
   });
 });
 
-// CRLV-e SP: rota administrativa/protegida. Não coloque CRLV_ADMIN_TOKEN no navegador.
-// A Desphub pode cobrar a consulta mesmo quando tem_dados=false; não repetir automaticamente.
+// CRLV-e SP / Desphub.
+// Esta rota é deliberadamente protegida: a chave da Desphub e o CRLV_ADMIN_TOKEN nunca vão ao navegador.
+// O fluxo público deve chamar esta rota somente a partir de um backend/webhook depois da confirmação do pagamento.
+// IMPORTANTE: tem_dados=false também pode ser uma consulta cobrada. Não repetir automaticamente.
 app.post("/api/crlv/sp", async (req, res) => {
   res.set("Cache-Control", "no-store");
 
   if (!DESPHUB_API_KEY) {
-    return res.status(503).json({ error: "DESPHUB_API_KEY não configurado no servidor." });
+    return res.status(503).json({ error: "integracao_nao_configurada", mensagem: "Integração de CRLV-e não configurada no servidor." });
   }
   if (!CRLV_ADMIN_TOKEN) {
-    return res.status(503).json({ error: "CRLV_ADMIN_TOKEN não configurado. Emissão bloqueada por segurança." });
+    return res.status(503).json({ error: "emissao_bloqueada", mensagem: "Emissão bloqueada até a configuração da autorização interna do servidor." });
   }
 
   const accessToken = req.get("X-CRLV-Access");
   if (!secureEqual(accessToken, CRLV_ADMIN_TOKEN)) {
-    return res.status(401).json({ error: "Não autorizado." });
+    return res.status(401).json({ error: "nao_autorizado", mensagem: "Não autorizado." });
   }
 
   const plate = normalizePlate(req.body && req.body.placa);
   if (!validPlate(plate)) {
-    return res.status(400).json({ error: "Placa inválida. Use 7 caracteres, sem hífen." });
+    return res.status(400).json({ error: "placa_invalida", mensagem: "Placa inválida. Use 7 caracteres, sem hífen." });
   }
 
   const finalidade = String((req.body && req.body.finalidade) || "").trim();
   if (finalidade.length < 10 || finalidade.length > 300) {
-    return res.status(400).json({ error: "Informe uma finalidade legítima para a emissão (10 a 300 caracteres)." });
+    return res.status(400).json({ error: "finalidade_invalida", mensagem: "Informe uma finalidade legítima para a emissão (10 a 300 caracteres)." });
   }
 
   if (!req.body || req.body.autorizado !== true) {
-    return res.status(400).json({ error: "Confirme que a emissão foi solicitada pelo proprietário ou por pessoa devidamente autorizada." });
+    return res.status(400).json({ error: "autorizacao_ausente", mensagem: "Confirme que a emissão foi solicitada pelo proprietário ou por pessoa devidamente autorizada." });
   }
 
+  if (crlvInFlight.has(plate)) {
+    return res.status(409).json({ error: "emissao_em_andamento", mensagem: "Já existe uma emissão desta placa em andamento. Aguarde a conclusão para evitar consulta duplicada." });
+  }
+
+  crlvInFlight.add(plate);
   try {
     const response = await desphubRequest({
       produto: "crlv-sp",
@@ -234,16 +261,21 @@ app.post("/api/crlv/sp", async (req, res) => {
     const data = response.data;
 
     if (response.status < 200 || response.status >= 300) {
-      const codigo = data && data.erro && data.erro.codigo ? data.erro.codigo : "erro_desphub";
-      const mensagem = data && data.erro && data.erro.mensagem ? data.erro.mensagem : "Falha ao emitir CRLV-e.";
+      const codigo = data && data.erro && data.erro.codigo ? String(data.erro.codigo) : "erro_desphub";
+      const original = data && data.erro && data.erro.mensagem ? String(data.erro.mensagem) : null;
       console.error("Desphub respondeu com erro", response.status, codigo);
-      return res.status(response.status).json({ error: codigo, mensagem });
+      return res.status(response.status).json({
+        error: codigo,
+        mensagem: desphubPublicMessage(codigo, original),
+        repetir_automaticamente: false
+      });
     }
 
     if (!data || typeof data !== "object") {
-      return res.status(502).json({ error: "Resposta inválida da Desphub." });
+      return res.status(502).json({ error: "resposta_invalida", mensagem: "Resposta inválida da fonte de emissão.", repetir_automaticamente: false });
     }
 
+    // A documentação informa que 201 + tem_dados=false também representa consulta concluída/cobrada.
     if (data.tem_dados !== true) {
       return res.status(200).json({
         ok: false,
@@ -253,6 +285,7 @@ app.post("/api/crlv/sp", async (req, res) => {
         preco_cobrado: data.preco_cobrado ?? null,
         preco_venda: CRLV_SP_SALE_PRICE,
         currency: "BRL",
+        repetir_automaticamente: false,
         mensagem: "A consulta foi concluída, mas a base não retornou o CRLV-e. Não repita automaticamente esta emissão."
       });
     }
@@ -269,6 +302,7 @@ app.post("/api/crlv/sp", async (req, res) => {
         preco_cobrado: data.preco_cobrado ?? null,
         preco_venda: CRLV_SP_SALE_PRICE,
         currency: "BRL",
+        repetir_automaticamente: false,
         mensagem: "A consulta retornou dados, mas o PDF do CRLV-e não veio na resposta. Não repita automaticamente."
       });
     }
@@ -282,7 +316,8 @@ app.post("/api/crlv/sp", async (req, res) => {
         preco_cobrado: data.preco_cobrado ?? null,
         preco_venda: CRLV_SP_SALE_PRICE,
         currency: "BRL",
-        mensagem: "A Desphub respondeu, mas o arquivo recebido não parece ser um PDF válido. Não repita automaticamente."
+        repetir_automaticamente: false,
+        mensagem: "A fonte respondeu, mas o arquivo recebido não parece ser um PDF válido. Não repita automaticamente."
       });
     }
 
@@ -294,7 +329,13 @@ app.post("/api/crlv/sp", async (req, res) => {
     return res.send(pdf);
   } catch (err) {
     console.error("Erro ao consultar CRLV-e na Desphub:", err.message);
-    return res.status(502).json({ error: "Falha de comunicação com a Desphub. Não houve repetição automática da consulta." });
+    return res.status(502).json({
+      error: "falha_comunicacao",
+      mensagem: "Falha de comunicação com a fonte de emissão. Não houve repetição automática da consulta.",
+      repetir_automaticamente: false
+    });
+  } finally {
+    crlvInFlight.delete(plate);
   }
 });
 
