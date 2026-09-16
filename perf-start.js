@@ -78,13 +78,103 @@ http.createServer = function patchedCreateServer(listener) {
   @media (min-width:561px){
     .cv-hero:before{background-image:url('${HERO_URL}')!important}
   }
-  .cv-section,.cv-footer{
-    content-visibility:auto;
-    contain-intrinsic-size:850px;
+
+  /* Hierarquia visual: consulta é a ação principal. */
+  .cv-search-card{
+    position:relative;
+    z-index:3;
+    border-color:#268fe8!important;
+    box-shadow:0 24px 70px rgba(0,79,165,.28)!important;
   }
+  .cv-search-card:before{
+    content:'AÇÃO PRINCIPAL';
+    position:absolute;
+    top:-10px;
+    right:18px;
+    padding:5px 9px;
+    border-radius:999px;
+    background:#168cff;
+    color:#fff;
+    font:900 9px/1 Inter,system-ui,-apple-system,'Segoe UI',sans-serif;
+    letter-spacing:.8px;
+    box-shadow:0 8px 20px rgba(22,140,255,.26);
+  }
+  #cv-consult-btn{
+    background:linear-gradient(135deg,#1d9dff,#0566df)!important;
+    box-shadow:0 14px 34px rgba(15,117,229,.34)!important;
+  }
+
+  /* CRLV permanece muito visível, mas com linguagem visual secundária. */
+  .cv-hero-crlv{
+    position:relative;
+    z-index:2;
+    border-color:rgba(91,171,230,.48)!important;
+    background:linear-gradient(180deg,rgba(9,31,51,.94),rgba(6,19,33,.96))!important;
+    box-shadow:0 16px 46px rgba(0,0,0,.28)!important;
+  }
+  .cv-hero-crlv:before{
+    content:'SERVIÇO DOCUMENTAL';
+    display:inline-flex;
+    align-items:center;
+    width:max-content;
+    margin-bottom:9px;
+    padding:5px 9px;
+    border:1px solid rgba(88,178,239,.38);
+    border-radius:999px;
+    background:rgba(18,80,123,.34);
+    color:#8fd4ff;
+    font:900 9px/1 Inter,system-ui,-apple-system,'Segoe UI',sans-serif;
+    letter-spacing:.9px;
+  }
+  .cv-hero-crlv h2{
+    font-size:clamp(25px,2.7vw,38px)!important;
+    line-height:1.02!important;
+  }
+  .cv-hero-crlv strong{
+    font-size:clamp(30px,3vw,42px)!important;
+  }
+  .cv-hero-crlv button{
+    background:rgba(14,72,116,.28)!important;
+    border:1px solid #368ccc!important;
+    color:#e8f6ff!important;
+    box-shadow:none!important;
+  }
+  .cv-hero-crlv button:hover{
+    background:rgba(27,113,174,.38)!important;
+    border-color:#61b9f5!important;
+  }
+
+  /* Deixa clara a prioridade também no CTA fixo do celular. */
   @media (max-width:560px){
     .cv-nav{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:#040a14!important}
     .cv-search-card,.cv-hero-crlv,.cv-report-preview,.cv-sticky-mobile{box-shadow:none!important}
+    .cv-search-card:before{top:-9px;right:12px;font-size:8px}
+    .cv-hero-crlv{opacity:.98}
+    .cv-hero-crlv h2{font-size:25px!important}
+    .cv-hero-crlv strong{font-size:30px!important}
+    .cv-sticky-mobile{
+      grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)!important;
+      gap:7px!important;
+    }
+    .cv-sticky-mobile a[href="#consulta"],
+    .cv-sticky-mobile button:first-child{
+      background:#168cff!important;
+      border-color:#168cff!important;
+      color:#fff!important;
+      font-weight:950!important;
+    }
+    .cv-sticky-mobile a[href="#crlv"],
+    .cv-sticky-mobile button:last-child{
+      background:#0b2034!important;
+      border:1px solid #356e9d!important;
+      color:#d7efff!important;
+      box-shadow:none!important;
+    }
+  }
+
+  .cv-section,.cv-footer{
+    content-visibility:auto;
+    contain-intrinsic-size:850px;
   }
 </style>`;
         html = html.replace('</head>', `${perfHead}\n</head>`);
