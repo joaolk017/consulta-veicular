@@ -4,349 +4,65 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#07111d">
-<meta name="description" content="Consulta veicular privada por placa, com preço informado antes do pagamento, suporte identificado e políticas acessíveis.">
+<meta name="description" content="Consulta veicular privada por placa. Prévia gratuita e consulta completa por R$ 18,90, com pagamento PIX pela Woovi/OpenPix.">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://consultaveicular360.com.br/">
 <title>Consulta Veicular 360 | Consulta privada por placa</title>
 <style>
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:radial-gradient(circle at 50% 0,#172841 0,#09111d 36%,#05080d 78%);color:#f5f8fc;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
-a{color:inherit}
-.wrap{width:min(100% - 28px,980px);margin:auto;padding:22px 0 46px}
-.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:32px}
-.brand{display:flex;align-items:center;gap:11px;font-weight:950}
-.logo{width:44px;height:44px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,#ff4058,#a90b27);box-shadow:0 10px 30px #e51d3c45}
-.topnav{display:flex;gap:13px;flex-wrap:wrap;justify-content:flex-end}
-.topnav a{color:#aab7c7;text-decoration:none;font-size:11px;font-weight:800}
-.hero{text-align:center;max-width:790px;margin:0 auto 24px}
-.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border:1px solid #29374b;border-radius:999px;background:#101927;color:#c7d1df;font-size:12px;font-weight:800}
-.dot{width:7px;height:7px;border-radius:50%;background:#35d07f;box-shadow:0 0 12px #35d07f}
-h1{font-size:clamp(37px,7vw,60px);line-height:1.02;letter-spacing:-2px;margin:18px 0 14px}
-.red{background:linear-gradient(90deg,#ff5267,#ff2344);-webkit-background-clip:text;background-clip:text;color:transparent}
-.lead{max-width:680px;margin:auto;color:#aeb9c8;font-size:16px;line-height:1.65}
-.private-notice,.identity-box{margin:0 auto 20px;max-width:900px;padding:16px 18px;border:1px solid #35506f;border-radius:15px;background:linear-gradient(145deg,#101d2c,#0a131f);color:#aebdce;font-size:12px;line-height:1.65}
-.private-notice{display:flex;gap:13px;align-items:flex-start}
-.private-notice b,.identity-box b{color:#f2f6fb}
-.card{background:linear-gradient(180deg,#111b29f2,#0a101af2);border:1px solid #2b394d;border-radius:25px;padding:clamp(20px,4vw,32px);box-shadow:0 30px 90px #0009}
-.section-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:17px}
-.section-icon{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:21px;background:#251018;border:1px solid #6f2635;flex:0 0 auto}
-.section-title{font-size:22px;font-weight:900;margin:0 0 5px}
-.section-sub{color:#8f9bad;margin:0;font-size:13px;line-height:1.45}
-.field-label{display:block;margin-bottom:8px;color:#d8e0ea;font-size:12px;font-weight:900}
-.plate-input{width:100%;border:1px solid #33465f;outline:0;background:#08111c;color:#f4f7fb;border-radius:13px;text-align:center;font-size:clamp(26px,5vw,36px);font-weight:900;letter-spacing:5px;text-transform:uppercase;padding:16px}
-.plate-input:focus{border-color:#ed3851;box-shadow:0 0 0 3px #ed385120}
-button{width:100%;margin-top:13px;padding:17px;border:0;border-radius:13px;background:linear-gradient(135deg,#f43a51,#c91535);color:#fff;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 12px 28px #e3224040}
-button:disabled{opacity:.55;cursor:not-allowed}
-.progress{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:18px 0 4px}
-.step{padding:9px 5px;border:1px solid #263449;background:#0b131f;border-radius:10px;text-align:center;color:#667488;font-size:10px;font-weight:800}
-.step.active{color:#fff;border-color:#b82a41;background:#251018}.step.done{color:#67e6a1;border-color:#1c6340;background:#0c2519}
-.hidden{display:none!important}
-.result{margin-top:18px}
-.vehicle-card,.report-section{border:1px solid #2b3a4f;border-radius:18px;background:linear-gradient(145deg,#142132,#0b121d);padding:18px;margin-bottom:14px}
-.vehicle-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.vehicle-title{display:flex;align-items:center;gap:10px}.vehicle-title h2{font-size:19px;margin:0}
-.found,.paid-badge{font-size:10px;font-weight:900;color:#5ce59a;background:#0e2b1d;border:1px solid #1c5737;padding:6px 8px;border-radius:999px}
-.plate-result{font-size:27px;font-weight:900;letter-spacing:3px;margin:17px 0 4px}.vehicle-name{color:#aab6c6;font-size:14px}
-.row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #202b3b;padding:13px 2px;gap:20px}.label{color:#8f9bad;font-size:13px}.value{font-size:13px;font-weight:800;text-align:right;max-width:65%}
-.locked{display:inline-flex;align-items:center;gap:7px;color:#778598}.blurbar{width:90px;height:12px;border-radius:4px;background:linear-gradient(90deg,#465366,#253043,#465366);filter:blur(2px)}
-.unlock{margin-top:18px;padding:24px 18px;border:1px solid #226843;border-radius:18px;background:radial-gradient(circle at 50% 0,#123424,#0b1712 60%,#09100d);text-align:center}
-.unlock h3{margin:7px 0 5px;font-size:21px}.unlock p{margin:0;color:#91a49a;font-size:13px;line-height:1.5}.price{font-size:36px;font-weight:950;margin:13px 0 1px}.price small{display:block;font-size:11px;color:#7e9187;margin-top:3px}
-.paybtn{background:linear-gradient(135deg,#2ac978,#12864d);box-shadow:0 12px 30px #19a45c45}.secure{font-size:11px;color:#789084;margin-top:9px;line-height:1.55}
-.error,.success,.info{margin-top:14px;padding:14px;border-radius:12px;font-size:12px;line-height:1.55}
-.error{background:#351218;border:1px solid #7d2937;color:#ffc0c8}.success{background:#0d2b1d;border:1px solid #236c46;color:#91efba}.info{background:#0d1d2d;border:1px solid #31506e;color:#a8c5df}
-.loading{margin:15px 0;color:#aeb9c8;display:flex;align-items:center;gap:9px;font-size:13px}.spinner{width:17px;height:17px;border:2px solid #39475b;border-top-color:#ff3c55;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
-.details-panel{margin-top:18px;padding:22px;border:1px solid #273548;background:#09111c;border-radius:20px}.included-title{font-size:17px;font-weight:900;margin-bottom:14px}.included-title span{color:#55dd91}
-.categories{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.cat{border:1px solid #202e41;border-radius:12px;background:#0d1622;padding:13px}.cat b{display:block;font-size:13px;margin-bottom:6px}.cat p{margin:0;color:#8795a7;font-size:11px;line-height:1.55}.included-note{font-size:10px;color:#667487;margin:13px 1px 0;line-height:1.5}
-.why{margin:34px 0}.why-head{text-align:center}.why-head h2{font-size:clamp(26px,5vw,36px)}.why-head p{color:#8f9bad}.benefits{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.benefit{background:#0c131e;border:1px solid #263246;border-radius:17px;padding:20px}.benefit h3{font-size:15px;margin:10px 0 6px}.benefit p{font-size:12px;line-height:1.55;color:#8996a8;margin:0}
-.footer{text-align:center;color:#5e6b7e;font-size:11px;line-height:1.9;margin-top:28px}.footer strong{color:#aeb9c8}.footer a{color:#8b98aa;text-decoration:none;margin:0 6px}
-.flow-overlay{position:fixed;inset:0;z-index:9999;background:#03060bd9;backdrop-filter:blur(6px);display:grid;place-items:center;padding:18px;overflow:auto}.flow-modal{width:min(100%,520px);max-height:92vh;overflow:auto;border:1px solid #28734b;border-radius:24px;background:linear-gradient(180deg,#101c2b,#080f18);box-shadow:0 30px 100px #000c}
-.flow-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:22px 22px 16px;border-bottom:1px solid #23344a}.flow-title{display:flex;gap:12px;align-items:flex-start}.flow-title .ico{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#0c3321;border:1px solid #247a4d}.flow-title h2{margin:0 0 5px;font-size:23px}.flow-title p{margin:0;color:#8fa1b7;font-size:12px;line-height:1.5}.flow-close{width:38px;height:38px;margin:0;padding:0;border:1px solid #2a3c53;background:#0c1521;color:#c8d3e0;box-shadow:none;border-radius:11px;font-size:18px}
-.flow-body{padding:22px}.field{margin-bottom:12px}.field label{display:block;color:#cbd5e2;font-size:12px;font-weight:800;margin:0 0 7px}.field input{width:100%;border:1px solid #2a3e56;border-radius:12px;background:#08111c;color:#f5f8fb;padding:14px;outline:none;font:inherit}.field input:focus{border-color:#2ac978;box-shadow:0 0 0 3px #2ac97820}
-.pix-price{font-size:34px;font-weight:950;text-align:center;margin:4px 0 8px}.pix-price small{display:block;font-size:12px;color:#8aa394;font-weight:700;margin-top:4px}.pix-summary{text-align:center;color:#8ea196;font-size:12px;margin-bottom:18px;line-height:1.6}.pix-privacy{font-size:10px;color:#778a80;line-height:1.55;margin-top:10px}.flow-error{margin:12px 0 0;padding:11px 12px;border:1px solid #7d2937;border-radius:10px;background:#351218;color:#ffc0c8;font-size:12px}
-.pix-box{text-align:center}.pix-qr{width:210px;height:210px;object-fit:contain;background:white;border-radius:16px;padding:10px;margin:6px auto 14px;display:block}.pix-code{width:100%;min-height:86px;border:1px solid #284a39;border-radius:12px;background:#07120d;color:#c8e8d6;padding:12px;font:12px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;resize:none}.copybtn{background:#0e3825!important;border:1px solid #22784b!important;box-shadow:none!important;padding:13px!important}
-.pix-status{margin-top:14px;padding:12px;border-radius:12px;border:1px solid #5d4e22;background:#2c250d;color:#ffe7a1;font-size:12px;line-height:1.5}.pix-status.ok{border-color:#226843;background:#0b2418;color:#8df0b7}.pix-status.bad{border-color:#7d2937;background:#351218;color:#ffc0c8}
-.pix-actions,.report-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.pix-actions button,.report-actions button{margin:0;padding:13px;font-size:12px}.secondary-btn{border:1px solid #32465f!important;background:#0b1521!important;color:#c4cfdb!important;box-shadow:none!important}.no-scroll{overflow:hidden}
-.report-section h3{margin:0 0 8px;font-size:15px}.report-note{color:#8293a7;font-size:10px;line-height:1.55;margin-top:10px}.risk-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.risk{padding:11px;border:1px solid #293b50;border-radius:11px;background:#0a1521;font-size:11px}.risk b{display:block;margin-bottom:4px}.risk.ok{border-color:#245b3f;background:#0b2118}.risk.warn{border-color:#7c6324;background:#2a230d}
-@media(max-width:720px){.top{align-items:flex-start}.topnav{max-width:230px}.categories,.benefits{grid-template-columns:1fr}.vehicle-top{align-items:flex-start;flex-direction:column}.pix-actions,.report-actions,.risk-grid{grid-template-columns:1fr}.flow-overlay{padding:0;align-items:end}.flow-modal{width:100%;max-height:95vh;border-radius:22px 22px 0 0}.flow-top,.flow-body{padding:18px}}
-@media(max-width:520px){.topnav{display:none}.wrap{width:min(100% - 20px,980px)}h1{letter-spacing:-1.3px}.card{padding:20px}.plate-input{font-size:30px}.progress{gap:4px}.step{font-size:9px}}
-@media print{body{background:white;color:black}.top,.hero,.private-notice,.details-panel,.why,.identity-box,.footer,.progress,.unlock,.flow-overlay,.report-actions{display:none!important}.card{box-shadow:none;border:0;background:white;padding:0}.result{display:block!important}.vehicle-card,.report-section{background:white;color:black;border-color:#bbb}.row{border-color:#ddd}.label{color:#555}.value{color:#111}}
+*{box-sizing:border-box}body{margin:0;background:#070b12;color:#f5f8fc;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}a{color:#8fcfff}.wrap{width:min(940px,calc(100% - 28px));margin:auto;padding:22px 0 44px}.top{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:34px}.brand{font-weight:950}.nav{display:flex;gap:12px;flex-wrap:wrap}.nav a{font-size:11px;text-decoration:none;color:#a9b7c8;font-weight:800}.hero{text-align:center;max-width:760px;margin:0 auto 24px}.pill{display:inline-block;padding:7px 11px;border:1px solid #2c4058;border-radius:999px;background:#0d1724;color:#b9c8d9;font-size:11px;font-weight:800}h1{font-size:clamp(36px,7vw,58px);line-height:1.02;letter-spacing:-1.7px;margin:16px 0 12px}.hero p{color:#9cabbc;line-height:1.65}.notice,.identity{padding:15px 17px;border:1px solid #31506e;border-radius:14px;background:#0b1724;color:#a9b8c9;font-size:12px;line-height:1.65;margin:0 0 18px}.notice b,.identity b{color:#fff}.card{padding:clamp(20px,4vw,32px);border:1px solid #2a394d;border-radius:22px;background:#0d1622;box-shadow:0 28px 70px #0008}.title{font-size:22px;font-weight:900;margin-bottom:6px}.sub{font-size:12px;color:#8f9bad;margin-bottom:16px}.plate{width:100%;padding:16px;border:1px solid #33465f;border-radius:13px;background:#07101a;color:#fff;text-align:center;font-size:32px;font-weight:900;letter-spacing:5px;text-transform:uppercase;outline:0}.plate:focus{border-color:#e63b54;box-shadow:0 0 0 3px #e63b5420}button{width:100%;border:0;border-radius:13px;padding:16px;margin-top:12px;background:linear-gradient(135deg,#ef3850,#c61634);color:#fff;font-weight:900;cursor:pointer}button:disabled{opacity:.55}.pay{background:linear-gradient(135deg,#28c879,#12864e)}.secondary{background:#0d1a28;border:1px solid #33475f}.status{margin-top:14px}.error,.success,.info{padding:13px 14px;border-radius:11px;font-size:12px;line-height:1.55}.error{background:#351218;border:1px solid #7d2937;color:#ffc0c8}.success{background:#0d2b1d;border:1px solid #236c46;color:#91efba}.info{background:#0d1d2d;border:1px solid #31506e;color:#b3cbe1}.hidden{display:none!important}.result{margin-top:18px}.vehicle,.section{padding:18px;border:1px solid #2b3a4f;border-radius:16px;background:#111b29;margin-top:12px}.head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.tag{font-size:10px;font-weight:900;padding:6px 8px;border-radius:999px;background:#0e2b1d;border:1px solid #1c5737;color:#5ce59a}.plateout{font-size:27px;font-weight:950;letter-spacing:3px;margin:14px 0 3px}.muted{color:#8e9daf;font-size:12px}.row{display:flex;justify-content:space-between;gap:18px;padding:12px 0;border-bottom:1px solid #263244}.row span:first-child{color:#8f9bad;font-size:12px}.row span:last-child{font-size:12px;font-weight:800;text-align:right}.locked{color:#778598!important}.unlock{text-align:center;padding:20px;border:1px solid #226843;border-radius:16px;background:#0a1911;margin-top:14px}.price{font-size:34px;font-weight:950;margin:10px 0 2px}.small{font-size:10px;color:#7d9185;line-height:1.5}.trust{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin:28px 0}.trust div{padding:16px;border:1px solid #26364a;border-radius:14px;background:#0b141f}.trust b{display:block;margin-bottom:6px}.trust p{font-size:11px;line-height:1.55;color:#8795a7;margin:0}.footer{text-align:center;color:#657488;font-size:11px;line-height:1.9;margin-top:24px}.overlay{position:fixed;inset:0;z-index:99;background:#03060bd9;display:grid;place-items:center;padding:16px}.modal{width:min(500px,100%);max-height:92vh;overflow:auto;border:1px solid #2a6948;border-radius:20px;background:#0a131e;padding:20px}.modaltop{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}.modal h2{margin:0}.close{width:38px;height:38px;padding:0;margin:0;background:#111e2c;border:1px solid #31445c}.pixprice{text-align:center;font-size:33px;font-weight:950;margin:20px 0 10px}.qr{width:210px;height:210px;object-fit:contain;background:white;border-radius:14px;padding:8px;margin:14px auto;display:block}.code{width:100%;min-height:84px;background:#07120d;color:#d0e9dc;border:1px solid #28503c;border-radius:10px;padding:10px;font:11px/1.45 monospace;resize:none}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions button{margin-top:8px}.riskgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.risk{padding:10px;border:1px solid #334052;border-radius:10px;font-size:11px}.risk b{display:block;margin-bottom:4px}@media(max-width:720px){.nav{display:none}.trust,.riskgrid,.actions{grid-template-columns:1fr}.top{margin-bottom:22px}.modal{border-radius:18px}.row span:last-child{max-width:62%}}@media print{.top,.hero,.notice,.trust,.identity,.footer,.unlock,.overlay,#consultCard{display:none!important}.card{border:0;box-shadow:none;background:white;color:black}.vehicle,.section{background:white;color:black;border-color:#bbb}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<header class="top">
-  <div class="brand"><div class="logo">🚘</div><span>Consulta Veicular 360</span></div>
-  <nav class="topnav" aria-label="Navegação">
-    <a href="/sobre/">Sobre nós</a><a href="/termos.html">Termos</a><a href="/privacidade.html">Privacidade</a><a href="/reembolso.html">Reembolso</a><a href="/contato.html">Suporte</a>
-  </nav>
-</header>
-
-<section class="hero">
-  <div class="eyebrow"><span class="dot"></span> Serviço privado de consulta veicular</div>
-  <h1>Consulte a placa <span class="red">antes de negociar.</span></h1>
-  <p class="lead">A Consulta Veicular 360 organiza informações veiculares disponíveis por meio de fontes integradas para auxiliar sua análise antes de uma compra ou venda.</p>
-</section>
-
-<div class="private-notice">
-  <div style="font-size:22px">ℹ️</div>
-  <div><b>Plataforma privada e independente</b>Não somos DETRAN, SENATRAN, GOV.BR ou outro órgão público. Para procedimentos oficiais, utilize os canais governamentais competentes.</div>
-</div>
-
-<main class="card">
-  <div class="section-head">
-    <div class="section-icon">🔎</div>
-    <div><h2 class="section-title">Consulta veicular por placa</h2><p class="section-sub">Digite uma placa Mercosul ou padrão antigo. A prévia inicial não exige pagamento.</p></div>
-  </div>
-  <label class="field-label" for="plate">PLACA DO VEÍCULO</label>
-  <input id="plate" class="plate-input" maxlength="7" autocomplete="off" autocapitalize="characters" placeholder="ABC1D23" aria-label="Placa do veículo">
-  <button id="btn" type="button" onclick="consultar()">🔎 CONSULTAR VEÍCULO</button>
-  <div class="progress"><div id="s1" class="step active">1 · PLACA</div><div id="s2" class="step">2 · PRÉVIA</div><div id="s3" class="step">3 · RELATÓRIO</div></div>
-  <div id="status" aria-live="polite"></div>
-  <div id="result" class="result hidden"></div>
+<header class="top"><div class="brand">🚘 Consulta Veicular 360</div><nav class="nav"><a href="/sobre/">Sobre nós</a><a href="/termos.html">Termos</a><a href="/privacidade.html">Privacidade</a><a href="/reembolso.html">Reembolso</a><a href="/contato.html">Suporte</a></nav></header>
+<section class="hero"><span class="pill">Serviço privado e independente</span><h1>Consulte a placa antes de negociar.</h1><p>Veja uma prévia gratuita e, se desejar, libere a consulta completa por R$ 18,90.</p></section>
+<div class="notice"><b>Importante:</b> não somos DETRAN, SENATRAN, GOV.BR ou outro órgão público. A Consulta Veicular 360 é uma plataforma privada de consulta veicular.</div>
+<main class="card" id="consultCard">
+<div class="title">Consultar veículo</div><div class="sub">Digite somente a placa. A consulta da placa não exige CPF.</div>
+<input id="plate" class="plate" maxlength="7" autocomplete="off" placeholder="ABC1D23" aria-label="Placa do veículo">
+<button id="btn" onclick="consultar()">🔎 CONSULTAR VEÍCULO</button>
+<div id="status" class="status"></div><div id="result" class="result hidden"></div>
 </main>
-
-<section class="details-panel">
-  <div class="included-title">O que o relatório pode apresentar <span>quando disponível</span></div>
-  <div class="categories">
-    <div class="cat"><b>🚘 Identificação</b><p>Marca, modelo, ano, cor, município, UF, combustível e tipo.</p></div>
-    <div class="cat"><b>📊 Dados de referência</b><p>Valor FIPE e dados cadastrais quando retornados pela fonte integrada.</p></div>
-    <div class="cat"><b>⚠️ Indicadores</b><p>Restrições e indicadores veiculares somente quando a fonte consultada disponibilizar.</p></div>
-    <div class="cat"><b>📄 Relatório</b><p>Organização dos dados efetivamente retornados, com opção de impressão em PDF.</p></div>
-  </div>
-  <p class="included-note">A disponibilidade e a atualização dos campos variam conforme o veículo e as fontes integradas. Nenhum campo específico é garantido para todos os veículos.</p>
+<section class="trust">
+<div><b>💳 Preço transparente</b><p>R$ 18,90 por consulta completa, em pagamento único e sem assinatura.</p></div>
+<div><b>💠 PIX pela Woovi/OpenPix</b><p>O checkout do site gera o PIX sem solicitar nome, CPF, e-mail ou telefone do pagador.</p></div>
+<div><b>🔐 Liberação verificada</b><p>O relatório só é liberado depois que o servidor confirma o pagamento na Woovi/OpenPix.</p></div>
 </section>
+<div class="identity"><b>Consulta Veicular 360</b><br>consultaveicular360.com.br · Serviço privado e independente.<br>E-mail: <a href="mailto:kauehara485@gmail.com">kauehara485@gmail.com</a> · WhatsApp: <a href="https://wa.me/5577920006292" target="_blank" rel="noopener noreferrer">(77) 92000-6292</a></div>
+<footer class="footer">Consulta Veicular 360 · <a href="/sobre/">Sobre nós</a> · <a href="/termos.html">Termos</a> · <a href="/privacidade.html">Privacidade</a> · <a href="/reembolso.html">Reembolso</a> · <a href="/contato.html">Contato</a></footer>
+</div>
 
-<section class="why">
-  <div class="why-head"><h2>Transparência antes do pagamento</h2><p>Preço, finalidade e regras ficam disponíveis antes de você concluir a compra.</p></div>
-  <div class="benefits">
-    <div class="benefit"><div style="font-size:24px">💳</div><h3>R$ 18,90</h3><p>Pagamento único pela consulta completa. Sem assinatura ou cobrança recorrente.</p></div>
-    <div class="benefit"><div style="font-size:24px">🔐</div><h3>Pagamento identificado</h3><p>O PIX é processado pela MisticPay e a liberação ocorre somente após a confirmação do pagamento.</p></div>
-    <div class="benefit"><div style="font-size:24px">💬</div><h3>Suporte identificado</h3><p>Dúvidas sobre pagamento, relatório, privacidade ou reembolso podem ser tratadas pelos canais informados no site.</p></div>
-  </div>
+<div id="pixFlow" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pixTitle">
+<div class="modal">
+<div class="modaltop"><div><h2 id="pixTitle">Pagamento via PIX</h2><div class="muted">Consulta completa · pagamento único</div></div><button class="close" onclick="fecharPix()" aria-label="Fechar">✕</button></div>
+<section id="pixForm">
+<div class="pixprice">R$ 18,90</div>
+<div class="info"><b>PIX gerado pela Woovi/OpenPix.</b><br>Não pedimos nome completo, CPF, e-mail ou telefone para criar esta cobrança.</div>
+<div class="muted" style="text-align:center;margin-top:13px">Placa: <b id="pixPlate">—</b></div>
+<div id="pixError" class="status"></div>
+<button id="pixCreate" class="pay" onclick="gerarPix()">💠 GERAR CÓDIGO PIX</button>
+<div class="small" style="margin-top:10px">Ao continuar, você concorda com os <a href="/termos.html">Termos</a>, a <a href="/privacidade.html">Política de Privacidade</a> e a <a href="/reembolso.html">Política de Reembolso</a>.</div>
 </section>
-
-<div class="identity-box">
-  <b>Consulta Veicular 360</b><br>
-  Domínio: consultaveicular360.com.br · Serviço privado e independente de consulta veicular.<br>
-  E-mail: <a href="mailto:kauehara485@gmail.com">kauehara485@gmail.com</a> · WhatsApp: <a href="https://wa.me/5577920006292" target="_blank" rel="noopener noreferrer">(77) 92000-6292</a>
-</div>
-
-<footer class="footer">
-  <strong>Consulta Veicular 360</strong> · Serviço privado e independente. Não possuímos vínculo com órgãos públicos.<br>
-  <a href="/sobre/">Sobre nós</a> · <a href="/termos.html">Termos</a> · <a href="/privacidade.html">Privacidade</a> · <a href="/reembolso.html">Reembolso</a> · <a href="/contato.html">Contato</a>
-</footer>
-</div>
-
-<div id="pixFlow" class="flow-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pixFlowTitle">
-  <div class="flow-modal">
-    <div class="flow-top">
-      <div class="flow-title"><div class="ico">💠</div><div><h2 id="pixFlowTitle">Pagamento via PIX</h2><p>Pagamento único de R$ 18,90 pela consulta completa.</p></div></div>
-      <button class="flow-close" type="button" onclick="fecharPix()" aria-label="Fechar">✕</button>
-    </div>
-    <div class="flow-body">
-      <section id="pixFormStep">
-        <div class="pix-price">R$ 18,90 <small>valor total · pagamento único · sem assinatura</small></div>
-        <div class="pix-summary">Placa: <b id="pixPlate">—</b><br>A cobrança será de exatamente <b>R$ 18,90</b>.</div>
-        <div class="info"><b>Pagamento processado pela MisticPay</b><br>Para criar e identificar a cobrança PIX, a processadora solicita nome e CPF do pagador. O CPF não é solicitado para consultar a placa e não é usado como senha ou credencial.</div>
-        <div class="field"><label for="pixNome">Nome do pagador</label><input id="pixNome" autocomplete="name" maxlength="120" placeholder="Nome completo"></div>
-        <div class="field"><label for="pixCpf">CPF do pagador</label><input id="pixCpf" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00" aria-describedby="pixCpfInfo"><div id="pixCpfInfo" style="margin-top:7px;color:#7f9188;font-size:10px;line-height:1.5">Usado exclusivamente nesta etapa para criação e identificação da cobrança PIX pela MisticPay.</div></div>
-        <div id="pixFormError"></div>
-        <button id="pixCreateBtn" class="paybtn" type="button" onclick="gerarPix()">💠 GERAR PIX DE R$ 18,90</button>
-        <div class="pix-privacy">Consulte nossa <a href="/privacidade.html">Política de Privacidade</a>, <a href="/termos.html">Termos de Uso</a> e <a href="/reembolso.html">Política de Reembolso</a>.</div>
-      </section>
-
-      <section id="pixPayStep" class="hidden pix-box">
-        <h3 style="margin-top:0">PIX de R$ 18,90</h3>
-        <p style="color:#91a49a;font-size:12px">Escaneie o QR Code ou use o PIX copia e cola. A página verifica a confirmação automaticamente.</p>
-        <img id="pixQr" class="pix-qr hidden" alt="QR Code PIX">
-        <textarea id="pixCode" class="pix-code" readonly aria-label="Código PIX copia e cola"></textarea>
-        <button class="copybtn" type="button" onclick="copiarPix()">📋 COPIAR CÓDIGO PIX</button>
-        <div id="pixStatus" class="pix-status">⏳ Aguardando pagamento de R$ 18,90...</div>
-        <div class="pix-actions"><button class="secondary-btn" type="button" onclick="verificarPagamento(false)">🔄 JÁ PAGUEI</button><button class="secondary-btn" type="button" onclick="novoPix()">NOVO PIX</button></div>
-      </section>
-
-      <section id="pixSuccessStep" class="hidden pix-box">
-        <div style="font-size:48px">✅</div><h3>Pagamento confirmado</h3>
-        <p style="color:#91a49a;font-size:12px">Seu relatório foi liberado. O acesso temporário pode ficar salvo por até 24 horas neste navegador, sem pedir CPF novamente.</p>
-        <button class="paybtn" type="button" onclick="irParaRelatorio()">VER RELATÓRIO</button>
-      </section>
-    </div>
-  </div>
-</div>
-
+<section id="pixPay" class="hidden">
+<div class="pixprice">R$ 18,90</div><img id="pixQr" class="qr hidden" alt="QR Code PIX"><textarea id="pixCode" class="code" readonly aria-label="PIX copia e cola"></textarea>
+<button class="pay" onclick="copiarPix()">📋 COPIAR CÓDIGO PIX</button><div id="pixStatus" class="info" style="margin-top:10px">Aguardando pagamento...</div>
+<div class="actions"><button class="secondary" onclick="verificarPagamento(false)">JÁ PAGUEI</button><button class="secondary" onclick="novoPix()">NOVO PIX</button></div>
+</section>
+<section id="pixSuccess" class="hidden"><div class="success" style="margin-top:18px">✅ Pagamento confirmado. Seu relatório foi liberado.</div><button class="pay" onclick="irRelatorio()">VER RELATÓRIO</button></section>
+</div></div>
 <script>
-function normalizar(v){return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,7)}
-function soDigitos(v){return String(v||'').replace(/\D/g,'')}
-function placaValida(v){return /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(v)||/^[A-Z]{3}[0-9]{4}$/.test(v)}
-function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
-function show(v){return v===undefined||v===null||String(v).trim()===''?'Não informado':String(v)}
-function valueRow(label,value){return `<div class="row"><span class="label">${esc(label)}</span><span class="value">${esc(show(value))}</span></div>`}
-function lockedRow(label){return `<div class="row"><span class="label">${esc(label)}</span><span class="locked"><span class="blurbar"></span> 🔒</span></div>`}
-function steps(n){for(let i=1;i<=3;i++){const x=document.getElementById('s'+i);x.className='step'+(i<n?' done':i===n?' active':'')}}
-function salvarPDF(){window.print()}
-
-const plateInput=document.getElementById('plate');
-const pixFlow=document.getElementById('pixFlow');
-const pixNome=document.getElementById('pixNome');
-const pixCpf=document.getElementById('pixCpf');
-let ultimaPlacaConsultada='';
-let pixPayment=null;
-let pixPollTimer=null;
-
-plateInput.addEventListener('input',e=>e.target.value=normalizar(e.target.value));
-plateInput.addEventListener('keydown',e=>{if(e.key==='Enter')consultar()});
-pixCpf.addEventListener('input',e=>{let d=soDigitos(e.target.value).slice(0,11);e.target.value=d.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2')});
-
-function accessKey(plate){return 'cv_relatorio_24h_'+normalizar(plate)}
-function saveReportAccess(data){
-  try{
-    if(!data||!data.vehicle||!data.reportAccessToken||!data.reportAccessExpiresAt)return;
-    const plate=normalizar(data.vehicle.plate);
-    if(!plate)return;
-    localStorage.setItem(accessKey(plate),JSON.stringify({plate,accessToken:data.reportAccessToken,expiresAt:Number(data.reportAccessExpiresAt)}));
-  }catch{}
-}
-function getReportAccess(plate){
-  plate=normalizar(plate);
-  try{
-    const raw=localStorage.getItem(accessKey(plate));
-    if(!raw)return null;
-    const data=JSON.parse(raw);
-    if(!data||data.plate!==plate||!data.accessToken||Date.now()>=Number(data.expiresAt)){localStorage.removeItem(accessKey(plate));return null}
-    return data;
-  }catch{return null}
-}
-async function tryRestoreReport(plate){
-  const saved=getReportAccess(plate);
-  if(!saved)return false;
-  const status=document.getElementById('status');
-  status.innerHTML='<div class="loading"><span class="spinner"></span>Abrindo sua consulta já paga...</div>';
-  try{
-    const r=await fetch('/api/consulta-salva',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accessToken:saved.accessToken}),cache:'no-store'});
-    let data={};try{data=await r.json()}catch{}
-    if(!r.ok||data.paid!==true||!data.vehicle)throw new Error('Acesso temporário expirado.');
-    ultimaPlacaConsultada=plate;
-    renderRelatorioCompleto(data.vehicle);
-    status.innerHTML='<div class="success">✅ Consulta já paga recuperada neste navegador sem solicitar CPF novamente.</div>';
-    steps(3);
-    return true;
-  }catch{
-    try{localStorage.removeItem(accessKey(plate))}catch{}
-    status.innerHTML='';
-    return false;
-  }
-}
-
-async function consultar(){
-  const plate=normalizar(plateInput.value),btn=document.getElementById('btn'),status=document.getElementById('status'),result=document.getElementById('result');
-  if(!placaValida(plate)){status.innerHTML='<div class="error">⚠️ Digite uma placa válida, como ABC1D23.</div>';return}
-  btn.disabled=true;btn.textContent='CONSULTANDO...';steps(2);result.classList.add('hidden');
-  try{
-    if(await tryRestoreReport(plate))return;
-    status.innerHTML='<div class="loading"><span class="spinner"></span>Consultando os dados disponíveis...</div>';
-    const r=await fetch('/api/consulta/'+encodeURIComponent(plate),{cache:'no-store'});
-    let data={};try{data=await r.json()}catch{}
-    if(!r.ok)throw new Error(data.error||'Não foi possível realizar a consulta.');
-    ultimaPlacaConsultada=plate;
-    const v=data.vehicle||{},marca=v.brand||v.marca||'Disponível',modelo=v.model||v.modelo||'Disponível';
-    result.innerHTML=`<div class="vehicle-card"><div class="vehicle-top"><div class="vehicle-title"><span style="font-size:27px">🚘</span><h2>Veículo localizado</h2></div><span class="found">● LOCALIZADO</span></div><div class="plate-result">${esc(plate)}</div><div class="vehicle-name">${esc(marca)} · ${esc(modelo)}</div></div>${lockedRow('Ano / Ano-modelo')}${lockedRow('Cor')}${lockedRow('Município / UF')}${lockedRow('Combustível')}${lockedRow('Tipo do veículo')}<div class="unlock"><div style="font-size:32px">🔐</div><h3>Consulta completa disponível</h3><p>Libere os dados adicionais que estiverem disponíveis para este veículo.</p><div class="price">R$ 18,90 <small>pagamento único pela consulta completa</small></div><button class="paybtn" onclick="desbloquear()">💠 PAGAR R$ 18,90 COM PIX</button><div class="secure">🔒 Pagamento único • Sem assinatura • Liberação somente após confirmação</div></div>`;
-    result.classList.remove('hidden');status.innerHTML='';steps(3);
-  }catch(e){status.innerHTML='<div class="error">⚠️ '+esc(e.message)+'</div>';steps(1)}
-  finally{btn.disabled=false;btn.textContent='🔎 CONSULTAR VEÍCULO'}
-}
-
-function setPixStep(step){
-  document.getElementById('pixFormStep').classList.toggle('hidden',step!=='form');
-  document.getElementById('pixPayStep').classList.toggle('hidden',step!=='pay');
-  document.getElementById('pixSuccessStep').classList.toggle('hidden',step!=='success');
-}
-function erroPix(msg){document.getElementById('pixFormError').innerHTML=msg?'<div class="flow-error">⚠️ '+esc(msg)+'</div>':''}
-function loadStoredPayment(){try{const raw=sessionStorage.getItem('consultaPix');if(!raw)return null;const p=JSON.parse(raw);if(!p||p.plate!==ultimaPlacaConsultada||!p.paymentToken)return null;return p}catch{return null}}
-function desbloquear(){
-  const plate=ultimaPlacaConsultada||normalizar(plateInput.value);
-  if(!placaValida(plate)){document.getElementById('status').innerHTML='<div class="error">Faça uma consulta válida antes de gerar o pagamento.</div>';return}
-  ultimaPlacaConsultada=plate;document.getElementById('pixPlate').textContent=plate;pixFlow.classList.remove('hidden');document.body.classList.add('no-scroll');erroPix('');
-  const stored=loadStoredPayment();if(stored){pixPayment=stored;mostrarPixGerado(stored);verificarPagamento(true)}else{setPixStep('form');setTimeout(()=>pixNome.focus(),80)}
-}
-function fecharPix(){pixFlow.classList.add('hidden');document.body.classList.remove('no-scroll');pararPollingPix()}
-function novoPix(){pararPollingPix();pixPayment=null;sessionStorage.removeItem('consultaPix');document.getElementById('pixCode').value='';document.getElementById('pixQr').classList.add('hidden');document.getElementById('pixStatus').className='pix-status';document.getElementById('pixStatus').textContent='⏳ Aguardando pagamento de R$ 18,90...';setPixStep('form')}
-
-async function gerarPix(){
-  const nome=pixNome.value.trim().replace(/\s+/g,' '),cpf=soDigitos(pixCpf.value),btn=document.getElementById('pixCreateBtn');
-  if(nome.length<2){erroPix('Informe o nome do pagador.');return}
-  if(cpf.length!==11){erroPix('Informe um CPF válido com 11 números.');return}
-  erroPix('');btn.disabled=true;btn.textContent='GERANDO PIX...';
-  try{
-    const r=await fetch('/api/pagamento/pix/criar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({produto:'consulta-completa',placa:ultimaPlacaConsultada,nome,cpf}),cache:'no-store'});
-    let data={};try{data=await r.json()}catch{}
-    if(!r.ok)throw new Error(data.mensagem||data.error||'Não foi possível gerar o PIX.');
-    pixPayment={plate:ultimaPlacaConsultada,paymentToken:data.paymentToken,transactionId:data.transactionId,copyPaste:data.copyPaste||'',qrCodeBase64:data.qrCodeBase64||'',qrcodeUrl:data.qrcodeUrl||'',createdAt:Date.now()};
-    sessionStorage.setItem('consultaPix',JSON.stringify(pixPayment));mostrarPixGerado(pixPayment);iniciarPollingPix();
-  }catch(e){erroPix(e.message)}
-  finally{btn.disabled=false;btn.textContent='💠 GERAR PIX DE R$ 18,90'}
-}
-function mostrarPixGerado(p){
-  setPixStep('pay');const qr=document.getElementById('pixQr'),code=document.getElementById('pixCode');code.value=p.copyPaste||'';
-  let src='';if(p.qrCodeBase64)src=String(p.qrCodeBase64).startsWith('data:')?p.qrCodeBase64:'data:image/png;base64,'+p.qrCodeBase64;else if(p.qrcodeUrl)src=p.qrcodeUrl;
-  if(src){qr.src=src;qr.classList.remove('hidden')}else qr.classList.add('hidden');
-  document.getElementById('pixStatus').className='pix-status';document.getElementById('pixStatus').textContent='⏳ Aguardando pagamento de R$ 18,90...';iniciarPollingPix();
-}
-async function copiarPix(){const code=document.getElementById('pixCode').value;if(!code)return;try{await navigator.clipboard.writeText(code);document.getElementById('pixStatus').textContent='📋 Código PIX copiado.'}catch{document.getElementById('pixCode').select();document.execCommand('copy')}}
-function iniciarPollingPix(){pararPollingPix();pixPollTimer=setInterval(()=>verificarPagamento(true),4000)}
-function pararPollingPix(){if(pixPollTimer){clearInterval(pixPollTimer);pixPollTimer=null}}
-async function verificarPagamento(silencioso){
-  if(!pixPayment||!pixPayment.paymentToken)return;
-  const status=document.getElementById('pixStatus');
-  if(!silencioso){status.className='pix-status';status.textContent='🔄 Verificando pagamento...'}
-  try{
-    const r=await fetch('/api/pagamento/pix/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentToken:pixPayment.paymentToken}),cache:'no-store'});
-    let data={};try{data=await r.json()}catch{}
-    if(!r.ok)throw new Error(data.mensagem||'Não foi possível verificar o pagamento.');
-    if(data.pago===true){pararPollingPix();status.className='pix-status ok';status.textContent='✅ PIX confirmado. Liberando o relatório...';await liberarRelatorio();return}
-    status.className='pix-status';status.textContent='⏳ Pagamento ainda pendente. A confirmação é atualizada automaticamente.';
-  }catch(e){if(!silencioso){status.className='pix-status bad';status.textContent='⚠️ '+e.message}}
-}
-async function liberarRelatorio(){
-  try{
-    const r=await fetch('/api/consulta-completa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentToken:pixPayment.paymentToken}),cache:'no-store'});
-    let data={};try{data=await r.json()}catch{}
-    if(!r.ok)throw new Error(data.mensagem||'Não foi possível liberar a consulta.');
-    saveReportAccess(data);renderRelatorioCompleto(data.vehicle||{});sessionStorage.removeItem('consultaPix');setPixStep('success');
-  }catch(e){const status=document.getElementById('pixStatus');status.className='pix-status bad';status.textContent='⚠️ Pagamento confirmado, mas houve falha ao carregar o relatório: '+e.message}
-}
-function indicatorCard(label,value){
-  if(value===true)return `<div class="risk warn"><b>${esc(label)}</b>⚠️ Ocorrência indicada pela fonte</div>`;
-  if(value===false)return `<div class="risk ok"><b>${esc(label)}</b>✅ Nada consta na indicação retornada</div>`;
-  return `<div class="risk"><b>${esc(label)}</b>⚪ Não informado</div>`;
-}
-function renderRelatorioCompleto(v){
-  const result=document.getElementById('result'),plate=v.plate||ultimaPlacaConsultada,marca=v.brand||'Não informado',modelo=v.model||'Não informado';
-  const ano=(v.year&&v.modelYear&&String(v.year)!==String(v.modelYear))?`${v.year} / ${v.modelYear}`:(v.modelYear||v.year||'Não informado');
-  const local=[v.city,v.state].filter(Boolean).join(' / ')||'Não informado';
-  let html=`<div class="vehicle-card"><div class="vehicle-top"><div class="vehicle-title"><span style="font-size:27px">🚘</span><h2>Relatório liberado</h2></div><span class="paid-badge">✓ PAGAMENTO CONFIRMADO</span></div><div class="plate-result">${esc(plate)}</div><div class="vehicle-name">${esc(marca)} · ${esc(modelo)}</div></div>`;
-  html+=valueRow('Ano / Ano-modelo',ano)+valueRow('Cor',v.color)+valueRow('Município / UF',local)+valueRow('Combustível',v.fuel)+valueRow('Tipo do veículo',v.type);
-  if(v.renavam)html+=valueRow('RENAVAM',v.renavam);
-  if(v.chassis)html+=valueRow('Chassi',v.chassis);
-  if(v.status)html+=valueRow('Situação',v.status);
-  if(v.origin)html+=valueRow('Procedência',v.origin);
-  if(v.fipe&&(v.fipe.value||v.fipe.numericValue)){
-    const fv=v.fipe.value||Number(v.fipe.numericValue).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-    html+=`<div class="report-section"><h3>📊 Referência FIPE</h3>${valueRow('Valor de referência',fv)}${v.fipe.code?valueRow('Código FIPE',v.fipe.code):''}${v.fipe.referenceMonth?valueRow('Mês de referência',v.fipe.referenceMonth):''}<div class="report-note">Valor de referência informado pela fonte integrada; não representa avaliação individual do veículo.</div></div>`;
-  }
-  if(v.indicators){
-    const i=v.indicators;
-    html+=`<div class="report-section"><h3>⚠️ Indicadores disponíveis</h3><div class="risk-grid">${indicatorCard('Roubo / furto',i.theft)}${indicatorCard('Leilão',i.auction)}${indicatorCard('Recall',i.recall)}${indicatorCard('RENAJUD',i.renajud)}${indicatorCard('RENAINF / infrações',i.renainf)}${indicatorCard('Comunicação de venda',i.saleCommunication)}${indicatorCard('Pendência documental',i.documentationPending)}${indicatorCard('Remarcação de chassi',i.chassisRemarked)}</div><div class="report-note">A ausência de informação não deve ser interpretada automaticamente como ausência de ocorrência.</div></div>`;
-  }
-  if(Array.isArray(v.restrictions)){
-    html+=`<div class="report-section"><h3>🔎 Restrições retornadas</h3>${v.restrictions.length?v.restrictions.map(x=>`<div class="info">${esc(x)}</div>`).join(''):'<div class="success">Nenhuma restrição foi informada na lista retornada pela fonte.</div>'}</div>`;
-  }
-  html+=`<div class="success">✅ Consulta liberada após confirmação do pagamento. Os campos exibidos são somente os efetivamente retornados pelas fontes integradas.</div><div class="report-actions"><button class="secondary-btn" onclick="novaConsulta()">🔄 NOVA CONSULTA</button><button class="paybtn" onclick="salvarPDF()">📄 SALVAR / IMPRIMIR PDF</button></div>`;
-  result.innerHTML=html;result.classList.remove('hidden');steps(3);
-}
-function novaConsulta(){ultimaPlacaConsultada='';plateInput.value='';document.getElementById('result').classList.add('hidden');document.getElementById('status').innerHTML='';steps(1);plateInput.focus()}
-function irParaRelatorio(){fecharPix();setTimeout(()=>document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'}),100)}
-pixFlow.addEventListener('click',e=>{if(e.target===pixFlow)fecharPix()});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!pixFlow.classList.contains('hidden'))fecharPix()});
+const $=id=>document.getElementById(id);const norm=v=>String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,7);const valid=p=>/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(p)||/^[A-Z]{3}[0-9]{4}$/.test(p);const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));const show=v=>v===undefined||v===null||String(v).trim()===''?'Não informado':String(v);
+let lastPlate='',payment=null,poll=null;$('plate').addEventListener('input',e=>e.target.value=norm(e.target.value));$('plate').addEventListener('keydown',e=>{if(e.key==='Enter')consultar()});
+const row=(l,v)=>`<div class="row"><span>${esc(l)}</span><span>${esc(show(v))}</span></div>`;const lock=l=>`<div class="row"><span>${esc(l)}</span><span class="locked">██████ 🔒</span></div>`;
+function accessKey(p){return'cv_relatorio_24h_'+norm(p)}function saveAccess(d){try{if(d?.vehicle?.plate&&d.reportAccessToken&&d.reportAccessExpiresAt)localStorage.setItem(accessKey(d.vehicle.plate),JSON.stringify({plate:norm(d.vehicle.plate),token:d.reportAccessToken,exp:Number(d.reportAccessExpiresAt)}))}catch{}}function getAccess(p){try{const x=JSON.parse(localStorage.getItem(accessKey(p))||'null');if(!x||x.plate!==norm(p)||!x.token||Date.now()>=x.exp){localStorage.removeItem(accessKey(p));return null}return x}catch{return null}}
+async function restore(p){const x=getAccess(p);if(!x)return false;try{const r=await fetch('/api/consulta-salva',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accessToken:x.token}),cache:'no-store'});const d=await r.json();if(!r.ok||!d.vehicle)throw 0;lastPlate=p;renderReport(d.vehicle);$('status').innerHTML='<div class="success">✅ Consulta já paga reaberta neste navegador.</div>';return true}catch{try{localStorage.removeItem(accessKey(p))}catch{}return false}}
+async function consultar(){const p=norm($('plate').value),b=$('btn');if(!valid(p))return $('status').innerHTML='<div class="error">Digite uma placa válida, como ABC1D23.</div>';b.disabled=true;b.textContent='CONSULTANDO...';$('result').classList.add('hidden');$('status').innerHTML='<div class="info">Consultando...</div>';try{if(await restore(p))return;const r=await fetch('/api/consulta/'+encodeURIComponent(p),{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Não foi possível consultar.');lastPlate=p;const v=d.vehicle||{};$('result').innerHTML=`<div class="vehicle"><div class="head"><b>Veículo localizado</b><span class="tag">LOCALIZADO</span></div><div class="plateout">${esc(p)}</div><div class="muted">${esc(v.brand||'Disponível')} · ${esc(v.model||'Disponível')}</div></div>${lock('Ano / Ano-modelo')}${lock('Cor')}${lock('Município / UF')}${lock('Combustível')}${lock('Tipo do veículo')}<div class="unlock"><b>Consulta completa disponível</b><div class="price">R$ 18,90</div><div class="small">Pagamento único, sem assinatura.</div><button class="pay" onclick="abrirPix()">💠 PAGAR COM PIX</button></div>`;$('result').classList.remove('hidden');$('status').innerHTML=''}catch(e){$('status').innerHTML='<div class="error">'+esc(e.message)+'</div>'}finally{b.disabled=false;b.textContent='🔎 CONSULTAR VEÍCULO'}}
+function setStep(s){$('pixForm').classList.toggle('hidden',s!=='form');$('pixPay').classList.toggle('hidden',s!=='pay');$('pixSuccess').classList.toggle('hidden',s!=='success')}function stored(){try{const x=JSON.parse(sessionStorage.getItem('consultaPix')||'null');return x&&x.plate===lastPlate&&x.paymentToken?x:null}catch{return null}}function abrirPix(){if(!valid(lastPlate))return;$('pixPlate').textContent=lastPlate;$('pixFlow').classList.remove('hidden');const x=stored();if(x){payment=x;showPix(x);verificarPagamento(true)}else setStep('form')}function fecharPix(){$('pixFlow').classList.add('hidden');stopPoll()}function novoPix(){stopPoll();payment=null;sessionStorage.removeItem('consultaPix');$('pixCode').value='';$('pixQr').classList.add('hidden');$('pixError').innerHTML='';setStep('form')}
+async function gerarPix(){const b=$('pixCreate');b.disabled=true;b.textContent='GERANDO PIX...';$('pixError').innerHTML='';try{const r=await fetch('/api/pagamento/pix/criar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({produto:'consulta-completa',placa:lastPlate}),cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.mensagem||'Não foi possível gerar o PIX.');payment={plate:lastPlate,paymentToken:d.paymentToken,correlationID:d.correlationID,copyPaste:d.copyPaste||'',qrcodeUrl:d.qrcodeUrl||''};sessionStorage.setItem('consultaPix',JSON.stringify(payment));showPix(payment)}catch(e){$('pixError').innerHTML='<div class="error">'+esc(e.message)+'</div>'}finally{b.disabled=false;b.textContent='💠 GERAR CÓDIGO PIX'}}
+function showPix(x){setStep('pay');$('pixCode').value=x.copyPaste||'';if(x.qrcodeUrl){$('pixQr').src=x.qrcodeUrl;$('pixQr').classList.remove('hidden')}else $('pixQr').classList.add('hidden');$('pixStatus').className='info';$('pixStatus').textContent='Aguardando pagamento...';startPoll()}async function copiarPix(){const c=$('pixCode').value;if(!c)return;try{await navigator.clipboard.writeText(c);$('pixStatus').textContent='Código PIX copiado.'}catch{$('pixCode').select();document.execCommand('copy')}}function startPoll(){stopPoll();poll=setInterval(()=>verificarPagamento(true),4000)}function stopPoll(){if(poll){clearInterval(poll);poll=null}}
+async function verificarPagamento(silent){if(!payment)return;if(!silent)$('pixStatus').textContent='Verificando pagamento...';try{const r=await fetch('/api/pagamento/pix/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentToken:payment.paymentToken}),cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.mensagem||'Falha ao verificar pagamento.');if(d.pago){stopPoll();$('pixStatus').className='success';$('pixStatus').textContent='Pagamento confirmado. Liberando relatório...';return liberar()}$('pixStatus').className='info';$('pixStatus').textContent='Pagamento ainda pendente.'}catch(e){if(!silent){$('pixStatus').className='error';$('pixStatus').textContent=e.message}}}
+async function liberar(){try{const r=await fetch('/api/consulta-completa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentToken:payment.paymentToken}),cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.mensagem||'Não foi possível liberar o relatório.');saveAccess(d);renderReport(d.vehicle||{});sessionStorage.removeItem('consultaPix');setStep('success')}catch(e){$('pixStatus').className='error';$('pixStatus').textContent=e.message}}
+function indicator(l,v){return`<div class="risk"><b>${esc(l)}</b>${v===true?'⚠️ Ocorrência indicada':v===false?'✅ Nada consta na indicação':'⚪ Não informado'}</div>`}function renderReport(v){const p=v.plate||lastPlate;let h=`<div class="vehicle"><div class="head"><b>Relatório liberado</b><span class="tag">PAGAMENTO CONFIRMADO</span></div><div class="plateout">${esc(p)}</div><div class="muted">${esc(show(v.brand))} · ${esc(show(v.model))}</div></div>`;h+=row('Ano / Ano-modelo',v.modelYear&&v.year&&String(v.modelYear)!==String(v.year)?v.year+' / '+v.modelYear:v.modelYear||v.year)+row('Cor',v.color)+row('Município / UF',[v.city,v.state].filter(Boolean).join(' / '))+row('Combustível',v.fuel)+row('Tipo do veículo',v.type);if(v.renavam)h+=row('RENAVAM',v.renavam);if(v.chassis)h+=row('Chassi',v.chassis);if(v.status)h+=row('Situação',v.status);if(v.fipe&&(v.fipe.value||v.fipe.numericValue))h+=`<div class="section"><b>📊 Referência FIPE</b>${row('Valor',v.fipe.value||Number(v.fipe.numericValue).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}))}${v.fipe.code?row('Código FIPE',v.fipe.code):''}</div>`;if(v.indicators){const i=v.indicators;h+=`<div class="section"><b>⚠️ Indicadores disponíveis</b><div class="riskgrid" style="margin-top:10px">${indicator('Roubo / furto',i.theft)}${indicator('Leilão',i.auction)}${indicator('Recall',i.recall)}${indicator('RENAJUD',i.renajud)}${indicator('Infrações',i.renainf)}${indicator('Remarcação de chassi',i.chassisRemarked)}</div></div>`}if(Array.isArray(v.restrictions))h+=`<div class="section"><b>🔎 Restrições retornadas</b>${v.restrictions.length?v.restrictions.map(x=>'<div class="info" style="margin-top:8px">'+esc(x)+'</div>').join(''):'<div class="success" style="margin-top:8px">Nenhuma restrição foi informada na lista retornada.</div>'}</div>`;h+='<div class="success" style="margin-top:12px">Os campos exibidos são somente os efetivamente retornados pelas fontes integradas.</div><div class="actions"><button class="secondary" onclick="nova()">NOVA CONSULTA</button><button class="pay" onclick="window.print()">SALVAR / IMPRIMIR PDF</button></div>';$('result').innerHTML=h;$('result').classList.remove('hidden')}
+function nova(){lastPlate='';$('plate').value='';$('result').classList.add('hidden');$('status').innerHTML='';$('plate').focus()}function irRelatorio(){fecharPix();$('result').scrollIntoView({behavior:'smooth',block:'start'})}$('pixFlow').addEventListener('click',e=>{if(e.target===$('pixFlow'))fecharPix()});document.addEventListener('keydown',e=>{if(e.key==='Escape')fecharPix()});
 </script>
-</body>
-</html>
+</body></html>
