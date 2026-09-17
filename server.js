@@ -7,15 +7,14 @@ const app = express();
 const PORT = Number(process.env.PORT || 3000);
 
 const FALCON_TOKEN = String(process.env.FALCON_TOKEN || "").trim();
-const MISTIC_PAY_URL = String(process.env.MISTIC_PAY_URL || "https://api.misticpay.com/api").replace(/\/+$/, "");
-const MISTIC_CLIENT_ID = String(process.env.MISTIC_CLIENT_ID || "").trim();
-const MISTIC_CLIENT_SECRET = String(process.env.MISTIC_CLIENT_SECRET || "").trim();
-const MISTIC_AUTH_HEADER = String(process.env.MISTIC_AUTH_HEADER || "").trim();
-const MISTIC_WEBHOOK_URL = String(process.env.MISTIC_WEBHOOK_URL || "").trim();
+const OPENPIX_APP_ID = String(process.env.OPENPIX_APP_ID || process.env.WOOVI_APP_ID || "").trim();
+const OPENPIX_API_URL = String(process.env.OPENPIX_API_URL || "https://api.openpix.com.br/api/v1").replace(/\/+$/, "");
 const PAYMENT_SIGNING_SECRET = String(process.env.PAYMENT_SIGNING_SECRET || "").trim();
 
 const CONSULTA_SALE_PRICE = 18.90;
+const CONSULTA_SALE_CENTS = 1890;
 const PAYMENT_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+const CHARGE_EXPIRES_IN_SECONDS = 30 * 60;
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const RATE_WINDOW_MS = 60 * 60 * 1000;
 const MAX_PREVIEWS_PER_HOUR = 10;
@@ -45,7 +44,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Evita exposição acidental do código-fonte e arquivos internos pelo servidor estático.
 app.use((req, res, next) => {
   const pathname = String(req.path || "/").toLowerCase();
   const blocked =
@@ -87,7 +85,7 @@ setInterval(() => {
   for (const [key, entry] of rateStore) if (now >= entry.resetAt) rateStore.delete(key);
   for (const [key, entry] of paymentRateStore) if (now >= entry.resetAt) paymentRateStore.delete(key);
   for (const [plate, entry] of previewCache) if (now >= entry.expiresAt) previewCache.delete(plate);
-  for (const [tx, entry] of confirmedPaymentCache) if (now >= entry.expiresAt) confirmedPaymentCache.delete(tx);
+  for (const [id, entry] of confirmedPaymentCache) if (now >= entry.expiresAt) confirmedPaymentCache.delete(id);
 }, 10 * 60 * 1000).unref();
 
 function normalizePlate(value) {
@@ -98,242 +96,95 @@ function validPlate(plate) {
   return /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(plate) || /^[A-Z]{3}[0-9]{4}$/.test(plate);
 }
 
-function digits(value) {
-  return String(value || "").replace(/\D/g, "");
-}
-
-function validCpf(value) {
-  const cpf = digits(value);
-  if (!/^\d{11}$/.test(cpf) || /^(\d)\1{10}$/.test(cpf)) return false;
-  for (let t = 9; t < 11; t += 1) {
-    let sum = 0;
-    for (let i = 0; i < t; i += 1) sum += Number(cpf[i]) * ((t + 1) - i);
-    const digit = ((sum * 10) % 11) % 10;
-    if (digit !== Number(cpf[t])) return false;
-  }
-  return true;
-}
-
 function secureEqual(a, b) {
   const left = Buffer.from(String(a || ""));
   const right = Buffer.from(String(b || ""));
   return left.length === right.length && crypto.timingSafeEqual(left, right);
 }
 
-function falconRequest(url, token) {
+function requestJson(url, options = {}, payload = null, maxBytes = 2_000_000) {
   return new Promise((resolve, reject) => {
-    const request = https.get(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-        "User-Agent": "ConsultaVeicular360/1.0"
-      }
-    }, response => {
-      let body = "";
-      response.setEncoding("utf8");
-      response.on("data", chunk => {
-        body += chunk;
-        if (body.length > 2_000_000) request.destroy(new Error("Resposta da fonte veicular excedeu o limite."));
-      });
-      response.on("end", () => resolve({ status: response.statusCode || 502, body }));
-    });
-    request.setTimeout(20000, () => request.destroy(new Error("Tempo limite da fonte veicular excedido.")));
-    request.on("error", reject);
-  });
-}
+    let parsed;
+    try { parsed = new URL(url); } catch { return reject(new Error("URL de integração inválida.")); }
+    if (parsed.protocol !== "https:") return reject(new Error("A integração deve usar HTTPS."));
 
-function falconRetryableError(err) {
-  const code = String((err && err.code) || "").toUpperCase();
-  const message = String((err && err.message) || "");
-  return message.includes("Tempo limite") ||
-    ["ETIMEDOUT", "ECONNRESET", "EAI_AGAIN", "ENETUNREACH", "EHOSTUNREACH", "ECONNREFUSED"].includes(code);
-}
-
-async function falconRequestWithRetry(url, token) {
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
-    try {
-      const response = await falconRequest(url, token);
-      if (response.status < 500 || response.status > 599 || attempt === 2) return response;
-    } catch (err) {
-      if (!falconRetryableError(err) || attempt === 2) throw err;
+    const body = payload == null ? null : JSON.stringify(payload);
+    const headers = { Accept: "application/json", ...(options.headers || {}) };
+    if (body != null) {
+      headers["Content-Type"] = "application/json";
+      headers["Content-Length"] = Buffer.byteLength(body);
     }
-    await new Promise(resolve => setTimeout(resolve, 700));
-  }
-  throw new Error("Falha temporária da fonte veicular.");
-}
 
-function misticAuthorization() {
-  const configured = MISTIC_AUTH_HEADER.replace(/^Authorization\s*:\s*/i, "");
-  if (configured) return /^Basic\s+/i.test(configured) ? configured : `Basic ${configured}`;
-  if (!MISTIC_CLIENT_ID || !MISTIC_CLIENT_SECRET) return null;
-  return `Basic ${Buffer.from(`${MISTIC_CLIENT_ID}:${MISTIC_CLIENT_SECRET}`).toString("base64")}`;
-}
-
-function misticRequest(endpoint, payload) {
-  return new Promise((resolve, reject) => {
-    const authorization = misticAuthorization();
-    if (!authorization) return reject(new Error("Credenciais da MisticPay não configuradas."));
-
-    let url;
-    try {
-      url = new URL(`${MISTIC_PAY_URL}${endpoint}`);
-    } catch {
-      return reject(new Error("URL da MisticPay inválida."));
-    }
-    if (url.protocol !== "https:") return reject(new Error("A integração de pagamento deve usar HTTPS."));
-
-    const body = JSON.stringify(payload || {});
-    const request = https.request(url, {
-      method: "POST",
-      headers: {
-        Authorization: authorization,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "Content-Length": Buffer.byteLength(body)
-      }
-    }, response => {
+    const request = https.request(parsed, { method: options.method || "GET", headers }, response => {
       const chunks = [];
       let size = 0;
       response.on("data", chunk => {
         size += chunk.length;
-        if (size > 2_000_000) return request.destroy(new Error("Resposta da MisticPay excedeu o limite."));
+        if (size > maxBytes) {
+          request.destroy(new Error("Resposta da integração excedeu o limite permitido."));
+          return;
+        }
         chunks.push(chunk);
       });
       response.on("end", () => {
         const raw = Buffer.concat(chunks).toString("utf8");
         let data = null;
         try { data = raw ? JSON.parse(raw) : null; } catch {}
-        resolve({ status: response.statusCode || 502, data });
+        resolve({ status: response.statusCode || 502, data, raw });
       });
     });
-    request.setTimeout(20000, () => request.destroy(new Error("Tempo limite da MisticPay excedido.")));
+    request.setTimeout(options.timeout || 20000, () => request.destroy(new Error("Tempo limite da integração excedido.")));
     request.on("error", reject);
-    request.write(body);
+    if (body != null) request.write(body);
     request.end();
   });
 }
 
-function paymentProduct(product) {
-  if (product === "consulta-completa") {
-    return { id: "consulta-completa", amount: CONSULTA_SALE_PRICE, description: "Consulta veicular completa" };
-  }
-  return null;
-}
-
-function signPaymentToken(payload) {
-  if (!PAYMENT_SIGNING_SECRET) throw new Error("Assinatura interna de pagamento não configurada.");
-  const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  const signature = crypto.createHmac("sha256", PAYMENT_SIGNING_SECRET).update(encoded).digest("base64url");
-  return `${encoded}.${signature}`;
-}
-
-function verifyPaymentToken(token) {
-  if (!PAYMENT_SIGNING_SECRET) throw new Error("Assinatura interna de pagamento não configurada.");
-  const parts = String(token || "").split(".");
-  if (parts.length !== 2) throw new Error("Token de pagamento inválido.");
-  const expected = crypto.createHmac("sha256", PAYMENT_SIGNING_SECRET).update(parts[0]).digest("base64url");
-  if (!secureEqual(parts[1], expected)) throw new Error("Token de pagamento inválido.");
-
-  let payload = null;
-  try { payload = JSON.parse(Buffer.from(parts[0], "base64url").toString("utf8")); } catch {}
-  if (!payload || payload.v !== 1 || !payload.tx || !payload.product || !payload.plate || !payload.exp) {
-    throw new Error("Token de pagamento inválido.");
-  }
-  if (Date.now() > Number(payload.exp)) throw new Error("Token de pagamento expirado.");
-  return payload;
-}
-
-function misticAmountMatches(value, expected) {
-  const amount = Number(value);
-  if (!Number.isFinite(amount)) return false;
-  return Math.abs(amount - expected) < 0.011 || Math.abs((amount / 100) - expected) < 0.011;
-}
-
-async function getMisticTransaction(transactionId) {
-  const key = String(transactionId || "");
-  const cached = confirmedPaymentCache.get(key);
-  if (cached && Date.now() < cached.expiresAt) return cached.transaction;
-
-  const response = await misticRequest("/transactions/check", { transactionId: key });
-  if (response.status < 200 || response.status >= 300 || !response.data || typeof response.data !== "object") {
-    const err = new Error("Não foi possível verificar o pagamento na MisticPay.");
-    err.status = response.status >= 400 && response.status < 500 ? response.status : 502;
-    throw err;
-  }
-
-  const transaction = response.data.transaction || response.data.data || response.data;
-  if (!transaction || typeof transaction !== "object") {
-    const err = new Error("Resposta inválida ao verificar o pagamento.");
-    err.status = 502;
-    throw err;
-  }
-
-  const state = String(transaction.transactionState || transaction.status || "").toUpperCase();
-  if (state === "COMPLETO") {
-    confirmedPaymentCache.set(key, { transaction, expiresAt: Date.now() + 30 * 60 * 1000 });
-  }
-  return transaction;
-}
-
-async function verifyPaidToken(token, requiredProduct) {
-  const payload = verifyPaymentToken(token);
-  if (requiredProduct && payload.product !== requiredProduct) {
-    const err = new Error("Este pagamento não pertence a este produto.");
-    err.status = 400;
-    throw err;
-  }
-
-  const product = paymentProduct(payload.product);
-  if (!product || Math.abs(Number(payload.amount) - product.amount) > 0.001) {
-    const err = new Error("Produto ou valor do pagamento inválido.");
-    err.status = 400;
-    throw err;
-  }
-
-  const transaction = await getMisticTransaction(payload.tx);
-  const state = String(transaction.transactionState || transaction.status || "").toUpperCase();
-  const type = String(transaction.transactionType || "").toUpperCase();
-  const method = String(transaction.transactionMethod || "").toUpperCase();
-  const value = transaction.value ?? transaction.transactionAmount ?? transaction.amount;
-
-  return {
-    paid: state === "COMPLETO" &&
-      (!type || type === "DEPOSITO") &&
-      (!method || method === "PIX") &&
-      misticAmountMatches(value, product.amount),
-    state: state || "DESCONHECIDO",
-    payload
-  };
-}
-
-async function getVehicle(plate) {
-  const cached = previewCache.get(plate);
-  if (cached && Date.now() < cached.expiresAt) return cached.vehicle;
-
+async function falconRequest(plate) {
   if (!FALCON_TOKEN) {
-    const err = new Error("Consulta veicular temporariamente indisponível.");
+    const err = new Error("API veicular não configurada no servidor.");
     err.status = 503;
     throw err;
   }
 
   const url = `https://beta.falcon-server.com.br/data-hub/private/v1/vehicles/${encodeURIComponent(plate)}/search`;
-  const response = await falconRequestWithRetry(url, FALCON_TOKEN);
-
-  let data = null;
-  try { data = JSON.parse(response.body); } catch {}
-
-  if (response.status < 200 || response.status >= 300) {
-    const err = new Error("Não foi possível realizar a consulta veicular.");
-    err.status = response.status >= 400 && response.status < 500 ? response.status : 502;
-    throw err;
+  let lastError = null;
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      const response = await requestJson(url, {
+        headers: { Authorization: `Bearer ${FALCON_TOKEN}` },
+        timeout: 20000
+      });
+      if (response.status >= 200 && response.status < 300 && response.data && typeof response.data === "object") {
+        return response.data;
+      }
+      if (response.status < 500 && response.status !== 429) {
+        const err = new Error("Não foi possível realizar a consulta veicular.");
+        err.status = response.status >= 400 && response.status < 500 ? response.status : 502;
+        throw err;
+      }
+      lastError = new Error(`Falcon respondeu HTTP ${response.status}.`);
+    } catch (err) {
+      lastError = err;
+    }
+    if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 500));
   }
-  if (!data || typeof data !== "object") {
+  const err = new Error("A fonte veicular está temporariamente indisponível.");
+  err.status = 502;
+  err.cause = lastError;
+  throw err;
+}
+
+async function getVehicle(plate) {
+  const cached = previewCache.get(plate);
+  if (cached && Date.now() < cached.expiresAt) return cached.vehicle;
+  const data = await falconRequest(plate);
+  const vehicle = data.vehicle || data.data || data;
+  if (!vehicle || typeof vehicle !== "object") {
     const err = new Error("Resposta inválida da fonte veicular.");
     err.status = 502;
     throw err;
   }
-
-  const vehicle = data.vehicle || data.data || data;
   previewCache.set(plate, { vehicle, expiresAt: Date.now() + CACHE_TTL_MS });
   return vehicle;
 }
@@ -353,10 +204,105 @@ function safeVehicleDetails(vehicle, plate) {
   };
 }
 
-app.get("/healthz", (req, res) => {
-  res.set("Cache-Control", "no-store");
-  res.json({ ok: true, service: "consulta-veicular-360" });
-});
+function paymentProduct(product) {
+  if (product === "consulta-completa") {
+    return { id: "consulta-completa", amount: CONSULTA_SALE_PRICE, cents: CONSULTA_SALE_CENTS, description: "Consulta veicular completa" };
+  }
+  return null;
+}
+
+function signPaymentToken(payload) {
+  if (!PAYMENT_SIGNING_SECRET) throw new Error("PAYMENT_SIGNING_SECRET não configurado.");
+  const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const signature = crypto.createHmac("sha256", PAYMENT_SIGNING_SECRET).update(encoded).digest("base64url");
+  return `${encoded}.${signature}`;
+}
+
+function verifyPaymentToken(token) {
+  if (!PAYMENT_SIGNING_SECRET) throw new Error("PAYMENT_SIGNING_SECRET não configurado.");
+  const parts = String(token || "").split(".");
+  if (parts.length !== 2) throw new Error("Token de pagamento inválido.");
+  const expected = crypto.createHmac("sha256", PAYMENT_SIGNING_SECRET).update(parts[0]).digest("base64url");
+  if (!secureEqual(parts[1], expected)) throw new Error("Token de pagamento inválido.");
+
+  let payload = null;
+  try { payload = JSON.parse(Buffer.from(parts[0], "base64url").toString("utf8")); } catch {}
+  if (!payload || payload.v !== 2 || payload.provider !== "openpix" || !payload.correlationID || !payload.product || !payload.plate || !payload.exp) {
+    throw new Error("Token de pagamento inválido.");
+  }
+  if (Date.now() > Number(payload.exp)) throw new Error("Token de pagamento expirado.");
+  return payload;
+}
+
+function openPixHeaders() {
+  if (!OPENPIX_APP_ID) throw new Error("OPENPIX_APP_ID não configurado.");
+  return { Authorization: OPENPIX_APP_ID };
+}
+
+async function createOpenPixCharge({ correlationID, plate, product }) {
+  const response = await requestJson(
+    `${OPENPIX_API_URL}/charge?return_existing=true`,
+    { method: "POST", headers: openPixHeaders(), timeout: 20000 },
+    {
+      correlationID,
+      value: product.cents,
+      comment: `Consulta Veicular 360 - ${plate}`,
+      expiresIn: CHARGE_EXPIRES_IN_SECONDS
+    }
+  );
+
+  const charge = response.data && response.data.charge ? response.data.charge : null;
+  if (response.status < 200 || response.status >= 300 || !charge || typeof charge !== "object") {
+    console.error("Woovi/OpenPix respondeu com erro ao criar cobrança:", response.status);
+    const err = new Error("Não foi possível gerar o PIX. Tente novamente.");
+    err.status = response.status >= 400 && response.status < 500 ? response.status : 502;
+    throw err;
+  }
+  return charge;
+}
+
+async function getOpenPixCharge(correlationID) {
+  const key = String(correlationID || "");
+  const cached = confirmedPaymentCache.get(key);
+  if (cached && Date.now() < cached.expiresAt) return cached.charge;
+
+  const response = await requestJson(
+    `${OPENPIX_API_URL}/charge/${encodeURIComponent(key)}`,
+    { headers: openPixHeaders(), timeout: 15000 }
+  );
+  const charge = response.data && response.data.charge ? response.data.charge : null;
+  if (response.status < 200 || response.status >= 300 || !charge || typeof charge !== "object") {
+    const err = new Error("Não foi possível verificar o pagamento na Woovi/OpenPix.");
+    err.status = response.status >= 400 && response.status < 500 ? response.status : 502;
+    throw err;
+  }
+  if (String(charge.status || "").toUpperCase() === "COMPLETED") {
+    confirmedPaymentCache.set(key, { charge, expiresAt: Date.now() + 30 * 60 * 1000 });
+  }
+  return charge;
+}
+
+async function verifyPaidToken(token, requiredProduct) {
+  const payload = verifyPaymentToken(token);
+  if (requiredProduct && payload.product !== requiredProduct) {
+    const err = new Error("Este pagamento não pertence a este produto.");
+    err.status = 400;
+    throw err;
+  }
+  const product = paymentProduct(payload.product);
+  if (!product || Number(payload.cents) !== product.cents) {
+    const err = new Error("Produto ou valor do pagamento inválido.");
+    err.status = 400;
+    throw err;
+  }
+
+  const charge = await getOpenPixCharge(payload.correlationID);
+  const state = String(charge.status || "").toUpperCase();
+  const value = Number(charge.value);
+  const paid = state === "COMPLETED" && Number.isFinite(value) && value === product.cents;
+
+  return { paid, state: state || "DESCONHECIDO", payload, charge };
+}
 
 app.get("/api/consulta/:plate", async (req, res) => {
   const plate = normalizePlate(req.params.plate);
@@ -391,32 +337,27 @@ app.get("/api/consulta/:plate", async (req, res) => {
 });
 
 app.get("/api/pagamento/pix/diagnostico", (req, res) => {
-  const authConfigured = Boolean(misticAuthorization());
-  const signingConfigured = Boolean(PAYMENT_SIGNING_SECRET);
   return res.json({
-    provedor: "misticpay",
-    autenticacao_configurada: authConfigured,
-    webhook_configurado: Boolean(MISTIC_WEBHOOK_URL),
-    assinatura_interna_configurada: signingConfigured,
-    pronto_para_cobrar: authConfigured && signingConfigured
+    provedor: "woovi-openpix",
+    api_configurada: Boolean(OPENPIX_APP_ID),
+    assinatura_interna_configurada: Boolean(PAYMENT_SIGNING_SECRET),
+    pronto_para_cobrar: Boolean(OPENPIX_APP_ID && PAYMENT_SIGNING_SECRET),
+    coleta_dados_pagador_no_site: false
   });
 });
 
 app.post("/api/pagamento/pix/criar", async (req, res) => {
-  if (!misticAuthorization() || !PAYMENT_SIGNING_SECRET) {
+  if (!OPENPIX_APP_ID || !PAYMENT_SIGNING_SECRET) {
     return res.status(503).json({
       error: "pagamento_nao_configurado",
-      mensagem: "Integração PIX temporariamente indisponível."
+      mensagem: "Integração PIX Woovi/OpenPix ainda não configurada no servidor."
     });
   }
 
   const limit = checkPaymentRateLimit(req);
   if (!limit.allowed) {
     res.set("Retry-After", String(limit.retryAfter));
-    return res.status(429).json({
-      error: "limite_pagamentos",
-      mensagem: "Muitas tentativas de cobrança. Tente novamente mais tarde."
-    });
+    return res.status(429).json({ error: "limite_pagamentos", mensagem: "Muitas tentativas de cobrança. Tente novamente mais tarde." });
   }
 
   const product = paymentProduct(String((req.body && req.body.produto) || "consulta-completa"));
@@ -425,76 +366,41 @@ app.post("/api/pagamento/pix/criar", async (req, res) => {
   const plate = normalizePlate(req.body && req.body.placa);
   if (!validPlate(plate)) return res.status(400).json({ error: "placa_invalida", mensagem: "Placa inválida." });
 
-  const payerName = String((req.body && req.body.nome) || "").trim().replace(/\s+/g, " ");
-  const payerDocument = digits(req.body && req.body.cpf);
-
-  if (payerName.length < 2 || payerName.length > 120) {
-    return res.status(400).json({ error: "nome_invalido", mensagem: "Informe o nome do pagador." });
-  }
-  if (!validCpf(payerDocument)) {
-    return res.status(400).json({ error: "cpf_invalido", mensagem: "Informe um CPF válido do pagador." });
-  }
-
-  const clientTransactionId = `cv-${plate}-${Date.now()}-${crypto.randomBytes(5).toString("hex")}`;
-  const payload = {
-    amount: product.amount,
-    payerName,
-    payerDocument,
-    transactionId: clientTransactionId,
-    description: `${product.description} - ${plate}`
-  };
-  if (MISTIC_WEBHOOK_URL) payload.projectWebhook = MISTIC_WEBHOOK_URL;
+  const correlationID = `cv-${plate}-${Date.now()}-${crypto.randomBytes(6).toString("hex")}`;
 
   try {
-    const response = await misticRequest("/transactions/create", payload);
-    const data = response.data && response.data.data ? response.data.data : response.data;
-
-    if (response.status < 200 || response.status >= 300 || !data || typeof data !== "object") {
-      console.error("MisticPay respondeu com erro ao criar cobrança:", response.status);
-      return res.status(response.status >= 400 && response.status < 500 ? response.status : 502).json({
-        error: "falha_criar_pix",
-        mensagem: "Não foi possível gerar o PIX. Tente novamente."
-      });
-    }
-
-    const transactionId = data.transactionId;
-    if (transactionId === undefined || transactionId === null || transactionId === "") {
-      return res.status(502).json({
-        error: "resposta_pix_invalida",
-        mensagem: "A processadora não retornou o identificador da cobrança."
-      });
-    }
-
+    const charge = await createOpenPixCharge({ correlationID, plate, product });
     const paymentToken = signPaymentToken({
-      v: 1,
+      v: 2,
+      provider: "openpix",
       product: product.id,
       plate,
       amount: product.amount,
-      tx: String(transactionId),
-      clientTx: clientTransactionId,
+      cents: product.cents,
+      correlationID,
       exp: Date.now() + PAYMENT_TOKEN_TTL_MS
     });
 
     return res.status(201).json({
       ok: true,
+      provedor: "woovi-openpix",
       produto: product.id,
       placa: plate,
       valor: product.amount,
       moeda: "BRL",
-      transactionId: String(transactionId),
-      clientTransactionId,
-      status: String(data.transactionState || "PENDENTE").toUpperCase(),
-      qrCodeBase64: data.qrCodeBase64 || null,
-      qrcodeUrl: data.qrcodeUrl || null,
-      copyPaste: data.copyPaste || null,
+      correlationID,
+      status: String(charge.status || "ACTIVE").toUpperCase(),
+      copyPaste: charge.brCode || (charge.pix && charge.pix.brCode) || null,
+      qrcodeUrl: charge.qrCodeImage || null,
+      paymentLinkUrl: charge.paymentLinkUrl || null,
       paymentToken,
-      expiraEmSegundos: Math.floor(PAYMENT_TOKEN_TTL_MS / 1000)
+      expiraEmSegundos: Number(charge.expiresIn) || CHARGE_EXPIRES_IN_SECONDS
     });
   } catch (err) {
-    console.error("Erro ao criar cobrança na MisticPay:", err.message);
-    return res.status(502).json({
-      error: "falha_comunicacao_pix",
-      mensagem: "Falha de comunicação com a processadora PIX."
+    console.error("Erro ao criar cobrança na Woovi/OpenPix:", err.message);
+    return res.status(err.status || 502).json({
+      error: "falha_criar_pix",
+      mensagem: err.message || "Não foi possível gerar o PIX."
     });
   }
 });
@@ -516,21 +422,6 @@ app.post("/api/pagamento/pix/status", async (req, res) => {
       error: "pagamento_invalido",
       mensagem: err.message || "Não foi possível verificar o pagamento."
     });
-  }
-});
-
-// O webhook nunca libera conteúdo sozinho. A transação é revalidada pela API autenticada.
-app.post("/api/misticpay/webhook", async (req, res) => {
-  const transactionId = req.body && req.body.transactionId;
-  if (transactionId === undefined || transactionId === null || transactionId === "") {
-    return res.status(400).json({ ok: false });
-  }
-  try {
-    await getMisticTransaction(String(transactionId));
-    return res.status(200).json({ ok: true });
-  } catch (err) {
-    console.error("Falha ao revalidar webhook MisticPay:", err.message);
-    return res.status(502).json({ ok: false });
   }
 });
 
@@ -584,9 +475,9 @@ app.use((req, res) => {
 });
 
 if (!FALCON_TOKEN) console.warn("FALCON_TOKEN não configurado.");
-if (!misticAuthorization()) console.warn("Credenciais MisticPay não configuradas.");
+if (!OPENPIX_APP_ID) console.warn("OPENPIX_APP_ID não configurado. O checkout PIX ficará indisponível.");
 if (!PAYMENT_SIGNING_SECRET) console.warn("PAYMENT_SIGNING_SECRET não configurado.");
 
 app.listen(PORT, () => {
-  console.log(`Consulta Veicular 360 ativa na porta ${PORT}.`);
+  console.log(`Consulta Veicular 360 ativa na porta ${PORT}. Checkout PIX: Woovi/OpenPix.`);
 });
