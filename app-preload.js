@@ -15,7 +15,8 @@ const modules = [
   './swap-fipe-gravame-preload.js',
   './inline-result-preload.js',
   './no-auto-scroll-preload.js',
-  './google-ads-conversion-preload.js'
+  './google-ads-conversion-preload.js',
+  './transparency-preload.js'
 ];
 
 for (const modulePath of modules) {
