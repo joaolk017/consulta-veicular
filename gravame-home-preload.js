@@ -1,8 +1,6 @@
 'use strict';
-
 const http = require('http');
 const path = require('path');
-
 const IS_OUTER_UI = path.basename(String(process.argv[1] || '')).toLowerCase() === 'recovery-ui-proxy.js';
 
 if (IS_OUTER_UI) {
@@ -42,6 +40,7 @@ if (IS_OUTER_UI) {
 .cv-gravame-home-price{position:relative;margin:13px 0 6px;font-size:31px;font-weight:950}.cv-gravame-home-price small{font-size:10px;color:#8297b1;font-weight:800}
 .cv-gravame-home-btn{position:relative;width:100%!important;height:50px!important;margin:4px 0 0!important;border:1px solid #4a98f3!important;border-radius:11px!important;background:linear-gradient(135deg,#2789ef,#1559b7)!important;color:#fff!important;font-size:11px!important;font-weight:950!important;box-shadow:0 13px 30px rgba(29,110,218,.25)!important;cursor:pointer}
 .cv-gravame-home-msg{position:relative;min-height:17px;padding-top:7px;color:#ffb9c3;font-size:9px;text-align:center}.cv-gravame-home-note{position:relative;margin-top:5px;color:#748ba6;font-size:8px;line-height:1.45;text-align:center}
+.cv-mobile-bar .cv-gravame-mobile{border:1px solid #366ba6!important;background:linear-gradient(135deg,#1d5f9f,#123b66)!important;color:#eef7ff!important;box-shadow:none!important}
 @media(max-width:1050px){.services-grid.cv-with-gravame-home{grid-template-columns:1fr 1fr!important}.services-grid.cv-with-gravame-home>main.card{grid-column:1/-1}}
 @media(max-width:700px){.services-grid.cv-with-gravame-home{grid-template-columns:1fr!important}.services-grid.cv-with-gravame-home>main.card{grid-column:auto}.cv-gravame-home{padding:20px;border-radius:20px}.cv-gravame-home h2{font-size:34px}}
 </style>`;
@@ -52,6 +51,13 @@ if (IS_OUTER_UI) {
   function normal(v){return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,7)}
   function valid(v){return /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(v)||/^[A-Z]{3}[0-9]{4}$/.test(v)}
   function msg(t){var e=document.getElementById('cv-gravame-home-msg');if(e)e.textContent=t||''}
+  window.cvOpenGravameMobile=function(){
+    var visible=document.getElementById('cv-plate'),main=document.getElementById('plate'),home=document.getElementById('cv-gravame-home-plate');
+    var p=normal((visible&&visible.value)||(main&&main.value)||(home&&home.value)||'');
+    if(p){if(visible)visible.value=p;if(main)main.value=p;if(home)home.value=p;}
+    if(typeof window.cvOpenGravame==='function')window.cvOpenGravame();
+    else {var target=document.getElementById('cv-gravame-home');if(target)target.scrollIntoView({behavior:'smooth',block:'start'});}
+  };
   function bind(){
     var input=document.getElementById('cv-gravame-home-plate');
     var btn=document.getElementById('cv-gravame-home-btn');
@@ -107,6 +113,7 @@ if (IS_OUTER_UI) {
             if (contentType.includes('text/html') && !body.includes('id="cv-gravame-home"')) {
               body = body.replace(/<div class="services-grid">/i, '<div class="services-grid cv-with-gravame-home">');
               body = body.replace(/(<aside id="fipe"[\s\S]*?<\/aside>)/i, '$1' + CARD);
+              body = body.replace(/<a class="cv-fipe-mobile"[^>]*>[\s\S]*?<\/a>/i, '<button type="button" class="cv-gravame-mobile" onclick="cvOpenGravameMobile()">🔐 Consultar gravame</button>');
               if (!body.includes('id="cv-gravame-home-style"')) body = body.replace('</head>', STYLE + '\n</head>');
               if (!body.includes('id="cv-gravame-home-script"')) body = body.replace('</body>', SCRIPT + '\n</body>');
               chunk = Buffer.from(body, 'utf8');
