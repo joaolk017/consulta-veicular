@@ -1,12 +1,11 @@
 'use strict';
 
 // Ponto único de inicialização dos módulos que estendem a aplicação.
-// A ordem é mantida para preservar exatamente o comportamento atual do site.
+// Recuperação paga, proxy, renderização e PDF agora ficam concentrados em recovery-suite-preload.js.
 const modules = [
   './preview-rate-limit-preload.js',
   './security-preload.js',
-  './recovery-route-redirect-preload.js',
-  './recovery-preload.js',
+  './recovery-suite-preload.js',
   './fontedata-preload.js',
   './falcon-preview-ui-preload.js',
   './gravame-direct-mobile-preload.js',
@@ -16,13 +15,7 @@ const modules = [
   './swap-fipe-gravame-preload.js',
   './inline-result-preload.js',
   './no-auto-scroll-preload.js',
-  './google-ads-conversion-preload.js',
-  './recovery-hotfix-preload.js',
-  './recovery-paid-fallback-preload.js',
-  './recovery-direct-route-preload.js',
-  './recovery-browser-render-preload.js',
-  './recovery-pdf-preload.js',
-  './recovery-pdf-modal-preload.js'
+  './google-ads-conversion-preload.js'
 ];
 
 for (const modulePath of modules) {
@@ -34,4 +27,4 @@ for (const modulePath of modules) {
   }
 }
 
-console.log(`BOOTSTRAP: ${modules.length} módulos carregados por um único ponto de inicialização.`);
+console.log(`BOOTSTRAP: ${modules.length} módulos ativos carregados por um único ponto de inicialização.`);
