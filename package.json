@@ -1,7 +1,12 @@
 {
-  "name":"consulta-veicular-falcon",
-  "version":"1.0.0",
-  "private":true,
-  "scripts":{"start":"node -r ./app-preload.js recovery-ui-proxy.js"},
-  "dependencies":{"express":"^5.1.0","pg":"^8.13.1","pdfkit":"^0.15.0"}
+  "name": "consulta-veicular-falcon",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node -r ./security-preload.js -r ./fontedata-preload.js server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "pg": "^8.13.1"
+  }
 }
