@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 260" role="img" aria-labelledby="title desc">
+  <title id="title">Consulta Veicular 360</title>
+  <desc id="desc">Logo com carro, lupa e símbolo de confirmação</desc>
+  <rect width="920" height="260" rx="28" fill="#ffffff"/>
+  <g transform="translate(35 38)">
+    <path d="M30 118c12-47 36-79 70-95 24-11 76-16 129-13 27 2 56 11 75 26 16 13 31 32 42 58l18 44c4 10-3 22-14 22H54c-18 0-30-18-24-42z" fill="#071f3f"/>
+    <path d="M65 111h209c15 0 28 12 28 28v18H39v-18c0-16 11-28 26-28z" fill="#0b3566"/>
+    <path d="M93 35h140c21 0 40 6 55 18l20 16H72l21-24z" fill="#eaf4ff"/>
+    <path d="M59 118h39c8 0 15 6 15 14v7H48c2-12 5-17 11-21z" fill="#43b8ff"/>
+    <path d="M239 118h40c7 0 13 6 15 21h-69v-7c0-8 6-14 14-14z" fill="#43b8ff"/>
+    <circle cx="292" cy="78" r="64" fill="#ffffff" stroke="#149dff" stroke-width="16"/>
+    <path d="M267 78l17 17 34-39" fill="none" stroke="#1677ff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M335 125l42 42" stroke="#0679c8" stroke-width="18" stroke-linecap="round"/>
+  </g>
+  <text x="420" y="113" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="800" fill="#071f3f">Consulta</text>
+  <text x="420" y="188" font-family="Arial, Helvetica, sans-serif" font-size="66" font-weight="750" fill="#0b4f9c">Veicular</text>
+  <text x="741" y="188" font-family="Arial, Helvetica, sans-serif" font-size="76" font-weight="850" fill="#159dff">360</text>
+</svg>
