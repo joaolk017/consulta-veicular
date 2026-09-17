@@ -28,6 +28,7 @@ const BRAND_CSS = `
 }
 .notice.private-notice{border-color:#5d88ad;background:linear-gradient(135deg,#173b5d,#122f4a);box-shadow:0 14px 34px rgba(2,9,17,.22)}
 .notice.private-notice strong{display:block;margin-bottom:6px;font-size:13px;color:#fff;letter-spacing:.2px}
+.notice.private-notice .provider-note{display:block;margin-top:8px;color:#d8e8f5;font-size:11px;line-height:1.6}
 .notice.private-notice .private-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
 .notice.private-notice .private-links a{font-size:10px;font-weight:850;text-decoration:none}
 @media(max-width:900px){
@@ -90,7 +91,7 @@ http.createServer = function brandedCreateServer(...args) {
 
         output = output.replace(
           '<div class="notice"><b>Importante:</b> a Consulta Veicular 360 é uma plataforma privada e independente de intermediação e consolidação de consultas veiculares, sem vínculo governamental.</div>',
-          '<div class="notice private-notice"><strong>🔎 Consulta Veicular 360 — serviço privado e independente</strong>A Consulta Veicular 360 é uma plataforma privada de consulta informativa e consolidação de dados veiculares. <b>Não somos DETRAN, SENATRAN, GOV.BR e não representamos nenhum órgão público.</b> O serviço é operado por empresa privada identificada no rodapé do site. As informações dependem das fontes integradas e podem variar conforme o veículo.<div class="private-links"><a href="/sobre/">Sobre o serviço</a><a href="/termos.html">Termos de Uso</a><a href="/privacidade.html">Política de Privacidade</a><a href="/contato.html">Contato e Suporte</a></div></div>'
+          '<div class="notice private-notice"><strong>🔎 Consulta Veicular 360 — serviço privado e independente</strong>A Consulta Veicular 360 é uma plataforma privada de consulta informativa e consolidação de dados veiculares. <b>Não somos DETRAN, SENATRAN, GOV.BR e não representamos nenhum órgão público.</b> O serviço é operado por empresa privada identificada no rodapé do site. As informações dependem das fontes integradas e podem variar conforme o veículo.<span class="provider-note"><b>Integrações transparentes:</b> utilizamos provedores tecnológicos independentes para dados veiculares e a Woovi/OpenPix para processamento do PIX. A utilização ou menção desses serviços <b>não significa sociedade, representação, afiliação institucional, patrocínio ou vínculo governamental</b>.</span><div class="private-links"><a href="/sobre/">Sobre o serviço</a><a href="/termos.html">Termos de Uso</a><a href="/privacidade.html">Política de Privacidade</a><a href="/contato.html">Contato e Suporte</a></div></div>'
         );
 
         output = output.replace(
