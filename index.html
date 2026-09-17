@@ -49,30 +49,30 @@
 
 <div id="pixFlow" class="flow-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pixFlowTitle">
   <div class="flow-modal pix-modal">
-    <div class="flow-top"><div class="flow-title"><div class="ico pix-head-icon">💠</div><div><h2 id="pixFlowTitle">Pagamento via PIX</h2><p id="pixSubtitle">Desbloqueie a consulta completa após a confirmação.</p></div></div><button class="flow-close" type="button" onclick="fecharPix()" aria-label="Fechar">✕</button></div>
+    <div class="flow-top"><div class="flow-title"><div class="ico pix-head-icon">💠</div><div><h2 id="pixFlowTitle">Pagamento via PIX</h2><p id="pixSubtitle">Pagamento único de R$ 18,90 pela consulta completa. Confira os dados antes de gerar o PIX.</p></div></div><button class="flow-close" type="button" onclick="fecharPix()" aria-label="Fechar">✕</button></div>
     <div class="flow-body">
       <section id="pixFormStep">
-        <div class="pix-price">R$ 18,90 <small>consulta completa</small></div>
-        <div class="pix-summary">Placa: <b id="pixPlate">—</b></div>
+        <div class="pix-price">R$ 18,90 <small>pagamento único pela consulta completa</small></div>
+        <div class="pix-summary">Placa: <b id="pixPlate">—</b><br>Valor total do PIX: <b>R$ 18,90</b> · sem assinatura ou cobrança recorrente</div>
         <div class="pix-form">
           <div class="field"><label for="pixNome">Nome do pagador</label><input id="pixNome" autocomplete="name" maxlength="120" placeholder="Nome completo"></div>
           <div class="field"><label for="pixCpf">CPF do pagador</label><input id="pixCpf" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00"></div>
           <div id="pixFormError"></div>
           <button id="pixCreateBtn" class="paybtn" type="button" onclick="gerarPix()">💠 GERAR PIX DE R$ 18,90</button>
-          <div class="pix-privacy">O CPF é enviado ao provedor de pagamento somente para gerar e identificar a cobrança PIX. As credenciais da Mistic Pay permanecem protegidas no servidor.</div>
+          <div class="pix-privacy"><b>Valor total da cobrança: R$ 18,90.</b> Pagamento único para liberar esta consulta completa, sem assinatura ou cobrança recorrente. O CPF é enviado ao provedor de pagamento somente para gerar e identificar a cobrança PIX. As credenciais da Mistic Pay permanecem protegidas no servidor.</div>
         </div>
       </section>
       <section id="pixPayStep" class="hidden pix-box">
-        <h3 style="margin-top:0">Escaneie ou use o PIX copia e cola</h3>
-        <p style="color:#91a49a;font-size:12px">A consulta será liberada somente após o pagamento ser confirmado pelo provedor.</p>
+        <h3 style="margin-top:0">PIX de R$ 18,90</h3>
+        <p style="color:#91a49a;font-size:12px">Valor total: <b>R$ 18,90</b>. Escaneie o QR Code ou use o PIX copia e cola. A consulta será liberada somente após a confirmação do pagamento.</p>
         <img id="pixQr" class="pix-qr hidden" alt="QR Code PIX">
         <textarea id="pixCode" class="pix-code" readonly aria-label="Código PIX copia e cola"></textarea>
         <button class="copybtn" type="button" onclick="copiarPix()">📋 COPIAR CÓDIGO PIX</button>
-        <div id="pixStatus" class="pix-status">⏳ Aguardando pagamento...</div>
+        <div id="pixStatus" class="pix-status">⏳ Aguardando pagamento de R$ 18,90...</div>
         <div class="pix-actions"><button class="secondary-btn" type="button" onclick="verificarPagamento(false)">🔄 JÁ PAGUEI</button><button class="secondary-btn" type="button" onclick="novoPix()">NOVO PIX</button></div>
       </section>
       <section id="pixSuccessStep" class="hidden pix-box">
-        <div style="font-size:48px">✅</div><h3>Pagamento confirmado</h3><p style="color:#91a49a;font-size:12px">Seu relatório completo foi liberado.</p>
+        <div style="font-size:48px">✅</div><h3>Pagamento confirmado</h3><p style="color:#91a49a;font-size:12px">Pagamento único de R$ 18,90 confirmado. Seu relatório completo foi liberado.</p>
         <button class="paybtn" type="button" onclick="irParaRelatorio()">VER RELATÓRIO COMPLETO</button>
       </section>
     </div>
@@ -115,7 +115,7 @@ async function consultar(){
     const r=await fetch('/api/consulta/'+encodeURIComponent(plate),{cache:'no-store'});const data=await r.json();if(!r.ok)throw new Error(data.error||'Não foi possível realizar a consulta.');
     ultimaPlacaConsultada=plate;
     const v=data.vehicle||{},marca=v.brand||v.marca||'Disponível',modelo=v.model||v.modelo||'Disponível';
-    result.innerHTML=`<div class="vehicle-card"><div class="vehicle-top"><div class="vehicle-title"><div class="vehicle-icon">🚘</div><h2>Veículo localizado</h2></div><span class="found">● LOCALIZADO</span></div><div class="plate-result">${esc(plate)}</div><div class="vehicle-name">${esc(marca)} · ${esc(modelo)}</div></div>${lockedRow('Ano / Ano-modelo')}${lockedRow('Cor')}${lockedRow('Município / UF')}${lockedRow('Combustível')}${lockedRow('Tipo do veículo')}<div class="unlock"><div class="unlock-icon">🔐</div><h3>Relatório completo disponível</h3><p>Desbloqueie os demais dados disponíveis para este veículo.</p><div class="price">R$ 18,90 <small>por consulta</small></div><button class="paybtn" onclick="desbloquear()">💠 PAGAR COM PIX E DESBLOQUEAR</button><div class="secure">🔒 Pagamento via PIX • Liberação após confirmação</div><div class="pdf-feature">📄 <b>PDF incluído</b><br>Após a confirmação, você poderá salvar ou imprimir o relatório completo em PDF.</div></div>`;
+    result.innerHTML=`<div class="vehicle-card"><div class="vehicle-top"><div class="vehicle-title"><div class="vehicle-icon">🚘</div><h2>Veículo localizado</h2></div><span class="found">● LOCALIZADO</span></div><div class="plate-result">${esc(plate)}</div><div class="vehicle-name">${esc(marca)} · ${esc(modelo)}</div></div>${lockedRow('Ano / Ano-modelo')}${lockedRow('Cor')}${lockedRow('Município / UF')}${lockedRow('Combustível')}${lockedRow('Tipo do veículo')}<div class="unlock"><div class="unlock-icon">🔐</div><h3>Relatório completo disponível</h3><p>Desbloqueie os demais dados disponíveis para este veículo.</p><div class="price">R$ 18,90 <small>pagamento único pela consulta completa</small></div><button class="paybtn" onclick="desbloquear()">💠 PAGAR R$ 18,90 COM PIX E DESBLOQUEAR</button><div class="secure">🔒 Valor total desta consulta: R$ 18,90 • Pagamento único • Sem assinatura ou cobrança recorrente • Liberação após confirmação</div><div class="pdf-feature">📄 <b>PDF incluído</b><br>Após a confirmação, você poderá salvar ou imprimir o relatório completo em PDF.</div></div>`;
     result.classList.remove('hidden');status.innerHTML='';steps(3);setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'start'}),100);
   }catch(e){status.innerHTML='<div class="error">⚠️ '+esc(e.message)+'</div>';steps(1)}finally{btn.disabled=false;btn.textContent='🔎 CONSULTAR VEÍCULO'}
 }
@@ -131,10 +131,10 @@ function desbloquear(){
   const stored=loadStoredPayment();if(stored){pixPayment=stored;mostrarPixGerado(stored);verificarPagamento(true)}else{setPixStep('form');setTimeout(()=>pixNome.focus(),80)}
 }
 function fecharPix(){pixFlow.classList.add('hidden');document.body.classList.remove('no-scroll');pararPollingPix()}
-function novoPix(){pararPollingPix();pixPayment=null;sessionStorage.removeItem('consultaPix');document.getElementById('pixCode').value='';document.getElementById('pixQr').classList.add('hidden');document.getElementById('pixStatus').className='pix-status';document.getElementById('pixStatus').textContent='⏳ Aguardando pagamento...';setPixStep('form')}
+function novoPix(){pararPollingPix();pixPayment=null;sessionStorage.removeItem('consultaPix');document.getElementById('pixCode').value='';document.getElementById('pixQr').classList.add('hidden');document.getElementById('pixStatus').className='pix-status';document.getElementById('pixStatus').textContent='⏳ Aguardando pagamento de R$ 18,90...';setPixStep('form')}
 async function gerarPix(){
   const nome=pixNome.value.trim().replace(/\s+/g,' '),cpf=soDigitos(pixCpf.value),btn=document.getElementById('pixCreateBtn');
-  if(nome.length<2){erroPix('Informe o nome do pagador.');return}if(cpf.length!==11){erroPix('Informe um CPF válido com 11 números.');return}erroPix('');btn.disabled=true;btn.textContent='GERANDO PIX...';
+  if(nome.length<2){erroPix('Informe o nome do pagador.');return}if(cpf.length!==11){erroPix('Informe um CPF válido com 11 números.');return}erroPix('');btn.disabled=true;btn.textContent='GERANDO PIX DE R$ 18,90...';
   try{
     const r=await fetch('/api/pagamento/pix/criar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({produto:'consulta-completa',placa:ultimaPlacaConsultada,nome,cpf})});
     let data={};try{data=await r.json()}catch{}if(!r.ok)throw new Error(data.mensagem||data.error||'Não foi possível gerar o PIX.');
@@ -146,17 +146,17 @@ function mostrarPixGerado(p){
   setPixStep('pay');const qr=document.getElementById('pixQr'),code=document.getElementById('pixCode');code.value=p.copyPaste||'';let src='';
   if(p.qrCodeBase64)src=String(p.qrCodeBase64).startsWith('data:')?p.qrCodeBase64:'data:image/png;base64,'+p.qrCodeBase64;else if(p.qrcodeUrl)src=p.qrcodeUrl;
   if(src){qr.src=src;qr.classList.remove('hidden')}else qr.classList.add('hidden');
-  document.getElementById('pixStatus').className='pix-status';document.getElementById('pixStatus').textContent='⏳ Aguardando confirmação do PIX...';iniciarPollingPix();
+  document.getElementById('pixStatus').className='pix-status';document.getElementById('pixStatus').textContent='⏳ Aguardando pagamento de R$ 18,90...';iniciarPollingPix();
 }
-async function copiarPix(){const code=document.getElementById('pixCode').value;if(!code)return;try{await navigator.clipboard.writeText(code);document.getElementById('pixStatus').textContent='📋 Código PIX copiado. Depois de pagar, aguarde a confirmação automática.'}catch{document.getElementById('pixCode').select();document.execCommand('copy')}}
+async function copiarPix(){const code=document.getElementById('pixCode').value;if(!code)return;try{await navigator.clipboard.writeText(code);document.getElementById('pixStatus').textContent='📋 Código PIX de R$ 18,90 copiado. Depois de pagar, aguarde a confirmação automática.'}catch{document.getElementById('pixCode').select();document.execCommand('copy')}}
 function iniciarPollingPix(){pararPollingPix();pixPollTimer=setInterval(()=>verificarPagamento(true),4000)}
 function pararPollingPix(){if(pixPollTimer){clearInterval(pixPollTimer);pixPollTimer=null}}
 async function verificarPagamento(silencioso){
-  if(!pixPayment||!pixPayment.paymentToken)return;const status=document.getElementById('pixStatus');if(!silencioso){status.className='pix-status';status.textContent='🔄 Verificando pagamento...'}
+  if(!pixPayment||!pixPayment.paymentToken)return;const status=document.getElementById('pixStatus');if(!silencioso){status.className='pix-status';status.textContent='🔄 Verificando pagamento de R$ 18,90...'}
   try{
     const r=await fetch('/api/pagamento/pix/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentToken:pixPayment.paymentToken}),cache:'no-store'});let data={};try{data=await r.json()}catch{}if(!r.ok)throw new Error(data.mensagem||'Não foi possível verificar o pagamento.');
-    if(data.pago===true){pararPollingPix();status.className='pix-status ok';status.textContent='✅ PIX confirmado. Liberando o relatório...';await liberarRelatorio();return}
-    status.className='pix-status';status.textContent='⏳ Pagamento ainda pendente. A confirmação é atualizada automaticamente.';
+    if(data.pago===true){pararPollingPix();status.className='pix-status ok';status.textContent='✅ PIX de R$ 18,90 confirmado. Liberando o relatório...';await liberarRelatorio();return}
+    status.className='pix-status';status.textContent='⏳ Pagamento de R$ 18,90 ainda pendente. A confirmação é atualizada automaticamente.';
   }catch(e){if(!silencioso){status.className='pix-status bad';status.textContent='⚠️ '+e.message}}
 }
 async function liberarRelatorio(){
@@ -168,7 +168,7 @@ async function liberarRelatorio(){
 function renderRelatorioCompleto(v){
   const result=document.getElementById('result'),plate=v.plate||ultimaPlacaConsultada,marca=v.brand||'Não informado',modelo=v.model||'Não informado';
   const ano=(v.year&&v.modelYear&&String(v.year)!==String(v.modelYear))?`${v.year} / ${v.modelYear}`:(v.modelYear||v.year||'Não informado');const local=[v.city,v.state].filter(Boolean).join(' / ')||'Não informado';
-  result.innerHTML=`<div class="vehicle-card"><div class="vehicle-top"><div class="vehicle-title"><div class="vehicle-icon">🚘</div><h2>Relatório completo</h2></div><span class="paid-badge">✓ PIX CONFIRMADO</span></div><div class="plate-result">${esc(plate)}</div><div class="vehicle-name">${esc(marca)} · ${esc(modelo)}</div></div>${valueRow('Ano / Ano-modelo',ano)}${valueRow('Cor',v.color)}${valueRow('Município / UF',local)}${valueRow('Combustível',v.fuel)}${valueRow('Tipo do veículo',v.type)}<div class="success">✅ Pagamento confirmado e consulta completa liberada.</div><div class="report-actions"><button class="secondary-btn" onclick="consultar()">🔄 NOVA CONSULTA</button><button class="paybtn" onclick="salvarPDF()">📄 SALVAR / IMPRIMIR PDF</button></div>`;result.classList.remove('hidden');steps(3)
+  result.innerHTML=`<div class="vehicle-card"><div class="vehicle-top"><div class="vehicle-title"><div class="vehicle-icon">🚘</div><h2>Relatório completo</h2></div><span class="paid-badge">✓ PIX CONFIRMADO</span></div><div class="plate-result">${esc(plate)}</div><div class="vehicle-name">${esc(marca)} · ${esc(modelo)}</div></div>${valueRow('Ano / Ano-modelo',ano)}${valueRow('Cor',v.color)}${valueRow('Município / UF',local)}${valueRow('Combustível',v.fuel)}${valueRow('Tipo do veículo',v.type)}<div class="success">✅ Pagamento único de R$ 18,90 confirmado e consulta completa liberada.</div><div class="report-actions"><button class="secondary-btn" onclick="consultar()">🔄 NOVA CONSULTA</button><button class="paybtn" onclick="salvarPDF()">📄 SALVAR / IMPRIMIR PDF</button></div>`;result.classList.remove('hidden');steps(3)
 }
 function irParaRelatorio(){fecharPix();setTimeout(()=>document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'}),100)}
 pixFlow.addEventListener('click',e=>{if(e.target===pixFlow)fecharPix()});
