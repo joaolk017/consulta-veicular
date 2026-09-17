@@ -26,6 +26,10 @@ const BRAND_CSS = `
   transform:translateY(-2px) scale(1.015);
   box-shadow:0 20px 50px rgba(2,9,17,.38),0 0 0 1px rgba(255,255,255,.46),0 0 34px rgba(48,152,255,.22);
 }
+.notice.private-notice{border-color:#5d88ad;background:linear-gradient(135deg,#173b5d,#122f4a);box-shadow:0 14px 34px rgba(2,9,17,.22)}
+.notice.private-notice strong{display:block;margin-bottom:6px;font-size:13px;color:#fff;letter-spacing:.2px}
+.notice.private-notice .private-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.notice.private-notice .private-links a{font-size:10px;font-weight:850;text-decoration:none}
 @media(max-width:900px){
   .top{justify-content:center;padding:22px 0}
   .brand-logo{width:300px;max-width:72vw;border-radius:14px;padding:6px 8px}
@@ -33,6 +37,7 @@ const BRAND_CSS = `
 @media(max-width:520px){
   .top{padding:18px 0}
   .brand-logo{width:240px;max-width:80vw;border-radius:12px;padding:5px 6px}
+  .notice.private-notice strong{font-size:12px}
 }
 `;
 
@@ -77,6 +82,21 @@ http.createServer = function brandedCreateServer(...args) {
           );
           output = output.replace('</style>', `${BRAND_CSS}</style>`);
         }
+
+        output = output.replace(
+          '<span class="pill">SERVIÇO PRIVADO E INDEPENDENTE</span>',
+          '<span class="pill">SERVIÇO PRIVADO E INDEPENDENTE · SEM VÍNCULO GOVERNAMENTAL</span>'
+        );
+
+        output = output.replace(
+          '<div class="notice"><b>Importante:</b> a Consulta Veicular 360 é uma plataforma privada e independente de intermediação e consolidação de consultas veiculares, sem vínculo governamental.</div>',
+          '<div class="notice private-notice"><strong>🔎 Consulta Veicular 360 — serviço privado e independente</strong>A Consulta Veicular 360 é uma plataforma privada de consulta informativa e consolidação de dados veiculares. <b>Não somos DETRAN, SENATRAN, GOV.BR e não representamos nenhum órgão público.</b> O serviço é operado por empresa privada identificada no rodapé do site. As informações dependem das fontes integradas e podem variar conforme o veículo.<div class="private-links"><a href="/sobre/">Sobre o serviço</a><a href="/termos.html">Termos de Uso</a><a href="/privacidade.html">Política de Privacidade</a><a href="/contato.html">Contato e Suporte</a></div></div>'
+        );
+
+        output = output.replace(
+          '<div class="identity"><b>Consulta Veicular 360</b><br>consultaveicular360.com.br · Serviço privado e independente.<br>',
+          '<div class="identity"><b>Consulta Veicular 360</b><br>consultaveicular360.com.br · <b>Serviço privado e independente, sem vínculo com DETRAN, SENATRAN ou GOV.BR.</b><br>'
+        );
 
         const body = Buffer.from(output, 'utf8');
         res.statusCode = 200;
