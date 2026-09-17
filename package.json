@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node -r ./security-preload.js -r ./fontedata-preload.js -r ./branding-preload.js server.js"
+    "start": "node -r ./security-preload.js -r ./fontedata-preload.js -r ./anti-phishing-hardening-preload.js -r ./branding-preload.js server.js"
   },
   "dependencies": {
     "express": "^5.1.0",
-    "pg": "^8.13.1"
+    "pg": "^8.13.1",
+    "qrcode": "^1.5.4"
   }
 }
