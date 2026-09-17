@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node -r ./security-preload.js -r ./fontedata-preload.js server.js"
+    "start": "node -r ./security-preload.js -r ./fontedata-preload.js -r ./hero-preload.js server.js"
   },
   "dependencies": {
     "express": "^5.1.0",
