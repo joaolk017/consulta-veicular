@@ -4,47 +4,57 @@ const https = require("https");
 const crypto = require("crypto");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT || 3000);
 
-const FALCON_TOKEN = process.env.FALCON_TOKEN;
-// Aceita o nome usado na documentação da Desphub e mantém compatibilidade com a variável antiga.
-const DESPHUB_API_KEY = process.env.DESPHUB_CHAVE || process.env.DESPHUB_API_KEY;
-const CRLV_ADMIN_TOKEN = process.env.CRLV_ADMIN_TOKEN;
-
-// Mistic Pay (cash-in PIX).
+const FALCON_TOKEN = String(process.env.FALCON_TOKEN || "").trim();
 const MISTIC_PAY_URL = String(process.env.MISTIC_PAY_URL || "https://api.misticpay.com/api").replace(/\/+$/, "");
-const MISTIC_CLIENT_ID = process.env.MISTIC_CLIENT_ID;
-const MISTIC_CLIENT_SECRET = process.env.MISTIC_CLIENT_SECRET;
-const MISTIC_AUTH_HEADER = process.env.MISTIC_AUTH_HEADER;
-const MISTIC_WEBHOOK_URL = process.env.MISTIC_WEBHOOK_URL;
-const PAYMENT_SIGNING_SECRET = process.env.PAYMENT_SIGNING_SECRET;
+const MISTIC_CLIENT_ID = String(process.env.MISTIC_CLIENT_ID || "").trim();
+const MISTIC_CLIENT_SECRET = String(process.env.MISTIC_CLIENT_SECRET || "").trim();
+const MISTIC_AUTH_HEADER = String(process.env.MISTIC_AUTH_HEADER || "").trim();
+const MISTIC_WEBHOOK_URL = String(process.env.MISTIC_WEBHOOK_URL || "").trim();
+const PAYMENT_SIGNING_SECRET = String(process.env.PAYMENT_SIGNING_SECRET || "").trim();
 
 const CONSULTA_SALE_PRICE = 18.90;
-const CRLV_SP_SALE_PRICE = 59.90;
 const PAYMENT_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
-
-if (!FALCON_TOKEN) console.warn("FALCON_TOKEN não configurado.");
-if (!DESPHUB_API_KEY) console.warn("DESPHUB_CHAVE/DESPHUB_API_KEY não configurada.");
-if (!CRLV_ADMIN_TOKEN) console.warn("CRLV_ADMIN_TOKEN não configurado. A emissão de CRLV ficará bloqueada.");
-if (!MISTIC_CLIENT_ID && !MISTIC_AUTH_HEADER) console.warn("MISTIC_CLIENT_ID/MISTIC_AUTH_HEADER não configurado.");
-if (!MISTIC_CLIENT_SECRET && !MISTIC_AUTH_HEADER) console.warn("MISTIC_CLIENT_SECRET/MISTIC_AUTH_HEADER não configurado.");
-if (!PAYMENT_SIGNING_SECRET) console.warn("PAYMENT_SIGNING_SECRET não configurado. O checkout PIX ficará bloqueado.");
-
-app.disable("x-powered-by");
-app.set("trust proxy", 1);
-app.use(express.json({ limit: "20kb" }));
-app.use(express.static(path.join(__dirname), { dotfiles: "deny", index: "index.html" }));
-
-const RATE_WINDOW_MS = 60 * 60 * 1000;
-const MAX_PREVIEWS_PER_HOUR = 3;
-const MAX_PAYMENT_CREATES_PER_HOUR = 12;
 const CACHE_TTL_MS = 10 * 60 * 1000;
+const RATE_WINDOW_MS = 60 * 60 * 1000;
+const MAX_PREVIEWS_PER_HOUR = 10;
+const MAX_PAYMENT_CREATES_PER_HOUR = 12;
+
 const rateStore = new Map();
 const paymentRateStore = new Map();
 const previewCache = new Map();
 const confirmedPaymentCache = new Map();
-// Evita duas emissões simultâneas da mesma placa por duplo clique/requisições concorrentes.
-const crlvInFlight = new Set();
+
+app.disable("x-powered-by");
+app.set("trust proxy", 1);
+app.use(express.json({ limit: "20kb" }));
+
+app.use((req, res, next) => {
+  res.set("X-Content-Type-Options", "nosniff");
+  res.set("X-Frame-Options", "DENY");
+  res.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), usb=(), payment=()");
+  res.set("Content-Security-Policy", "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'");
+  res.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  if (req.path.startsWith("/api/")) {
+    res.set("Cache-Control", "no-store");
+    res.set("Pragma", "no-cache");
+    res.set("X-Robots-Tag", "noindex, nofollow, nosnippet");
+  }
+  next();
+});
+
+// Evita exposição acidental do código-fonte e arquivos internos pelo servidor estático.
+app.use((req, res, next) => {
+  const pathname = String(req.path || "/").toLowerCase();
+  const blocked =
+    pathname.startsWith("/.") ||
+    pathname.startsWith("/node_modules/") ||
+    /\.(?:js|json|map|md|lock|env)$/i.test(pathname);
+  if (blocked) return res.status(404).type("text/plain").send("Página não encontrada.");
+  next();
+});
 
 function clientIp(req) {
   return req.ip || req.socket.remoteAddress || "unknown";
@@ -81,7 +91,7 @@ setInterval(() => {
 }, 10 * 60 * 1000).unref();
 
 function normalizePlate(value) {
-  return String(value || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return String(value || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7);
 }
 
 function validPlate(plate) {
@@ -113,59 +123,47 @@ function secureEqual(a, b) {
 function falconRequest(url, token) {
   return new Promise((resolve, reject) => {
     const request = https.get(url, {
-      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        "User-Agent": "ConsultaVeicular360/1.0"
+      }
     }, response => {
       let body = "";
       response.setEncoding("utf8");
       response.on("data", chunk => {
         body += chunk;
-        if (body.length > 2_000_000) request.destroy(new Error("Resposta da API excedeu o limite permitido."));
+        if (body.length > 2_000_000) request.destroy(new Error("Resposta da fonte veicular excedeu o limite."));
       });
       response.on("end", () => resolve({ status: response.statusCode || 502, body }));
     });
-    request.setTimeout(15000, () => request.destroy(new Error("Tempo limite da API Falcon excedido.")));
+    request.setTimeout(20000, () => request.destroy(new Error("Tempo limite da fonte veicular excedido.")));
     request.on("error", reject);
   });
 }
 
-function desphubRequest(payload) {
-  return new Promise((resolve, reject) => {
-    const body = JSON.stringify(payload);
-    const request = https.request("https://painel.desphub.com/api/v1/consultas", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${DESPHUB_API_KEY}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "Content-Length": Buffer.byteLength(body)
-      }
-    }, response => {
-      const chunks = [];
-      let size = 0;
-      response.on("data", chunk => {
-        size += chunk.length;
-        if (size > 25_000_000) {
-          request.destroy(new Error("Resposta da API Desphub excedeu o limite permitido."));
-          return;
-        }
-        chunks.push(chunk);
-      });
-      response.on("end", () => {
-        const raw = Buffer.concat(chunks).toString("utf8");
-        let data = null;
-        try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
-        resolve({ status: response.statusCode || 502, data });
-      });
-    });
-    request.setTimeout(65000, () => request.destroy(new Error("Tempo limite da API Desphub excedido.")));
-    request.on("error", reject);
-    request.write(body);
-    request.end();
-  });
+function falconRetryableError(err) {
+  const code = String((err && err.code) || "").toUpperCase();
+  const message = String((err && err.message) || "");
+  return message.includes("Tempo limite") ||
+    ["ETIMEDOUT", "ECONNRESET", "EAI_AGAIN", "ENETUNREACH", "EHOSTUNREACH", "ECONNREFUSED"].includes(code);
+}
+
+async function falconRequestWithRetry(url, token) {
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      const response = await falconRequest(url, token);
+      if (response.status < 500 || response.status > 599 || attempt === 2) return response;
+    } catch (err) {
+      if (!falconRetryableError(err) || attempt === 2) throw err;
+    }
+    await new Promise(resolve => setTimeout(resolve, 700));
+  }
+  throw new Error("Falha temporária da fonte veicular.");
 }
 
 function misticAuthorization() {
-  const configured = String(MISTIC_AUTH_HEADER || "").trim().replace(/^Authorization\s*:\s*/i, "");
+  const configured = MISTIC_AUTH_HEADER.replace(/^Authorization\s*:\s*/i, "");
   if (configured) return /^Basic\s+/i.test(configured) ? configured : `Basic ${configured}`;
   if (!MISTIC_CLIENT_ID || !MISTIC_CLIENT_SECRET) return null;
   return `Basic ${Buffer.from(`${MISTIC_CLIENT_ID}:${MISTIC_CLIENT_SECRET}`).toString("base64")}`;
@@ -174,15 +172,15 @@ function misticAuthorization() {
 function misticRequest(endpoint, payload) {
   return new Promise((resolve, reject) => {
     const authorization = misticAuthorization();
-    if (!authorization) return reject(new Error("Credenciais da Mistic Pay não configuradas."));
+    if (!authorization) return reject(new Error("Credenciais da MisticPay não configuradas."));
 
     let url;
     try {
       url = new URL(`${MISTIC_PAY_URL}${endpoint}`);
     } catch {
-      return reject(new Error("MISTIC_PAY_URL inválida."));
+      return reject(new Error("URL da MisticPay inválida."));
     }
-    if (url.protocol !== "https:") return reject(new Error("MISTIC_PAY_URL deve usar HTTPS."));
+    if (url.protocol !== "https:") return reject(new Error("A integração de pagamento deve usar HTTPS."));
 
     const body = JSON.stringify(payload || {});
     const request = https.request(url, {
@@ -198,20 +196,17 @@ function misticRequest(endpoint, payload) {
       let size = 0;
       response.on("data", chunk => {
         size += chunk.length;
-        if (size > 2_000_000) {
-          request.destroy(new Error("Resposta da Mistic Pay excedeu o limite permitido."));
-          return;
-        }
+        if (size > 2_000_000) return request.destroy(new Error("Resposta da MisticPay excedeu o limite."));
         chunks.push(chunk);
       });
       response.on("end", () => {
         const raw = Buffer.concat(chunks).toString("utf8");
         let data = null;
-        try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
+        try { data = raw ? JSON.parse(raw) : null; } catch {}
         resolve({ status: response.statusCode || 502, data });
       });
     });
-    request.setTimeout(20000, () => request.destroy(new Error("Tempo limite da Mistic Pay excedido.")));
+    request.setTimeout(20000, () => request.destroy(new Error("Tempo limite da MisticPay excedido.")));
     request.on("error", reject);
     request.write(body);
     request.end();
@@ -226,21 +221,21 @@ function paymentProduct(product) {
 }
 
 function signPaymentToken(payload) {
-  if (!PAYMENT_SIGNING_SECRET) throw new Error("PAYMENT_SIGNING_SECRET não configurado.");
+  if (!PAYMENT_SIGNING_SECRET) throw new Error("Assinatura interna de pagamento não configurada.");
   const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
   const signature = crypto.createHmac("sha256", PAYMENT_SIGNING_SECRET).update(encoded).digest("base64url");
   return `${encoded}.${signature}`;
 }
 
 function verifyPaymentToken(token) {
-  if (!PAYMENT_SIGNING_SECRET) throw new Error("PAYMENT_SIGNING_SECRET não configurado.");
+  if (!PAYMENT_SIGNING_SECRET) throw new Error("Assinatura interna de pagamento não configurada.");
   const parts = String(token || "").split(".");
   if (parts.length !== 2) throw new Error("Token de pagamento inválido.");
   const expected = crypto.createHmac("sha256", PAYMENT_SIGNING_SECRET).update(parts[0]).digest("base64url");
   if (!secureEqual(parts[1], expected)) throw new Error("Token de pagamento inválido.");
 
-  let payload;
-  try { payload = JSON.parse(Buffer.from(parts[0], "base64url").toString("utf8")); } catch { payload = null; }
+  let payload = null;
+  try { payload = JSON.parse(Buffer.from(parts[0], "base64url").toString("utf8")); } catch {}
   if (!payload || payload.v !== 1 || !payload.tx || !payload.product || !payload.plate || !payload.exp) {
     throw new Error("Token de pagamento inválido.");
   }
@@ -251,7 +246,6 @@ function verifyPaymentToken(token) {
 function misticAmountMatches(value, expected) {
   const amount = Number(value);
   if (!Number.isFinite(amount)) return false;
-  // A documentação da Mistic Pay contém exemplos em reais e outros aparentando centavos.
   return Math.abs(amount - expected) < 0.011 || Math.abs((amount / 100) - expected) < 0.011;
 }
 
@@ -262,7 +256,7 @@ async function getMisticTransaction(transactionId) {
 
   const response = await misticRequest("/transactions/check", { transactionId: key });
   if (response.status < 200 || response.status >= 300 || !response.data || typeof response.data !== "object") {
-    const err = new Error("Não foi possível verificar o pagamento na Mistic Pay.");
+    const err = new Error("Não foi possível verificar o pagamento na MisticPay.");
     err.status = response.status >= 400 && response.status < 500 ? response.status : 502;
     throw err;
   }
@@ -303,25 +297,13 @@ async function verifyPaidToken(token, requiredProduct) {
   const value = transaction.value ?? transaction.transactionAmount ?? transaction.amount;
 
   return {
-    paid: state === "COMPLETO" && (!type || type === "DEPOSITO") && (!method || method === "PIX") && misticAmountMatches(value, product.amount),
+    paid: state === "COMPLETO" &&
+      (!type || type === "DEPOSITO") &&
+      (!method || method === "PIX") &&
+      misticAmountMatches(value, product.amount),
     state: state || "DESCONHECIDO",
-    payload,
-    transaction
+    payload
   };
-}
-
-function desphubPublicMessage(code, fallback) {
-  const messages = {
-    requisicao_invalida: "Os dados enviados para a emissão são inválidos.",
-    nao_autenticado: "A integração de emissão está temporariamente indisponível.",
-    saldo_insuficiente: "A emissão está temporariamente indisponível. Tente novamente mais tarde.",
-    produto_desconhecido: "O serviço de CRLV-e está temporariamente indisponível.",
-    produto_sem_preco: "O serviço de CRLV-e está temporariamente indisponível.",
-    limite_excedido: "O limite de emissões foi atingido. Tente novamente mais tarde.",
-    produto_indisponivel: "O serviço de CRLV-e está temporariamente indisponível.",
-    provedor_indisponivel: "A base de emissão não respondeu. Nada deve ser repetido automaticamente."
-  };
-  return messages[code] || fallback || "Não foi possível processar a emissão do CRLV-e.";
 }
 
 async function getVehicle(plate) {
@@ -329,18 +311,18 @@ async function getVehicle(plate) {
   if (cached && Date.now() < cached.expiresAt) return cached.vehicle;
 
   if (!FALCON_TOKEN) {
-    const err = new Error("API não configurada no servidor.");
-    err.status = 500;
+    const err = new Error("Consulta veicular temporariamente indisponível.");
+    err.status = 503;
     throw err;
   }
 
   const url = `https://beta.falcon-server.com.br/data-hub/private/v1/vehicles/${encodeURIComponent(plate)}/search`;
-  const response = await falconRequest(url, FALCON_TOKEN);
-  let data;
-  try { data = JSON.parse(response.body); } catch { data = null; }
+  const response = await falconRequestWithRetry(url, FALCON_TOKEN);
+
+  let data = null;
+  try { data = JSON.parse(response.body); } catch {}
 
   if (response.status < 200 || response.status >= 300) {
-    console.error("Falcon respondeu com erro HTTP", response.status);
     const err = new Error("Não foi possível realizar a consulta veicular.");
     err.status = response.status >= 400 && response.status < 500 ? response.status : 502;
     throw err;
@@ -371,6 +353,11 @@ function safeVehicleDetails(vehicle, plate) {
   };
 }
 
+app.get("/healthz", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.json({ ok: true, service: "consulta-veicular-360" });
+});
+
 app.get("/api/consulta/:plate", async (req, res) => {
   const plate = normalizePlate(req.params.plate);
   if (!validPlate(plate)) return res.status(400).json({ error: "Placa inválida." });
@@ -378,11 +365,9 @@ app.get("/api/consulta/:plate", async (req, res) => {
   const limit = checkRateLimit(req);
   if (!limit.allowed) {
     res.set("Retry-After", String(limit.retryAfter));
-    res.set("Cache-Control", "no-store");
     return res.status(429).json({ error: "Limite de consultas gratuitas atingido. Tente novamente mais tarde." });
   }
 
-  res.set("Cache-Control", "no-store");
   res.set("X-RateLimit-Limit", String(MAX_PREVIEWS_PER_HOUR));
   res.set("X-RateLimit-Remaining", String(limit.remaining));
 
@@ -405,14 +390,11 @@ app.get("/api/consulta/:plate", async (req, res) => {
   }
 });
 
-// Diagnóstico seguro da integração PIX. Nunca retorna credenciais.
 app.get("/api/pagamento/pix/diagnostico", (req, res) => {
-  res.set("Cache-Control", "no-store");
   const authConfigured = Boolean(misticAuthorization());
   const signingConfigured = Boolean(PAYMENT_SIGNING_SECRET);
   return res.json({
     provedor: "misticpay",
-    url_base_configurada: Boolean(MISTIC_PAY_URL),
     autenticacao_configurada: authConfigured,
     webhook_configurado: Boolean(MISTIC_WEBHOOK_URL),
     assinatura_interna_configurada: signingConfigured,
@@ -420,18 +402,21 @@ app.get("/api/pagamento/pix/diagnostico", (req, res) => {
   });
 });
 
-// Cria uma cobrança PIX para a consulta veicular completa.
 app.post("/api/pagamento/pix/criar", async (req, res) => {
-  res.set("Cache-Control", "no-store");
-
   if (!misticAuthorization() || !PAYMENT_SIGNING_SECRET) {
-    return res.status(503).json({ error: "pagamento_nao_configurado", mensagem: "Integração PIX não configurada no servidor." });
+    return res.status(503).json({
+      error: "pagamento_nao_configurado",
+      mensagem: "Integração PIX temporariamente indisponível."
+    });
   }
 
   const limit = checkPaymentRateLimit(req);
   if (!limit.allowed) {
     res.set("Retry-After", String(limit.retryAfter));
-    return res.status(429).json({ error: "limite_pagamentos", mensagem: "Muitas tentativas de cobrança. Tente novamente mais tarde." });
+    return res.status(429).json({
+      error: "limite_pagamentos",
+      mensagem: "Muitas tentativas de cobrança. Tente novamente mais tarde."
+    });
   }
 
   const product = paymentProduct(String((req.body && req.body.produto) || "consulta-completa"));
@@ -442,6 +427,7 @@ app.post("/api/pagamento/pix/criar", async (req, res) => {
 
   const payerName = String((req.body && req.body.nome) || "").trim().replace(/\s+/g, " ");
   const payerDocument = digits(req.body && req.body.cpf);
+
   if (payerName.length < 2 || payerName.length > 120) {
     return res.status(400).json({ error: "nome_invalido", mensagem: "Informe o nome do pagador." });
   }
@@ -462,8 +448,9 @@ app.post("/api/pagamento/pix/criar", async (req, res) => {
   try {
     const response = await misticRequest("/transactions/create", payload);
     const data = response.data && response.data.data ? response.data.data : response.data;
+
     if (response.status < 200 || response.status >= 300 || !data || typeof data !== "object") {
-      console.error("Mistic Pay respondeu com erro ao criar cobrança", response.status);
+      console.error("MisticPay respondeu com erro ao criar cobrança:", response.status);
       return res.status(response.status >= 400 && response.status < 500 ? response.status : 502).json({
         error: "falha_criar_pix",
         mensagem: "Não foi possível gerar o PIX. Tente novamente."
@@ -472,8 +459,10 @@ app.post("/api/pagamento/pix/criar", async (req, res) => {
 
     const transactionId = data.transactionId;
     if (transactionId === undefined || transactionId === null || transactionId === "") {
-      console.error("Mistic Pay não retornou transactionId na criação da cobrança.");
-      return res.status(502).json({ error: "resposta_pix_invalida", mensagem: "A operadora não retornou o identificador da cobrança." });
+      return res.status(502).json({
+        error: "resposta_pix_invalida",
+        mensagem: "A processadora não retornou o identificador da cobrança."
+      });
     }
 
     const paymentToken = signPaymentToken({
@@ -502,14 +491,15 @@ app.post("/api/pagamento/pix/criar", async (req, res) => {
       expiraEmSegundos: Math.floor(PAYMENT_TOKEN_TTL_MS / 1000)
     });
   } catch (err) {
-    console.error("Erro ao criar cobrança na Mistic Pay:", err.message);
-    return res.status(502).json({ error: "falha_comunicacao_pix", mensagem: "Falha de comunicação com a operadora PIX." });
+    console.error("Erro ao criar cobrança na MisticPay:", err.message);
+    return res.status(502).json({
+      error: "falha_comunicacao_pix",
+      mensagem: "Falha de comunicação com a processadora PIX."
+    });
   }
 });
 
-// Consulta o pagamento diretamente na Mistic Pay. Não confia apenas no webhook recebido.
 app.post("/api/pagamento/pix/status", async (req, res) => {
-  res.set("Cache-Control", "no-store");
   try {
     const checked = await verifyPaidToken(req.body && req.body.paymentToken, "consulta-completa");
     return res.json({
@@ -522,35 +512,36 @@ app.post("/api/pagamento/pix/status", async (req, res) => {
       moeda: "BRL"
     });
   } catch (err) {
-    return res.status(err.status || 400).json({ error: "pagamento_invalido", mensagem: err.message || "Não foi possível verificar o pagamento." });
+    return res.status(err.status || 400).json({
+      error: "pagamento_invalido",
+      mensagem: err.message || "Não foi possível verificar o pagamento."
+    });
   }
 });
 
-// Webhook da Mistic Pay. A documentação pública não informa assinatura do webhook;
-// por isso o payload recebido NUNCA libera conteúdo sozinho: a transação é revalidada pela API autenticada.
+// O webhook nunca libera conteúdo sozinho. A transação é revalidada pela API autenticada.
 app.post("/api/misticpay/webhook", async (req, res) => {
-  res.set("Cache-Control", "no-store");
   const transactionId = req.body && req.body.transactionId;
   if (transactionId === undefined || transactionId === null || transactionId === "") {
     return res.status(400).json({ ok: false });
   }
-
   try {
     await getMisticTransaction(String(transactionId));
     return res.status(200).json({ ok: true });
   } catch (err) {
-    console.error("Falha ao revalidar webhook Mistic Pay:", err.message);
+    console.error("Falha ao revalidar webhook MisticPay:", err.message);
     return res.status(502).json({ ok: false });
   }
 });
 
-// Libera somente os campos técnicos previstos no site após confirmar o PIX na operadora.
 app.post("/api/consulta-completa", async (req, res) => {
-  res.set("Cache-Control", "no-store");
   try {
     const checked = await verifyPaidToken(req.body && req.body.paymentToken, "consulta-completa");
     if (!checked.paid) {
-      return res.status(402).json({ error: "pagamento_pendente", mensagem: "Pagamento ainda não confirmado." });
+      return res.status(402).json({
+        error: "pagamento_pendente",
+        mensagem: "Pagamento ainda não confirmado."
+      });
     }
 
     const plate = checked.payload.plate;
@@ -564,168 +555,38 @@ app.post("/api/consulta-completa", async (req, res) => {
     });
   } catch (err) {
     console.error("Erro ao liberar consulta completa:", err.message);
-    return res.status(err.status || 400).json({ error: "falha_desbloqueio", mensagem: err.message || "Não foi possível liberar a consulta." });
-  }
-});
-
-app.get("/api/crlv/sp/info", (req, res) => {
-  res.set("Cache-Control", "no-store");
-  return res.json({
-    produto: "crlv-sp",
-    codigo: "1942",
-    estado: "SP",
-    preco: CRLV_SP_SALE_PRICE,
-    currency: "BRL",
-    pagamento_obrigatorio: true,
-    finalidade_obrigatoria_no_site: true
-  });
-});
-
-// Diagnóstico seguro: informa somente se as variáveis necessárias existem.
-// Nunca retorna o conteúdo de nenhuma chave/token.
-app.get("/api/crlv/sp/diagnostico", (req, res) => {
-  res.set("Cache-Control", "no-store");
-  const desphubConfigurada = Boolean(DESPHUB_API_KEY);
-  const protecaoConfigurada = Boolean(CRLV_ADMIN_TOKEN);
-  return res.json({
-    servico: "crlv-sp",
-    desphub_configurada: desphubConfigurada,
-    protecao_crlv_configurada: protecaoConfigurada,
-    pronto_para_emissao: desphubConfigurada && protecaoConfigurada
-  });
-});
-
-// CRLV-e SP / Desphub.
-// Esta rota é deliberadamente protegida: a chave da Desphub e o CRLV_ADMIN_TOKEN nunca vão ao navegador.
-// O fluxo público deve chamar esta rota somente a partir de um backend/webhook depois da confirmação do pagamento.
-// IMPORTANTE: tem_dados=false também pode ser uma consulta cobrada. Não repetir automaticamente.
-app.post("/api/crlv/sp", async (req, res) => {
-  res.set("Cache-Control", "no-store");
-
-  if (!DESPHUB_API_KEY) {
-    return res.status(503).json({ error: "integracao_nao_configurada", mensagem: "Integração de CRLV-e não configurada no servidor." });
-  }
-  if (!CRLV_ADMIN_TOKEN) {
-    return res.status(503).json({ error: "emissao_bloqueada", mensagem: "Emissão bloqueada até a configuração da autorização interna do servidor." });
-  }
-
-  const accessToken = req.get("X-CRLV-Access");
-  if (!secureEqual(accessToken, CRLV_ADMIN_TOKEN)) {
-    return res.status(401).json({ error: "nao_autorizado", mensagem: "Não autorizado." });
-  }
-
-  const plate = normalizePlate(req.body && req.body.placa);
-  if (!validPlate(plate)) {
-    return res.status(400).json({ error: "placa_invalida", mensagem: "Placa inválida. Use 7 caracteres, sem hífen." });
-  }
-
-  const finalidade = String((req.body && req.body.finalidade) || "").trim();
-  if (finalidade.length < 10 || finalidade.length > 300) {
-    return res.status(400).json({ error: "finalidade_invalida", mensagem: "Informe uma finalidade legítima para a emissão (10 a 300 caracteres)." });
-  }
-
-  if (!req.body || req.body.autorizado !== true) {
-    return res.status(400).json({ error: "autorizacao_ausente", mensagem: "Confirme que a emissão foi solicitada pelo proprietário ou por pessoa devidamente autorizada." });
-  }
-
-  if (crlvInFlight.has(plate)) {
-    return res.status(409).json({ error: "emissao_em_andamento", mensagem: "Já existe uma emissão desta placa em andamento. Aguarde a conclusão para evitar consulta duplicada." });
-  }
-
-  crlvInFlight.add(plate);
-  try {
-    const response = await desphubRequest({
-      produto: "crlv-sp",
-      parametros: { Placa: plate },
-      finalidade
+    return res.status(err.status || 400).json({
+      error: "falha_desbloqueio",
+      mensagem: err.message || "Não foi possível liberar a consulta."
     });
-    const data = response.data;
-
-    if (response.status < 200 || response.status >= 300) {
-      const codigo = data && data.erro && data.erro.codigo ? String(data.erro.codigo) : "erro_desphub";
-      const original = data && data.erro && data.erro.mensagem ? String(data.erro.mensagem) : null;
-      console.error("Desphub respondeu com erro", response.status, codigo);
-      return res.status(response.status).json({
-        error: codigo,
-        mensagem: desphubPublicMessage(codigo, original),
-        repetir_automaticamente: false
-      });
-    }
-
-    if (!data || typeof data !== "object") {
-      return res.status(502).json({ error: "resposta_invalida", mensagem: "Resposta inválida da fonte de emissão.", repetir_automaticamente: false });
-    }
-
-    // A documentação informa que 201 + tem_dados=false também representa consulta concluída/cobrada.
-    if (data.tem_dados !== true) {
-      return res.status(200).json({
-        ok: false,
-        tem_dados: false,
-        cobrado: true,
-        consulta_id: data.consulta_id || null,
-        preco_cobrado: data.preco_cobrado ?? null,
-        preco_venda: CRLV_SP_SALE_PRICE,
-        currency: "BRL",
-        repetir_automaticamente: false,
-        mensagem: "A consulta foi concluída, mas a base não retornou o CRLV-e. Não repita automaticamente esta emissão."
-      });
-    }
-
-    const crlv = data.secoes && data.secoes["VEICULAR.CRLV"];
-    const pdfInfo = crlv && crlv.PDF_FILE;
-    const pdfBase64 = pdfInfo && pdfInfo.FILE_BASE64;
-
-    if (!pdfBase64 || typeof pdfBase64 !== "string") {
-      return res.status(502).json({
-        error: "documento_indisponivel",
-        cobrado: true,
-        consulta_id: data.consulta_id || null,
-        preco_cobrado: data.preco_cobrado ?? null,
-        preco_venda: CRLV_SP_SALE_PRICE,
-        currency: "BRL",
-        repetir_automaticamente: false,
-        mensagem: "A consulta retornou dados, mas o PDF do CRLV-e não veio na resposta. Não repita automaticamente."
-      });
-    }
-
-    const pdf = Buffer.from(pdfBase64, "base64");
-    if (pdf.length < 100 || pdf.subarray(0, 5).toString("ascii") !== "%PDF-") {
-      return res.status(502).json({
-        error: "pdf_invalido",
-        cobrado: true,
-        consulta_id: data.consulta_id || null,
-        preco_cobrado: data.preco_cobrado ?? null,
-        preco_venda: CRLV_SP_SALE_PRICE,
-        currency: "BRL",
-        repetir_automaticamente: false,
-        mensagem: "A fonte respondeu, mas o arquivo recebido não parece ser um PDF válido. Não repita automaticamente."
-      });
-    }
-
-    if (data.consulta_id) res.set("X-Consulta-Id", String(data.consulta_id));
-    if (data.preco_cobrado != null) res.set("X-Preco-Cobrado", String(data.preco_cobrado));
-    res.set("X-Preco-Venda", CRLV_SP_SALE_PRICE.toFixed(2));
-    res.set("Content-Type", "application/pdf");
-    res.set("Content-Disposition", `attachment; filename="CRLV-${plate}.pdf"`);
-    return res.send(pdf);
-  } catch (err) {
-    console.error("Erro ao consultar CRLV-e na Desphub:", err.message);
-    return res.status(502).json({
-      error: "falha_comunicacao",
-      mensagem: "Falha de comunicação com a fonte de emissão. Não houve repetição automática da consulta.",
-      repetir_automaticamente: false
-    });
-  } finally {
-    crlvInFlight.delete(plate);
   }
 });
 
-// Outros métodos/caminhos de consulta completa permanecem bloqueados.
 app.all(/^\/api\/consulta-completa(?:\/.*)?$/, (req, res) => {
-  res.set("Cache-Control", "no-store");
-  return res.status(402).json({ error: "Consulta completa disponível somente após confirmação do pagamento." });
+  return res.status(405).json({ error: "Método não permitido." });
 });
 
-app.use("/api", (req, res) => res.status(404).json({ error: "Endpoint não encontrado." }));
+app.use("/api", (req, res) => {
+  res.status(404).json({ error: "Endpoint não encontrado." });
+});
 
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+app.use(express.static(path.join(__dirname), {
+  dotfiles: "deny",
+  index: "index.html",
+  extensions: ["html"]
+}));
+
+app.use((req, res) => {
+  const notFound = path.join(__dirname, "404.html");
+  res.status(404).sendFile(notFound, err => {
+    if (err) res.status(404).type("text/plain").send("Página não encontrada.");
+  });
+});
+
+if (!FALCON_TOKEN) console.warn("FALCON_TOKEN não configurado.");
+if (!misticAuthorization()) console.warn("Credenciais MisticPay não configuradas.");
+if (!PAYMENT_SIGNING_SECRET) console.warn("PAYMENT_SIGNING_SECRET não configurado.");
+
+app.listen(PORT, () => {
+  console.log(`Consulta Veicular 360 ativa na porta ${PORT}.`);
+});
