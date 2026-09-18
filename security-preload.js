@@ -12,6 +12,7 @@ const generalApiStore = new Map();
 const sensitiveStores = new Map();
 
 const ALLOWED_METHODS = new Set(['GET', 'HEAD', 'POST', 'OPTIONS']);
+const ADMIN_DELETE_CHARGE_PATH = /^\/api\/admin\/cobrancas-teste\/[^/]+$/;
 const BLOCKED_EXTENSIONS = /\.(?:js|json|map|md|lock)$/i;
 const BLOCKED_PREFIXES = ['/node_modules/', '/.git/', '/.github/', '/.env'];
 const PAYMENT_SIGNING_SECRET = String(process.env.PAYMENT_SIGNING_SECRET || '');
@@ -265,7 +266,9 @@ http.createServer = function secureCreateServer(...args) {
     const pathname = pathOf(req);
     applySecurityHeaders(req, res, pathname);
 
-    if (!ALLOWED_METHODS.has(String(req.method || '').toUpperCase())) {
+    const requestMethod = String(req.method || '').toUpperCase();
+    const allowedAdminDelete = requestMethod === 'DELETE' && ADMIN_DELETE_CHARGE_PATH.test(pathname);
+    if (!ALLOWED_METHODS.has(requestMethod) && !allowedAdminDelete) {
       res.setHeader('Allow', 'GET, HEAD, POST, OPTIONS');
       res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
       return res.end('Método não permitido.');
