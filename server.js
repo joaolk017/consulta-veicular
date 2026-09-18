@@ -143,6 +143,7 @@ async function initDatabase() {
     );
     CREATE INDEX IF NOT EXISTS idx_credit_transactions_account ON credit_transactions(account_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_vehicle_queries_account ON vehicle_queries(account_id, created_at DESC);
+    ALTER TABLE vehicle_queries ADD COLUMN IF NOT EXISTS result_json JSONB;
     ALTER TABLE credit_accounts ADD COLUMN IF NOT EXISTS email TEXT;
     CREATE UNIQUE INDEX IF NOT EXISTS idx_credit_accounts_email_unique ON credit_accounts (LOWER(email)) WHERE email IS NOT NULL;
     CREATE TABLE IF NOT EXISTS credit_recovery_codes (
@@ -286,7 +287,7 @@ async function consumeCredit(accountId, plate) {
   } finally { client.release(); }
 }
 
-async function finishCreditQuery(accountId, queryId, ok) {
+async function finishCreditQuery(accountId, queryId, ok, vehicle = null) {
   requireDatabase();
   const client = await pool.connect();
   try {
@@ -295,7 +296,7 @@ async function finishCreditQuery(accountId, queryId, ok) {
     if (!q.rowCount) throw new Error("Consulta não encontrada.");
     if (q.rows[0].status !== "pending") { await client.query("COMMIT"); return; }
     if (ok) {
-      await client.query("UPDATE vehicle_queries SET status='completed',completed_at=NOW() WHERE id=$1", [queryId]);
+      await client.query("UPDATE vehicle_queries SET status='completed',completed_at=NOW(),result_json=$2::jsonb WHERE id=$1", [queryId, JSON.stringify(vehicle || {})]);
     } else {
       await client.query("UPDATE credit_accounts SET balance=balance+1,updated_at=NOW() WHERE id=$1", [accountId]);
       await client.query("UPDATE vehicle_queries SET status='failed',completed_at=NOW() WHERE id=$1", [queryId]);
@@ -629,6 +630,35 @@ app.get("/api/creditos/saldo", async (req, res) => {
   } catch(err) { return res.status(err.status || 401).json({ error:"conta_creditos", mensagem:err.message }); }
 });
 
+app.get("/api/minhas-consultas", async (req, res) => {
+  try {
+    requireDatabase();
+    const id = verifyAccountToken(req.get("X-Credit-Account"));
+    const [account, queries] = await Promise.all([
+      pool.query("SELECT balance,email FROM credit_accounts WHERE id=$1", [id]),
+      pool.query("SELECT id,plate,status,credit_consumed,created_at,completed_at,(result_json IS NOT NULL) AS relatorio_disponivel FROM vehicle_queries WHERE account_id=$1 ORDER BY created_at DESC LIMIT 100", [id])
+    ]);
+    if (!account.rowCount) return res.status(404).json({ mensagem:"Conta não encontrada." });
+    return res.json({ ok:true, creditos:Number(account.rows[0].balance)||0, email:account.rows[0].email||null, consultas:queries.rows });
+  } catch(err) {
+    return res.status(err.status || 401).json({ error:"minhas_consultas", mensagem:err.message });
+  }
+});
+
+app.get("/api/minhas-consultas/:id", async (req, res) => {
+  try {
+    requireDatabase();
+    const accountId = verifyAccountToken(req.get("X-Credit-Account"));
+    const q = await pool.query("SELECT id,plate,status,created_at,completed_at,result_json FROM vehicle_queries WHERE id=$1 AND account_id=$2 LIMIT 1", [req.params.id, accountId]);
+    if (!q.rowCount) return res.status(404).json({ mensagem:"Consulta não encontrada." });
+    const row=q.rows[0];
+    if (row.status!=="completed" || !row.result_json) return res.status(409).json({ mensagem:"Relatório ainda não está disponível para esta consulta." });
+    return res.json({ ok:true, consulta:{ id:row.id,plate:row.plate,status:row.status,created_at:row.created_at,completed_at:row.completed_at }, vehicle:row.result_json });
+  } catch(err) {
+    return res.status(err.status || 401).json({ error:"relatorio_consulta", mensagem:err.message });
+  }
+});
+
 app.get("/api/pagamento/pix/diagnostico", (req, res) => {
   return res.json({
     provedor: "woovi-openpix",
@@ -815,7 +845,7 @@ app.post("/api/consulta-completa", async (req, res) => {
     const debit = await consumeCredit(accountId, plate);
     try {
       const vehicle = await getVehicle(plate);
-      await finishCreditQuery(accountId, debit.queryId, true);
+      await finishCreditQuery(accountId, debit.queryId, true, safeVehicleDetails(vehicle,plate));
       return res.json({ ok:true, paid:true, vehicle:safeVehicleDetails(vehicle,plate), creditosRestantes:debit.balance, price:CONSULTA_SALE_PRICE, currency:"BRL" });
     } catch (err) {
       await finishCreditQuery(accountId, debit.queryId, false);
