@@ -553,6 +553,10 @@ async function getOpenPixCharge(correlationID) {
   if (response.status < 200 || response.status >= 300 || !charge || typeof charge !== "object") {
     const err = new Error("Não foi possível verificar o pagamento na Woovi/OpenPix.");
     err.status = response.status >= 400 && response.status < 500 ? response.status : 502;
+    err.providerHttpStatus = response.status;
+    err.providerResponse = response.data || null;
+    err.providerRaw = response.raw ? String(response.raw).slice(0, 2000) : null;
+    err.requestUrl = response.requestUrl || (OPENPIX_API_URL + "/charge/" + encodeURIComponent(key));
     throw err;
   }
   if (String(charge.status || "").toUpperCase() === "COMPLETED") {
@@ -610,8 +614,10 @@ app.get("/api/admin/cobrancas-teste", async (req, res) => {
           correlationID: String(p.correlation_id || "").slice(0, 160),
           method: "GET",
           requestUrl: OPENPIX_API_URL + "/charge/" + encodeURIComponent(String(p.correlation_id || "")),
-          httpStatus: Number(err && err.status) || null,
-          error: String(err && err.message || "Erro desconhecido").slice(0, 300)
+          httpStatus: Number(err && (err.providerHttpStatus || err.status)) || null,
+          error: String(err && err.message || "Erro desconhecido").slice(0, 300),
+          providerResponse: err && err.providerResponse ? err.providerResponse : null,
+          providerRaw: err && !err.providerResponse && err.providerRaw ? err.providerRaw : null
         }));
       }
       cobrancas.push({
