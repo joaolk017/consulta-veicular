@@ -521,7 +521,7 @@ function openPixHeaders() {
 
 async function createOpenPixCharge({ correlationID, plate, product }) {
   const response = await requestJson(
-    `${OPENPIX_API_URL}/charge?return_existing=true`,
+    `${WOOVI_API_URL}/charge?return_existing=true`,
     { method: "POST", headers: openPixHeaders(), timeout: 20000 },
     {
       correlationID,
@@ -539,6 +539,29 @@ async function createOpenPixCharge({ correlationID, plate, product }) {
     throw err;
   }
   return charge;
+}
+
+async function listWooviChargesDiagnostic() {
+  const response = await requestJson(
+    WOOVI_API_URL + "/charge",
+    { headers: openPixHeaders(), timeout: 15000 }
+  );
+  const charges = response.data && Array.isArray(response.data.charges) ? response.data.charges : [];
+  console.log("WOOVI LIST cobranças diagnóstico:", JSON.stringify({
+    method: "GET",
+    requestUrl: WOOVI_API_URL + "/charge",
+    httpStatus: response.status,
+    totalRetornado: charges.length,
+    charges: charges.slice(0, 50).map((charge) => ({
+      id: charge.globalID || charge.id || charge.identifier || null,
+      correlationID: charge.correlationID || null,
+      status: charge.status || null,
+      value: charge.value || null,
+      createdAt: charge.createdAt || null
+    })),
+    providerError: response.status >= 200 && response.status < 300 ? null : (response.data || response.raw || null)
+  }));
+  return { response, charges };
 }
 
 async function getOpenPixCharge(correlationID) {
@@ -605,6 +628,11 @@ app.get("/api/admin/cobrancas-teste", async (req, res) => {
       "SELECT correlation_id, product, cents, credits, status, credited_at, created_at FROM payments WHERE correlation_id LIKE 'cv-%' ORDER BY created_at DESC LIMIT 200"
     );
     const cobrancas = [];
+    try {
+      await listWooviChargesDiagnostic();
+    } catch (err) {
+      console.error("WOOVI LIST cobranças falhou:", String(err && err.message || err).slice(0, 300));
+    }
     for (const p of rows.rows) {
       let providerStatus = "DESCONHECIDO";
       try {
