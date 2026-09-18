@@ -885,9 +885,12 @@ app.post("/api/pagamento/pix/criar", async (req, res) => {
 });
 
 app.post("/api/pagamento/pix/webhook", async (req, res) => {
-  // Autentica a entrada antes de qualquer processamento ou chamada à Woovi/OpenPix.
+  // Compatibilidade temporária durante a migração do webhook existente.
+  // Se Authorization estiver presente, ele deve ser válido. Sem o cabeçalho,
+  // o webhook não é confiado: status e valor ainda são confirmados diretamente
+  // na Woovi/OpenPix antes de qualquer crédito.
   const suppliedWebhookSecret = String(req.get("Authorization") || "").trim();
-  if (!OPENPIX_WEBHOOK_SECRET || !secureEqual(suppliedWebhookSecret, OPENPIX_WEBHOOK_SECRET)) {
+  if (suppliedWebhookSecret && (!OPENPIX_WEBHOOK_SECRET || !secureEqual(suppliedWebhookSecret, OPENPIX_WEBHOOK_SECRET))) {
     return res.status(401).json({ ok:false });
   }
   // A notificação inicia a checagem, mas nunca é confiada sozinha:
