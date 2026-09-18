@@ -636,12 +636,20 @@ app.delete("/api/admin/cobrancas-teste/:correlationID", async (req, res) => {
     if (String(charge.status || "").toUpperCase() === "COMPLETED") {
       return res.status(409).json({ error: "Pagamento concluído não pode ser excluído." });
     }
+    // A documentação atual da Woovi define a exclusão no host oficial api.woovi.com.
+    // Mantemos o host configurável para criação/consulta, mas usamos o endpoint oficial
+    // para DELETE, evitando incompatibilidade com domínios legados da OpenPix.
+    const deleteUrl = "https://api.woovi.com/api/v1/charge/" + encodeURIComponent(correlationID);
     const response = await requestJson(
-      OPENPIX_API_URL + "/charge/" + encodeURIComponent(correlationID),
+      deleteUrl,
       { method: "DELETE", headers: openPixHeaders(), timeout: 15000 }
     );
     if (response.status < 200 || response.status >= 300) {
-      return res.status(502).json({ error: "A Woovi não confirmou a exclusão da cobrança." });
+      console.error("Woovi recusou exclusão:", correlationID, "HTTP", response.status, response.data || "");
+      const providerMessage = response.data && (response.data.error || response.data.message);
+      return res.status(response.status === 400 ? 409 : 502).json({
+        error: providerMessage ? "Woovi: " + String(providerMessage).slice(0, 180) : "A Woovi não confirmou a exclusão da cobrança."
+      });
     }
     confirmedPaymentCache.delete(correlationID);
     res.json({ ok: true, correlationID });
