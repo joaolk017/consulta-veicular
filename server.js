@@ -16,6 +16,7 @@ const PAYMENT_SIGNING_SECRET = String(process.env.PAYMENT_SIGNING_SECRET || "").
 const DATABASE_URL = String(process.env.DATABASE_URL || "").trim();
 const RESEND_API_KEY = String(process.env.RESEND_API_KEY || "").trim();
 const RESEND_FROM_EMAIL = String(process.env.RESEND_FROM_EMAIL || "Consulta Veicular 360 <onboarding@resend.dev>").trim();
+const ADMIN_FUNNEL_SECRET = String(process.env.ADMIN_FUNNEL_SECRET || "").trim();
 const pool = DATABASE_URL ? new Pool({ connectionString: DATABASE_URL, ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined }) : null;
 
 const CONSULTA_SALE_PRICE = 18.90;
@@ -528,6 +529,19 @@ async function verifyPaidToken(token, requiredProduct) {
 
   return { paid, state: state || "DESCONHECIDO", payload, charge };
 }
+
+app.get("/api/admin/funil", async (req, res) => {
+  try {
+    requireDatabase();
+    const supplied=String(req.get("X-Admin-Secret")||"").trim();
+    if(!ADMIN_FUNNEL_SECRET||ADMIN_FUNNEL_SECRET.length<24||supplied.length!==ADMIN_FUNNEL_SECRET.length||!crypto.timingSafeEqual(Buffer.from(supplied),Buffer.from(ADMIN_FUNNEL_SECRET))) return res.status(404).json({error:"Endpoint não encontrado."});
+    const days=Math.min(90,Math.max(1,Number(req.query.days)||7));
+    const totals=await pool.query(`SELECT event_name,COUNT(*)::int AS total,COUNT(DISTINCT session_id)::int AS sessions FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval GROUP BY event_name`,[days]);
+    const products=await pool.query(`SELECT COALESCE(product,'sem-produto') AS product,event_name,COUNT(*)::int AS total FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval AND event_name IN ('pacote_selecionado','pix_gerado','pix_pago','relatorio_entregue') GROUP BY product,event_name ORDER BY product,event_name`,[days]);
+    const daily=await pool.query(`SELECT TO_CHAR(created_at AT TIME ZONE 'America/Sao_Paulo','YYYY-MM-DD') AS day,event_name,COUNT(*)::int AS total FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval GROUP BY day,event_name ORDER BY day`,[days]);
+    return res.json({ok:true,days,totals:totals.rows,products:products.rows,daily:daily.rows});
+  } catch(err){console.error("Falha no painel do funil:",err.message);return res.status(500).json({mensagem:"Não foi possível carregar o painel."})}
+});
 
 app.post("/api/funil/evento", async (req, res) => {
   try {
