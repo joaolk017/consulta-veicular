@@ -626,7 +626,17 @@ app.get("/api/admin/cobrancas-teste", async (req, res) => {
 });
 
 app.delete("/api/admin/cobrancas-teste/:correlationID", async (req, res) => {
-  if (!requireAdminSecret(req, res)) return;
+  console.log("ADMIN DELETE entrada:", JSON.stringify({
+    method: req.method,
+    path: req.originalUrl,
+    correlationID: String(req.params.correlationID || "").slice(0, 160),
+    hasAdminSecret: Boolean(req.get("X-Admin-Secret"))
+  }));
+  if (!requireAdminSecret(req, res)) {
+    console.warn("ADMIN DELETE bloqueado: chave administrativa ausente ou inválida.");
+    return;
+  }
+  console.log("ADMIN DELETE autenticado:", String(req.params.correlationID || "").slice(0, 160));
   try {
     requireDatabase();
     const correlationID = String(req.params.correlationID || "").trim();
