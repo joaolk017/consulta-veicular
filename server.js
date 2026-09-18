@@ -41,6 +41,7 @@ const MAX_PAYMENT_CREATES_PER_HOUR = 12;
 const rateStore = new Map();
 const paymentRateStore = new Map();
 const recoveryRateStore = new Map();
+const sensitiveRateStore = new Map();
 const previewCache = new Map();
 const confirmedPaymentCache = new Map();
 
@@ -99,11 +100,24 @@ function checkPaymentRateLimit(req) {
   return useRateLimit(paymentRateStore, clientIp(req), MAX_PAYMENT_CREATES_PER_HOUR);
 }
 
+function checkSensitiveRateLimit(req, action, max = 60) {
+  return useRateLimit(sensitiveRateStore, action + ":" + clientIp(req), max);
+}
+
+function enforceSensitiveRateLimit(req, res, action, max) {
+  const limit = checkSensitiveRateLimit(req, action, max);
+  if (limit.allowed) return true;
+  res.set("Retry-After", String(limit.retryAfter));
+  res.status(429).json({ error: "limite_requisicoes", mensagem: "Muitas solicitações. Aguarde antes de tentar novamente." });
+  return false;
+}
+
 setInterval(() => {
   const now = Date.now();
   for (const [key, entry] of rateStore) if (now >= entry.resetAt) rateStore.delete(key);
   for (const [key, entry] of paymentRateStore) if (now >= entry.resetAt) paymentRateStore.delete(key);
   for (const [key, entry] of recoveryRateStore) if (now >= entry.resetAt) recoveryRateStore.delete(key);
+  for (const [key, entry] of sensitiveRateStore) if (now >= entry.resetAt) sensitiveRateStore.delete(key);
   for (const [plate, entry] of previewCache) if (now >= entry.expiresAt) previewCache.delete(plate);
   for (const [id, entry] of confirmedPaymentCache) if (now >= entry.expiresAt) confirmedPaymentCache.delete(id);
 }, 10 * 60 * 1000).unref();
@@ -750,6 +764,7 @@ app.get("/api/creditos/saldo", async (req, res) => {
 });
 
 app.get("/api/minhas-consultas", async (req, res) => {
+  if (!enforceSensitiveRateLimit(req, res, "minhas-consultas", 60)) return;
   try {
     requireDatabase();
     const id = verifyAccountToken(req.get("X-Credit-Account"));
@@ -765,6 +780,7 @@ app.get("/api/minhas-consultas", async (req, res) => {
 });
 
 app.get("/api/minhas-consultas/:id", async (req, res) => {
+  if (!enforceSensitiveRateLimit(req, res, "relatorio-salvo", 60)) return;
   try {
     requireDatabase();
     const accountId = verifyAccountToken(req.get("X-Credit-Account"));
@@ -776,16 +792,6 @@ app.get("/api/minhas-consultas/:id", async (req, res) => {
   } catch(err) {
     return res.status(err.status || 401).json({ error:"relatorio_consulta", mensagem:err.message });
   }
-});
-
-app.get("/api/pagamento/pix/diagnostico", (req, res) => {
-  return res.json({
-    provedor: "woovi-openpix",
-    api_configurada: Boolean(OPENPIX_APP_ID),
-    assinatura_interna_configurada: Boolean(PAYMENT_SIGNING_SECRET),
-    pronto_para_cobrar: Boolean(OPENPIX_APP_ID && PAYMENT_SIGNING_SECRET),
-    coleta_dados_pagador_no_site: false
-  });
 });
 
 app.post("/api/pagamento/pix/criar", async (req, res) => {
@@ -925,6 +931,7 @@ app.post("/api/pagamento/pix/webhook", async (req, res) => {
 });
 
 app.post("/api/pagamento/pix/status", async (req, res) => {
+  if (!enforceSensitiveRateLimit(req, res, "pix-status", 120)) return;
   try {
     const checked = await verifyPaidToken(req.body && req.body.paymentToken);
     let wallet = null;
@@ -948,6 +955,7 @@ app.post("/api/pagamento/pix/status", async (req, res) => {
 });
 
 app.post("/api/consulta-completa", async (req, res) => {
+  if (!enforceSensitiveRateLimit(req, res, "consulta-completa", 30)) return;
   try {
     let accountId, plate;
     if (req.body && req.body.paymentToken) {
