@@ -167,6 +167,9 @@ async function initDatabase() {
     );
     ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS amount_cents INTEGER;
     ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT FALSE;
+    -- Migração única: eventos anteriores à separação teste/produção eram da fase de validação.
+    -- Marca somente o legado existente; eventos novos permanecem reais por padrão.
+    UPDATE funnel_events SET is_test=TRUE WHERE is_test=FALSE AND created_at < TIMESTAMPTZ '2026-09-18 18:30:00-03';
     CREATE INDEX IF NOT EXISTS idx_funnel_events_name_created ON funnel_events(event_name, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_funnel_events_session_created ON funnel_events(session_id, created_at DESC);
   `);
