@@ -890,7 +890,7 @@ app.post("/api/pagamento/pix/webhook", async (req, res) => {
   // o webhook não é confiado: status e valor ainda são confirmados diretamente
   // na Woovi/OpenPix antes de qualquer crédito.
   const suppliedWebhookSecret = String(req.get("Authorization") || "").trim();
-  if (suppliedWebhookSecret && (!OPENPIX_WEBHOOK_SECRET || !secureEqual(suppliedWebhookSecret, OPENPIX_WEBHOOK_SECRET))) {
+  if (!OPENPIX_WEBHOOK_SECRET || !secureEqual(suppliedWebhookSecret, OPENPIX_WEBHOOK_SECRET)) {
     return res.status(401).json({ ok:false });
   }
   // A notificação inicia a checagem, mas nunca é confiada sozinha:
@@ -909,7 +909,7 @@ app.post("/api/pagamento/pix/webhook", async (req, res) => {
 
     requireDatabase();
     const registered = await pool.query(
-      "SELECT correlation_id, cents, product FROM payments WHERE correlation_id=$1",
+      "SELECT correlation_id, account_id, cents, product, credits FROM payments WHERE correlation_id=$1",
       [correlationID]
     );
     if (!registered.rowCount) return res.status(200).json({ ok:true, ignored:true });
@@ -937,6 +937,7 @@ app.post("/api/pagamento/pix/webhook", async (req, res) => {
       state,
       payload: {
         correlationID,
+        accountId: payment.account_id,
         product: product.id,
         cents: product.cents,
         amount: product.amount
