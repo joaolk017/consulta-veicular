@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const https = require("https");
 const crypto = require("crypto");
+const sharp = require("sharp");
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -461,10 +462,20 @@ app.use("/api", (req, res) => {
   res.status(404).json({ error: "Endpoint não encontrado." });
 });
 
-app.get("/preview-social.png", (req, res) => {
-  res.set("Content-Type", "image/png");
-  res.set("Cache-Control", "public, max-age=3600");
-  res.sendFile(path.join(__dirname, "file_00000000314c820e938dffdddecda774.png"));
+app.get("/preview-social.jpg", async (req, res) => {
+  try {
+    const input = path.join(__dirname, "file_00000000314c820e938dffdddecda774.png");
+    const image = await sharp(input)
+      .resize(1200, 630, { fit: "cover", position: "centre" })
+      .jpeg({ quality: 82, progressive: true })
+      .toBuffer();
+    res.set("Content-Type", "image/jpeg");
+    res.set("Content-Length", String(image.length));
+    res.set("Cache-Control", "public, max-age=86400");
+    res.send(image);
+  } catch (err) {
+    res.status(404).type("text/plain").send("Imagem não encontrada.");
+  }
 });
 
 app.use(express.static(path.join(__dirname), {
