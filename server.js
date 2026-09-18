@@ -645,10 +645,12 @@ app.delete("/api/admin/cobrancas-teste/:correlationID", async (req, res) => {
       { method: "DELETE", headers: openPixHeaders(), timeout: 15000 }
     );
     if (response.status < 200 || response.status >= 300) {
-      console.error("Woovi recusou exclusão:", correlationID, "HTTP", response.status, response.data || "");
+      console.error("Woovi recusou exclusão:", correlationID, "HTTP", response.status, JSON.stringify(response.data || null));
       const providerMessage = response.data && (response.data.error || response.data.message);
       return res.status(response.status === 400 ? 409 : 502).json({
-        error: providerMessage ? "Woovi: " + String(providerMessage).slice(0, 180) : "A Woovi não confirmou a exclusão da cobrança."
+        error: providerMessage ? "Woovi: " + String(providerMessage).slice(0, 180) : "A Woovi não confirmou a exclusão da cobrança.",
+        providerHttpStatus: response.status,
+        providerResponse: response.data || null
       });
     }
     confirmedPaymentCache.delete(correlationID);
