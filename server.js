@@ -166,6 +166,7 @@ async function initDatabase() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS amount_cents INTEGER;
+    ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT FALSE;
     CREATE INDEX IF NOT EXISTS idx_funnel_events_name_created ON funnel_events(event_name, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_funnel_events_session_created ON funnel_events(session_id, created_at DESC);
   `);
@@ -537,9 +538,9 @@ app.get("/api/admin/funil", async (req, res) => {
     const supplied=String(req.get("X-Admin-Secret")||"").trim();
     if(!ADMIN_FUNNEL_SECRET||ADMIN_FUNNEL_SECRET.length<24||supplied.length!==ADMIN_FUNNEL_SECRET.length||!crypto.timingSafeEqual(Buffer.from(supplied),Buffer.from(ADMIN_FUNNEL_SECRET))) return res.status(404).json({error:"Endpoint não encontrado."});
     const days=Math.min(90,Math.max(1,Number(req.query.days)||7));
-    const totals=await pool.query(`SELECT event_name,COUNT(*)::int AS total,COUNT(DISTINCT session_id)::int AS sessions FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval GROUP BY event_name`,[days]);
-    const products=await pool.query(`SELECT COALESCE(product,'sem-produto') AS product,event_name,COUNT(*)::int AS total,COALESCE(SUM(amount_cents),0)::bigint AS amount_cents FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval AND event_name IN ('pacote_selecionado','pix_gerado','pix_pago','relatorio_entregue') GROUP BY product,event_name ORDER BY product,event_name`,[days]);
-    const daily=await pool.query(`SELECT TO_CHAR(created_at AT TIME ZONE 'America/Sao_Paulo','YYYY-MM-DD') AS day,event_name,COUNT(*)::int AS total FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval GROUP BY day,event_name ORDER BY day`,[days]);
+    const totals=await pool.query(`SELECT event_name,COUNT(*)::int AS total,COUNT(DISTINCT session_id)::int AS sessions FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval AND is_test=FALSE GROUP BY event_name`,[days]);
+    const products=await pool.query(`SELECT COALESCE(product,'sem-produto') AS product,event_name,COUNT(*)::int AS total,COALESCE(SUM(amount_cents),0)::bigint AS amount_cents FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval AND is_test=FALSE AND event_name IN ('pacote_selecionado','pix_gerado','pix_pago','relatorio_entregue') GROUP BY product,event_name ORDER BY product,event_name`,[days]);
+    const daily=await pool.query(`SELECT TO_CHAR(created_at AT TIME ZONE 'America/Sao_Paulo','YYYY-MM-DD') AS day,event_name,COUNT(*)::int AS total FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval AND is_test=FALSE GROUP BY day,event_name ORDER BY day`,[days]);
     return res.json({ok:true,days,totals:totals.rows,products:products.rows,daily:daily.rows});
   } catch(err){console.error("Falha no painel do funil:",err.message);return res.status(500).json({mensagem:"Não foi possível carregar o painel."})}
 });
@@ -557,7 +558,10 @@ app.post("/api/funil/evento", async (req, res) => {
     const plateHash = validPlate(plate) ? crypto.createHash("sha256").update(plate + "|" + PAYMENT_SIGNING_SECRET).digest("hex").slice(0,32) : null;
     const knownProduct = paymentProduct(product);
     const amountCents = eventName === "pix_pago" && knownProduct ? knownProduct.cents : null;
-    await pool.query("INSERT INTO funnel_events(session_id,event_name,product,plate_hash,amount_cents) VALUES($1,$2,$3,$4,$5)", [sessionId,eventName,product,plateHash,amountCents]);
+    const testSecret = String(req.get("X-Funnel-Test-Secret") || "").trim();
+    const configuredTestSecret = String(process.env.FUNNEL_TEST_SECRET || "").trim();
+    const isTest = Boolean(configuredTestSecret && configuredTestSecret.length >= 24 && testSecret.length === configuredTestSecret.length && crypto.timingSafeEqual(Buffer.from(testSecret), Buffer.from(configuredTestSecret)));
+    await pool.query("INSERT INTO funnel_events(session_id,event_name,product,plate_hash,amount_cents,is_test) VALUES($1,$2,$3,$4,$5,$6)", [sessionId,eventName,product,plateHash,amountCents,isTest]);
     return res.status(204).end();
   } catch (err) {
     console.error("Falha ao registrar evento do funil:", err.message);
