@@ -156,6 +156,16 @@ async function initDatabase() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS idx_credit_recovery_email ON credit_recovery_codes(LOWER(email), created_at DESC);
+    CREATE TABLE IF NOT EXISTS funnel_events (
+      id BIGSERIAL PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      event_name TEXT NOT NULL,
+      product TEXT,
+      plate_hash TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_funnel_events_name_created ON funnel_events(event_name, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_funnel_events_session_created ON funnel_events(session_id, created_at DESC);
   `);
 }
 
@@ -518,6 +528,25 @@ async function verifyPaidToken(token, requiredProduct) {
 
   return { paid, state: state || "DESCONHECIDO", payload, charge };
 }
+
+app.post("/api/funil/evento", async (req, res) => {
+  try {
+    requireDatabase();
+    const eventName = String(req.body && req.body.event || "").trim();
+    const allowed = new Set(["consulta_iniciada","previa_exibida","pacote_selecionado","pix_gerado","pix_pago","relatorio_entregue"]);
+    if (!allowed.has(eventName)) return res.status(400).json({ ok:false });
+    const sessionId = String(req.body && req.body.sessionId || "").trim();
+    if (!/^[a-zA-Z0-9_-]{16,80}$/.test(sessionId)) return res.status(400).json({ ok:false });
+    const product = String(req.body && req.body.product || "").trim().slice(0,40) || null;
+    const plate = normalizePlate(req.body && req.body.plate);
+    const plateHash = validPlate(plate) ? crypto.createHash("sha256").update(plate + "|" + PAYMENT_SIGNING_SECRET).digest("hex").slice(0,32) : null;
+    await pool.query("INSERT INTO funnel_events(session_id,event_name,product,plate_hash) VALUES($1,$2,$3,$4)", [sessionId,eventName,product,plateHash]);
+    return res.status(204).end();
+  } catch (err) {
+    console.error("Falha ao registrar evento do funil:", err.message);
+    return res.status(204).end();
+  }
+});
 
 app.get("/api/consulta/:plate", async (req, res) => {
   const plate = normalizePlate(req.params.plate);
