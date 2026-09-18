@@ -137,9 +137,18 @@ if (IS_BACKEND_SERVER) {
         siniav: boolOrNull(indicators.siniav),
         chassisRemarked: boolOrNull(source.indicadorRemarcacaoChassi)
       },
+      complementary: {
+        billedType: cleanText(source.faturado && source.faturado.tipo),
+        billedDocument: maskIdentifier(source.faturado && source.faturado.documento, 4),
+        importDate: cleanText(source.importacao && source.importacao.data, 60),
+        importDeclaration: maskIdentifier(source.importacao && source.importacao.numeroDeclaracao, 4)
+      },
       technical: {
         engine: maskIdentifier(source.numeroMotor, 4),
         transmission: maskIdentifier(source.numeroCambio, 4),
+        bodyNumber: maskIdentifier(source.numeroCarroceria, 4),
+        rearAxleNumber: maskIdentifier(source.numeroEixoTraseiro, 4),
+        auxiliaryAxleNumber: maskIdentifier(source.numeroDoEixoAuxiliar, 4),
         displacement: cleanText(source.cilindrada, 40),
         power: cleanText(source.potencia, 40),
         axles: cleanText(source.numeroEixos, 20),
