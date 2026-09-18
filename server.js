@@ -575,6 +575,82 @@ async function verifyPaidToken(token, requiredProduct) {
   return { paid, state: state || "DESCONHECIDO", payload, charge };
 }
 
+function requireAdminSecret(req, res) {
+  const supplied = String(req.get("X-Admin-Secret") || "").trim();
+  if (!ADMIN_FUNNEL_SECRET || ADMIN_FUNNEL_SECRET.length < 24 || !secureEqual(supplied, ADMIN_FUNNEL_SECRET)) {
+    res.status(404).json({ error: "Endpoint não encontrado." });
+    return false;
+  }
+  return true;
+}
+
+app.get("/api/admin/cobrancas-teste", async (req, res) => {
+  if (!requireAdminSecret(req, res)) return;
+  try {
+    requireDatabase();
+    const rows = await pool.query(
+      "SELECT correlation_id, product, cents, credits, status, credited_at, created_at FROM payments WHERE correlation_id LIKE 'cv-%' ORDER BY created_at DESC LIMIT 200"
+    );
+    const cobrancas = [];
+    for (const p of rows.rows) {
+      let providerStatus = "DESCONHECIDO";
+      try {
+        const charge = await getOpenPixCharge(p.correlation_id);
+        providerStatus = String(charge.status || "").toUpperCase() || "DESCONHECIDO";
+      } catch {}
+      cobrancas.push({
+        correlationID: p.correlation_id,
+        produto: p.product,
+        valorCentavos: Number(p.cents),
+        creditos: Number(p.credits),
+        statusLocal: p.status,
+        statusWoovi: providerStatus,
+        creditado: Boolean(p.credited_at),
+        criadoEm: p.created_at,
+        podeExcluir: providerStatus !== "COMPLETED" && !p.credited_at
+      });
+    }
+    res.json({ ok: true, total: cobrancas.length, cobrancas });
+  } catch (err) {
+    console.error("Falha ao listar cobranças administrativas:", err.message);
+    res.status(500).json({ error: "Falha ao listar cobranças." });
+  }
+});
+
+app.delete("/api/admin/cobrancas-teste/:correlationID", async (req, res) => {
+  if (!requireAdminSecret(req, res)) return;
+  try {
+    requireDatabase();
+    const correlationID = String(req.params.correlationID || "").trim();
+    if (!correlationID.startsWith("cv-") || correlationID.length > 160) {
+      return res.status(400).json({ error: "Cobrança inválida." });
+    }
+    const found = await pool.query(
+      "SELECT correlation_id, credited_at FROM payments WHERE correlation_id=$1 LIMIT 1",
+      [correlationID]
+    );
+    if (!found.rowCount) return res.status(404).json({ error: "Cobrança não encontrada." });
+    if (found.rows[0].credited_at) return res.status(409).json({ error: "Cobrança creditada não pode ser excluída." });
+
+    const charge = await getOpenPixCharge(correlationID);
+    if (String(charge.status || "").toUpperCase() === "COMPLETED") {
+      return res.status(409).json({ error: "Pagamento concluído não pode ser excluído." });
+    }
+    const response = await requestJson(
+      OPENPIX_API_URL + "/charge/" + encodeURIComponent(correlationID),
+      { method: "DELETE", headers: openPixHeaders(), timeout: 15000 }
+    );
+    if (response.status < 200 || response.status >= 300) {
+      return res.status(502).json({ error: "A Woovi não confirmou a exclusão da cobrança." });
+    }
+    confirmedPaymentCache.delete(correlationID);
+    res.json({ ok: true, correlationID });
+  } catch (err) {
+    console.error("Falha ao excluir cobrança administrativa:", err.message);
+    res.status(500).json({ error: "Falha ao excluir cobrança." });
+  }
+});
+
 app.get("/api/admin/funil", async (req, res) => {
   try {
     requireDatabase();
