@@ -561,7 +561,8 @@ app.get("/api/admin/funil", async (req, res) => {
     const products=await pool.query(`SELECT COALESCE(product,'sem-produto') AS product,event_name,COUNT(*)::int AS total,COALESCE(SUM(amount_cents),0)::bigint AS amount_cents FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval AND is_test=FALSE AND event_name IN ('pacote_selecionado','pix_gerado','pix_pago','relatorio_entregue') GROUP BY product,event_name ORDER BY product,event_name`,[days]);
     const daily=await pool.query(`SELECT TO_CHAR(created_at AT TIME ZONE 'America/Sao_Paulo','YYYY-MM-DD') AS day,event_name,COUNT(*)::int AS total FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval AND is_test=FALSE GROUP BY day,event_name ORDER BY day`,[days]);
     const finance=await pool.query(`SELECT COUNT(*)::int AS paid_orders,COALESCE(SUM(cents),0)::bigint AS revenue_cents FROM payments WHERE status='completed' AND credited_at IS NOT NULL AND created_at>=NOW()-($1::text||' days')::interval`,[days]);
-    return res.json({ok:true,days,totals:totals.rows,products:products.rows,daily:daily.rows,finance:finance.rows[0]});
+    const financeByProduct=await pool.query(`SELECT product,COUNT(*)::int AS paid_orders,COALESCE(SUM(cents),0)::bigint AS revenue_cents,COALESCE(SUM(credits),0)::int AS credits_sold FROM payments WHERE status='completed' AND credited_at IS NOT NULL AND created_at>=NOW()-($1::text||' days')::interval GROUP BY product ORDER BY revenue_cents DESC`,[days]);
+    return res.json({ok:true,days,totals:totals.rows,products:products.rows,daily:daily.rows,finance:finance.rows[0],financeByProduct:financeByProduct.rows});
   } catch(err){console.error("Falha no painel do funil:",err.message);return res.status(500).json({mensagem:"Não foi possível carregar o painel."})}
 });
 
