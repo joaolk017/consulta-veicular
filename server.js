@@ -287,6 +287,19 @@ async function creditPaidPayment(checked) {
     const pay = await client.query("SELECT * FROM payments WHERE correlation_id=$1 FOR UPDATE", [checked.payload.correlationID]);
     if (!pay.rowCount) throw Object.assign(new Error("Pagamento não registrado."), { status: 400 });
     const p = pay.rows[0];
+    // Defesa em profundidade: o token assinado deve corresponder exatamente
+    // ao pagamento persistido antes de qualquer crédito ser liberado.
+    if (
+      String(p.account_id) !== String(checked.payload.accountId) ||
+      String(p.product) !== String(checked.payload.product) ||
+      Number(p.cents) !== Number(checked.payload.cents)
+    ) {
+      throw Object.assign(new Error("Dados do pagamento não correspondem ao registro original."), { status: 400 });
+    }
+    const expectedProduct = paymentProduct(p.product);
+    if (!expectedProduct || Number(p.credits) !== Number(expectedProduct.credits) || Number(p.cents) !== Number(expectedProduct.cents)) {
+      throw Object.assign(new Error("Registro de pagamento inconsistente."), { status: 400 });
+    }
     if (p.credited_at) {
       const b = await client.query("SELECT balance FROM credit_accounts WHERE id=$1", [p.account_id]);
       await client.query("COMMIT");
