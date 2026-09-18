@@ -3,6 +3,7 @@ const path = require("path");
 const https = require("https");
 const crypto = require("crypto");
 const sharp = require("sharp");
+const QRCode = require("qrcode");
 const { Pool } = require("pg");
 
 const app = express();
@@ -536,6 +537,11 @@ app.post("/api/pagamento/pix/criar", async (req, res) => {
 
   try {
     const charge = await createOpenPixCharge({ correlationID, plate, product });
+    const copyPaste = charge.brCode || (charge.pix && charge.pix.brCode) || null;
+    let qrcodeUrl = charge.qrCodeImage || null;
+    if (!qrcodeUrl && copyPaste) {
+      try { qrcodeUrl = await QRCode.toDataURL(copyPaste, { width: 420, margin: 2 }); } catch {}
+    }
     await pool.query("INSERT INTO payments(correlation_id,account_id,product,cents,credits) VALUES($1,$2,$3,$4,$5) ON CONFLICT(correlation_id) DO NOTHING", [correlationID, account.id, product.id, product.cents, product.credits]);
     const paymentToken = signPaymentToken({
       v: 3,
@@ -558,8 +564,8 @@ app.post("/api/pagamento/pix/criar", async (req, res) => {
       moeda: "BRL",
       correlationID,
       status: String(charge.status || "ACTIVE").toUpperCase(),
-      copyPaste: charge.brCode || (charge.pix && charge.pix.brCode) || null,
-      qrcodeUrl: charge.qrCodeImage || null,
+      copyPaste,
+      qrcodeUrl,
       paymentLinkUrl: charge.paymentLinkUrl || null,
       paymentToken,
       accountToken: account.token,
