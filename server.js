@@ -605,7 +605,15 @@ app.get("/api/admin/cobrancas-teste", async (req, res) => {
       try {
         const charge = await getOpenPixCharge(p.correlation_id);
         providerStatus = String(charge.status || "").toUpperCase() || "DESCONHECIDO";
-      } catch {}
+      } catch (err) {
+        console.error("WOOVI GET cobrança diagnóstico:", JSON.stringify({
+          correlationID: String(p.correlation_id || "").slice(0, 160),
+          method: "GET",
+          requestUrl: OPENPIX_API_URL + "/charge/" + encodeURIComponent(String(p.correlation_id || "")),
+          httpStatus: Number(err && err.status) || null,
+          error: String(err && err.message || "Erro desconhecido").slice(0, 300)
+        }));
+      }
       cobrancas.push({
         correlationID: p.correlation_id,
         produto: p.product,
