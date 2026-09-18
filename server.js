@@ -17,6 +17,7 @@ const DATABASE_URL = String(process.env.DATABASE_URL || "").trim();
 const RESEND_API_KEY = String(process.env.RESEND_API_KEY || "").trim();
 const RESEND_FROM_EMAIL = String(process.env.RESEND_FROM_EMAIL || "Consulta Veicular 360 <onboarding@resend.dev>").trim();
 const ADMIN_FUNNEL_SECRET = String(process.env.ADMIN_FUNNEL_SECRET || "").trim();
+const OPENPIX_WEBHOOK_SECRET = String(process.env.OPENPIX_WEBHOOK_SECRET || "").trim();
 const pool = DATABASE_URL ? new Pool({ connectionString: DATABASE_URL, ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined }) : null;
 
 const CONSULTA_SALE_PRICE = 18.90;
@@ -884,6 +885,11 @@ app.post("/api/pagamento/pix/criar", async (req, res) => {
 });
 
 app.post("/api/pagamento/pix/webhook", async (req, res) => {
+  // Autentica a entrada antes de qualquer processamento ou chamada à Woovi/OpenPix.
+  const suppliedWebhookSecret = String(req.get("Authorization") || "").trim();
+  if (!OPENPIX_WEBHOOK_SECRET || !secureEqual(suppliedWebhookSecret, OPENPIX_WEBHOOK_SECRET)) {
+    return res.status(401).json({ ok:false });
+  }
   // A notificação inicia a checagem, mas nunca é confiada sozinha:
   // o servidor confirma status e valor diretamente na Woovi/OpenPix antes de creditar.
   try {
