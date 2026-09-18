@@ -11,7 +11,8 @@ const PORT = Number(process.env.PORT || 3000);
 
 const FALCON_TOKEN = String(process.env.FALCON_TOKEN || "").trim();
 const OPENPIX_APP_ID = String(process.env.OPENPIX_APP_ID || process.env.WOOVI_APP_ID || "").trim();
-const OPENPIX_API_URL = String(process.env.OPENPIX_API_URL || "https://api.openpix.com.br/api/v1").replace(/\/+$/, "");
+const OPENPIX_API_URL = String(process.env.OPENPIX_API_URL || "https://api.woovi.com/api/v1").replace(/\/+$/, "");
+const WOOVI_API_URL = "https://api.woovi.com/api/v1";
 const PAYMENT_SIGNING_SECRET = String(process.env.PAYMENT_SIGNING_SECRET || "").trim();
 const DATABASE_URL = String(process.env.DATABASE_URL || "").trim();
 const RESEND_API_KEY = String(process.env.RESEND_API_KEY || "").trim();
@@ -546,7 +547,7 @@ async function getOpenPixCharge(correlationID) {
   if (cached && Date.now() < cached.expiresAt) return cached.charge;
 
   const response = await requestJson(
-    `${OPENPIX_API_URL}/charge/${encodeURIComponent(key)}`,
+    `${WOOVI_API_URL}/charge/${encodeURIComponent(key)}`,
     { headers: openPixHeaders(), timeout: 15000 }
   );
   const charge = response.data && response.data.charge ? response.data.charge : null;
@@ -556,7 +557,7 @@ async function getOpenPixCharge(correlationID) {
     err.providerHttpStatus = response.status;
     err.providerResponse = response.data || null;
     err.providerRaw = response.raw ? String(response.raw).slice(0, 2000) : null;
-    err.requestUrl = response.requestUrl || (OPENPIX_API_URL + "/charge/" + encodeURIComponent(key));
+    err.requestUrl = response.requestUrl || (WOOVI_API_URL + "/charge/" + encodeURIComponent(key));
     throw err;
   }
   if (String(charge.status || "").toUpperCase() === "COMPLETED") {
@@ -613,7 +614,7 @@ app.get("/api/admin/cobrancas-teste", async (req, res) => {
         console.error("WOOVI GET cobrança diagnóstico:", JSON.stringify({
           correlationID: String(p.correlation_id || "").slice(0, 160),
           method: "GET",
-          requestUrl: OPENPIX_API_URL + "/charge/" + encodeURIComponent(String(p.correlation_id || "")),
+          requestUrl: WOOVI_API_URL + "/charge/" + encodeURIComponent(String(p.correlation_id || "")),
           httpStatus: Number(err && (err.providerHttpStatus || err.status)) || null,
           error: String(err && err.message || "Erro desconhecido").slice(0, 300),
           providerResponse: err && err.providerResponse ? err.providerResponse : null,
