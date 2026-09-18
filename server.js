@@ -167,6 +167,8 @@ async function initDatabase() {
     );
     ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS amount_cents INTEGER;
     ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS correlation_id TEXT;
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_funnel_pix_pago_correlation ON funnel_events(correlation_id) WHERE event_name='pix_pago' AND correlation_id IS NOT NULL;
     -- Migração única: eventos anteriores à separação teste/produção eram da fase de validação.
     -- Marca somente o legado existente; eventos novos permanecem reais por padrão.
     UPDATE funnel_events SET is_test=TRUE WHERE is_test=FALSE AND created_at < TIMESTAMPTZ '2026-09-18 18:30:00-03';
@@ -276,6 +278,12 @@ async function creditPaidPayment(checked) {
     await client.query("UPDATE credit_accounts SET balance=balance+$1, updated_at=NOW() WHERE id=$2", [p.credits, p.account_id]);
     await client.query("INSERT INTO credit_transactions(account_id,type,quantity,reference) VALUES($1,'purchase',$2,$3) ON CONFLICT(type,reference) DO NOTHING", [p.account_id, p.credits, p.correlation_id]);
     await client.query("UPDATE payments SET status='completed', credited_at=NOW() WHERE correlation_id=$1", [p.correlation_id]);
+    // Venda real: registrada somente após confirmação do provedor e dentro da mesma transação do crédito.
+    // correlation_id + índice único tornam o evento idempotente e impedem contagem duplicada.
+    await client.query(
+      "INSERT INTO funnel_events(session_id,event_name,product,amount_cents,is_test,correlation_id) VALUES($1,'pix_pago',$2,$3,FALSE,$4) ON CONFLICT DO NOTHING",
+      ["pay_" + crypto.createHash("sha256").update(p.correlation_id).digest("hex").slice(0,24), p.product, Number(p.cents), p.correlation_id]
+    );
     const b = await client.query("SELECT balance FROM credit_accounts WHERE id=$1", [p.account_id]);
     await client.query("COMMIT");
     return { accountId: p.account_id, balance: b.rows[0].balance, alreadyCredited: false };
@@ -552,7 +560,8 @@ app.post("/api/funil/evento", async (req, res) => {
   try {
     requireDatabase();
     const eventName = String(req.body && req.body.event || "").trim();
-    const allowed = new Set(["consulta_iniciada","previa_exibida","pacote_selecionado","pix_gerado","pix_pago","relatorio_entregue"]);
+    const allowed = new Set(["consulta_iniciada","previa_exibida","pacote_selecionado","pix_gerado","relatorio_entregue"]);
+    // pix_pago nunca é aceito do navegador; ele é criado internamente após confirmação da Woovi/OpenPix.
     if (!allowed.has(eventName)) return res.status(400).json({ ok:false });
     const sessionId = String(req.body && req.body.sessionId || "").trim();
     if (!/^[a-zA-Z0-9_-]{16,80}$/.test(sessionId)) return res.status(400).json({ ok:false });
