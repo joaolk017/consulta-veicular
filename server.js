@@ -551,6 +551,30 @@ app.get("/api/consulta/:plate", async (req, res) => {
   }
 });
 
+app.get("/api/diagnostico/pacotes-creditos", async (req, res) => {
+  let client;
+  try {
+    requireDatabase();
+    client = await pool.connect();
+    await client.query("BEGIN");
+    const results = [];
+    for (const productId of ["consulta-completa","pacote-2","pacote-3"]) {
+      const product = PACKAGES[productId];
+      const id = crypto.randomUUID();
+      await client.query("INSERT INTO credit_accounts(id) VALUES($1)", [id]);
+      const before = await client.query("SELECT balance FROM credit_accounts WHERE id=$1", [id]);
+      await client.query("UPDATE credit_accounts SET balance=balance+$1 WHERE id=$2", [product.credits,id]);
+      const after = await client.query("SELECT balance FROM credit_accounts WHERE id=$1", [id]);
+      results.push({produto:productId,valor:product.amount,creditosEsperados:product.credits,saldoAntes:Number(before.rows[0].balance),saldoDepois:Number(after.rows[0].balance),ok:Number(after.rows[0].balance)===product.credits});
+    }
+    await client.query("ROLLBACK");
+    return res.json({ok:results.every(x=>x.ok),rollback:"OK",dadosPersistidos:false,pacotes:results});
+  } catch(err) {
+    if(client){try{await client.query("ROLLBACK")}catch{}}
+    return res.status(503).json({ok:false,mensagem:err.message});
+  } finally { if(client) client.release(); }
+});
+
 app.post("/api/creditos/conta", async (req, res) => {
   try {
     const account = await ensureAccount(req.body && req.body.accountToken);
