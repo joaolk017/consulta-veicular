@@ -21,6 +21,10 @@ const pool = DATABASE_URL ? new Pool({ connectionString: DATABASE_URL, ssl: proc
 
 const CONSULTA_SALE_PRICE = 18.90;
 const CONSULTA_SALE_CENTS = 1890;
+// Custos usados apenas para estimativa gerencial no painel.
+// API veicular: R$ 3,00 por crédito/consulta vendido. Woovi: 0,80% do valor confirmado.
+const VEHICLE_API_COST_CENTS = 300;
+const PAYMENT_FEE_RATE = 0.008;
 const PACKAGES = Object.freeze({
   "consulta-completa": { id: "consulta-completa", amount: 18.90, cents: 1890, credits: 1, description: "1 consulta veicular completa" },
   "pacote-2": { id: "pacote-2", amount: 32.90, cents: 3290, credits: 2, description: "Pacote com 2 consultas veiculares" },
@@ -562,6 +566,7 @@ app.get("/api/admin/funil", async (req, res) => {
     const daily=await pool.query(`SELECT TO_CHAR(created_at AT TIME ZONE 'America/Sao_Paulo','YYYY-MM-DD') AS day,event_name,COUNT(*)::int AS total FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval AND is_test=FALSE GROUP BY day,event_name ORDER BY day`,[days]);
     const finance=await pool.query(`SELECT COUNT(*)::int AS paid_orders,COALESCE(SUM(cents),0)::bigint AS revenue_cents FROM payments WHERE status='completed' AND credited_at IS NOT NULL AND created_at>=NOW()-($1::text||' days')::interval`,[days]);
     const financeByProduct=await pool.query(`SELECT product,COUNT(*)::int AS paid_orders,COALESCE(SUM(cents),0)::bigint AS revenue_cents,COALESCE(SUM(credits),0)::int AS credits_sold FROM payments WHERE status='completed' AND credited_at IS NOT NULL AND created_at>=NOW()-($1::text||' days')::interval GROUP BY product ORDER BY revenue_cents DESC`,[days]);
+    financeByProduct.rows=financeByProduct.rows.map(row=>{const revenue=Number(row.revenue_cents)||0,credits=Number(row.credits_sold)||0,apiCost=credits*VEHICLE_API_COST_CENTS,paymentFee=Math.round(revenue*PAYMENT_FEE_RATE),estimatedProfit=Math.max(0,revenue-apiCost-paymentFee);return {...row,api_cost_cents:apiCost,payment_fee_cents:paymentFee,estimated_profit_cents:estimatedProfit,estimated_margin_pct:revenue?Number((estimatedProfit/revenue*100).toFixed(1)):0};});
     return res.json({ok:true,days,totals:totals.rows,products:products.rows,daily:daily.rows,finance:finance.rows[0],financeByProduct:financeByProduct.rows});
   } catch(err){console.error("Falha no painel do funil:",err.message);return res.status(500).json({mensagem:"Não foi possível carregar o painel."})}
 });
