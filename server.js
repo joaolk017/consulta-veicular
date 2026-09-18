@@ -551,6 +551,34 @@ app.get("/api/consulta/:plate", async (req, res) => {
   }
 });
 
+app.get("/api/diagnostico/creditos-db", async (req, res) => {
+  let client;
+  try {
+    requireDatabase();
+    client = await pool.connect();
+    await client.query("BEGIN");
+    const ping = await client.query("SELECT 1 AS ok");
+    const id = crypto.randomUUID();
+    await client.query("INSERT INTO credit_accounts(id) VALUES($1)", [id]);
+    const wallet = await client.query("SELECT id,balance FROM credit_accounts WHERE id=$1", [id]);
+    await client.query("ROLLBACK");
+    const gone = await pool.query("SELECT id FROM credit_accounts WHERE id=$1", [id]);
+    return res.json({
+      ok:true,
+      postgres:ping.rows[0].ok===1 ? "OK" : "FALHA",
+      carteiraCriada:wallet.rowCount===1,
+      saldoInicial:Number(wallet.rows[0]?.balance) || 0,
+      rollback:gone.rowCount===0 ? "OK" : "FALHA",
+      dadosPersistidos:gone.rowCount!==0
+    });
+  } catch(err) {
+    if (client) { try { await client.query("ROLLBACK"); } catch {} }
+    return res.status(503).json({ ok:false, postgres:"FALHA", mensagem:err.message });
+  } finally {
+    if (client) client.release();
+  }
+});
+
 app.post("/api/creditos/conta", async (req, res) => {
   try {
     const account = await ensureAccount(req.body && req.body.accountToken);
