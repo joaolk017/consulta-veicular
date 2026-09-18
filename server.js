@@ -642,11 +642,30 @@ app.post("/api/creditos/conta", async (req, res) => {
 });
 
 app.post("/api/creditos/recuperar/solicitar", async (req, res) => {
-  const limit = useRateLimit(recoveryRateStore, "request:" + clientIp(req), 5);
-  if (!limit.allowed) return res.status(429).json({ mensagem: "Muitas tentativas. Aguarde antes de solicitar outro código." });
+  const ipLimit = useRateLimit(recoveryRateStore, "request-ip:" + clientIp(req), 5);
+  if (!ipLimit.allowed) {
+    res.set("Retry-After", String(ipLimit.retryAfter));
+    return res.status(429).json({ mensagem: "Muitas solicitações de recuperação. Aguarde antes de tentar novamente." });
+  }
   try {
     requireDatabase();
     const email = normalizeEmail(req.body && req.body.email);
+    // Limite adicional por endereço: impede que vários IPs sejam usados para bombardear
+    // a mesma caixa de entrada com códigos e protege a reputação do remetente.
+    const emailKey = crypto.createHash("sha256").update(email).digest("hex");
+    const emailLimit = useRateLimit(recoveryRateStore, "request-email:" + emailKey, 3);
+    if (!emailLimit.allowed) {
+      res.set("Retry-After", String(emailLimit.retryAfter));
+      return res.status(429).json({ mensagem: "Muitas solicitações de recuperação. Aguarde antes de tentar novamente." });
+    }
+    const recent = await pool.query(
+      "SELECT created_at FROM credit_recovery_codes WHERE LOWER(email)=LOWER($1) AND created_at>NOW()-INTERVAL '60 seconds' ORDER BY created_at DESC LIMIT 1",
+      [email]
+    );
+    if (recent.rowCount) {
+      res.set("Retry-After", "60");
+      return res.status(429).json({ mensagem: "Aguarde 60 segundos antes de solicitar outro código." });
+    }
     const found = await pool.query("SELECT id FROM credit_accounts WHERE LOWER(email)=LOWER($1) LIMIT 1", [email]);
     // Resposta neutra para não revelar quais e-mails possuem conta.
     if (!found.rowCount) return res.json({ ok: true, mensagem: "Se o e-mail estiver cadastrado, enviaremos um código de recuperação." });
