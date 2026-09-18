@@ -389,7 +389,8 @@ function requestJson(url, options = {}, payload = null, maxBytes = 2_000_000) {
       headers["Content-Length"] = Buffer.byteLength(body);
     }
 
-    const request = https.request(parsed, { method: options.method || "GET", headers }, response => {
+    const method = String(options.method || "GET").toUpperCase();
+    const request = https.request(parsed, { method, headers }, response => {
       const chunks = [];
       let size = 0;
       response.on("data", chunk => {
@@ -404,7 +405,14 @@ function requestJson(url, options = {}, payload = null, maxBytes = 2_000_000) {
         const raw = Buffer.concat(chunks).toString("utf8");
         let data = null;
         try { data = raw ? JSON.parse(raw) : null; } catch {}
-        resolve({ status: response.statusCode || 502, data, raw });
+        resolve({
+          status: response.statusCode || 502,
+          data,
+          raw,
+          requestUrl: parsed.toString(),
+          method,
+          location: response.headers.location || null
+        });
       });
     });
     request.setTimeout(options.timeout || 20000, () => request.destroy(new Error("Tempo limite da integração excedido.")));
@@ -645,7 +653,14 @@ app.delete("/api/admin/cobrancas-teste/:correlationID", async (req, res) => {
       { method: "DELETE", headers: openPixHeaders(), timeout: 15000 }
     );
     if (response.status < 200 || response.status >= 300) {
-      console.error("Woovi recusou exclusão:", correlationID, "HTTP", response.status, JSON.stringify(response.data || null));
+      console.error("Woovi DELETE diagnóstico:", JSON.stringify({
+        correlationID,
+        method: response.method,
+        requestUrl: response.requestUrl,
+        httpStatus: response.status,
+        location: response.location,
+        response: response.data || response.raw || null
+      }));
       const providerMessage = response.data && (response.data.error || response.data.message);
       return res.status(response.status === 400 ? 409 : 502).json({
         error: providerMessage ? "Woovi: " + String(providerMessage).slice(0, 180) : "A Woovi não confirmou a exclusão da cobrança.",
