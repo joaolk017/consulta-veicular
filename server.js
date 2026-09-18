@@ -581,6 +581,66 @@ app.post("/api/pagamento/pix/criar", async (req, res) => {
   }
 });
 
+app.post("/api/pagamento/pix/webhook", async (req, res) => {
+  // A notificação inicia a checagem, mas nunca é confiada sozinha:
+  // o servidor confirma status e valor diretamente na Woovi/OpenPix antes de creditar.
+  try {
+    const event = String(req.body && req.body.event || "").toUpperCase();
+    const notifiedCharge = req.body && req.body.charge;
+    if (event !== "OPENPIX:CHARGE_COMPLETED" || !notifiedCharge) {
+      return res.status(200).json({ ok:true, ignored:true });
+    }
+
+    const correlationID = String(notifiedCharge.correlationID || "").trim();
+    if (!correlationID || !correlationID.startsWith("cv-") || correlationID.length > 160) {
+      return res.status(200).json({ ok:true, ignored:true });
+    }
+
+    requireDatabase();
+    const registered = await pool.query(
+      "SELECT correlation_id, cents, product FROM payments WHERE correlation_id=$1",
+      [correlationID]
+    );
+    if (!registered.rowCount) return res.status(200).json({ ok:true, ignored:true });
+
+    // Confirma a cobrança na API oficial; impede crédito por webhook forjado.
+    confirmedPaymentCache.delete(correlationID);
+    const charge = await getOpenPixCharge(correlationID);
+    const state = String(charge.status || "").toUpperCase();
+    const providerCents = Number(charge.value);
+    const payment = registered.rows[0];
+
+    if (state !== "COMPLETED" || !Number.isFinite(providerCents) || providerCents !== Number(payment.cents)) {
+      console.warn("Webhook PIX ignorado após verificação: status/valor divergente.", correlationID);
+      return res.status(200).json({ ok:true, ignored:true });
+    }
+
+    const product = paymentProduct(payment.product);
+    if (!product || product.cents !== Number(payment.cents)) {
+      console.error("Webhook PIX: produto local inválido.", correlationID);
+      return res.status(200).json({ ok:true, ignored:true });
+    }
+
+    const checked = {
+      paid: true,
+      state,
+      payload: {
+        correlationID,
+        product: product.id,
+        cents: product.cents,
+        amount: product.amount
+      },
+      charge
+    };
+    const wallet = await creditPaidPayment(checked);
+    console.log("Webhook PIX confirmado e créditos processados:", correlationID, "saldo:", wallet.balance);
+    return res.status(200).json({ ok:true });
+  } catch (err) {
+    console.error("Erro no webhook Woovi/OpenPix:", err.message);
+    return res.status(500).json({ ok:false });
+  }
+});
+
 app.post("/api/pagamento/pix/status", async (req, res) => {
   try {
     const checked = await verifyPaidToken(req.body && req.body.paymentToken);
