@@ -461,6 +461,12 @@ app.use("/api", (req, res) => {
   res.status(404).json({ error: "Endpoint não encontrado." });
 });
 
+app.get("/preview-social.png", (req, res) => {
+  res.set("Content-Type", "image/png");
+  res.set("Cache-Control", "public, max-age=3600");
+  res.sendFile(path.join(__dirname, "file_00000000314c820e938dffdddecda774.png"));
+});
+
 app.use(express.static(path.join(__dirname), {
   dotfiles: "deny",
   index: "index.html",
