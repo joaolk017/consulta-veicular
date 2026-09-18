@@ -621,6 +621,26 @@ app.post("/api/creditos/recuperar/confirmar", async (req, res) => {
   }
 });
 
+app.post("/api/admin/credito-teste", async (req, res) => {
+  try {
+    requireDatabase();
+    const configured=String(process.env.TEST_CREDIT_SECRET||"").trim(), supplied=String(req.get("X-Test-Credit-Secret")||"").trim();
+    if(!configured||configured.length<24||configured.length!==supplied.length||!crypto.timingSafeEqual(Buffer.from(configured),Buffer.from(supplied))) return res.status(404).json({error:"Endpoint não encontrado."});
+    const accountId=verifyAccountToken(req.body&&req.body.accountToken), marker="admin-test-credit-once";
+    const client=await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const used=await client.query("SELECT 1 FROM payments WHERE correlation_id=$1 LIMIT 1",[marker]);
+      if(used.rowCount){await client.query("ROLLBACK");return res.status(409).json({mensagem:"Crédito de teste já utilizado."});}
+      const updated=await client.query("UPDATE credit_accounts SET balance=balance+1,updated_at=NOW() WHERE id=$1 RETURNING balance",[accountId]);
+      if(!updated.rowCount) throw Object.assign(new Error("Conta não encontrada."),{status:404});
+      await client.query("INSERT INTO payments(correlation_id,account_id,product,cents,credits) VALUES($1,$2,$3,0,1)",[marker,accountId,"admin-test"]);
+      await client.query("COMMIT");
+      return res.json({ok:true,creditos:Number(updated.rows[0].balance)||0});
+    } catch(err){try{await client.query("ROLLBACK")}catch{} throw err} finally{client.release()}
+  } catch(err){return res.status(err.status||500).json({mensagem:err.message||"Falha no crédito de teste."})}
+});
+
 app.get("/api/creditos/saldo", async (req, res) => {
   try {
     requireDatabase();
