@@ -552,7 +552,9 @@ app.get("/api/consulta/:plate", async (req, res) => {
 app.post("/api/creditos/conta", async (req, res) => {
   try {
     const account = await ensureAccount(req.body && req.body.accountToken);
-    const recoveryEmail = await bindRecoveryEmail(account.id, req.body && req.body.email);
+    // O e-mail é opcional ao apenas restaurar/criar a carteira no navegador.
+    // Quando informado explicitamente, vincula a carteira para recuperação.
+    if (req.body && req.body.email) await bindRecoveryEmail(account.id, req.body.email);
     return res.json({ ok:true, accountToken:account.token, creditos:account.balance });
   } catch(err) { return res.status(err.status || 503).json({ error:"creditos_indisponiveis", mensagem:err.message }); }
 });
@@ -656,7 +658,12 @@ app.post("/api/pagamento/pix/criar", async (req, res) => {
   const plate = normalizePlate(req.body && req.body.placa);
   if (product.id === "consulta-completa" && !validPlate(plate)) return res.status(400).json({ error: "placa_invalida", mensagem: "Placa inválida." });
   let account;
-  try { account = await ensureAccount(req.body && req.body.accountToken); }
+  try {
+    account = await ensureAccount(req.body && req.body.accountToken);
+    // Vincula o e-mail antes de criar a cobrança. Assim, os créditos comprados
+    // poderão ser recuperados em outro aparelho após a confirmação do PIX.
+    await bindRecoveryEmail(account.id, req.body && req.body.email);
+  }
   catch (err) { return res.status(err.status || 503).json({ error: "conta_creditos", mensagem: err.message }); }
 
   const correlationID = `cv-${plate}-${Date.now()}-${crypto.randomBytes(6).toString("hex")}`;
