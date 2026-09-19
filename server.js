@@ -776,7 +776,20 @@ app.get("/api/admin/diagnostico-woovi-delete/:correlationID", async (req, res) =
 });
 
 app.delete("/api/admin/cobrancas-teste-woovi/:correlationID", async (req, res) => {
-  if (!requireAdminSecret(req, res)) return;
+  const correlationIDEntrada = String(req.params.correlationID || "").trim();
+  console.log("ADMIN DELETE Woovi recebido:", JSON.stringify({
+    correlationID: correlationIDEntrada,
+    method: req.method,
+    path: req.path,
+    possuiAdminSecret: Boolean(req.get("X-Admin-Secret"))
+  }));
+  if (!requireAdminSecret(req, res)) {
+    console.warn("ADMIN DELETE Woovi bloqueado: autenticação administrativa inválida.", JSON.stringify({
+      correlationID: correlationIDEntrada
+    }));
+    return;
+  }
+  console.log("ADMIN DELETE Woovi autenticado:", JSON.stringify({ correlationID: correlationIDEntrada }));
   try {
     requireDatabase();
     const correlationID = String(req.params.correlationID || "").trim();
