@@ -693,14 +693,30 @@ app.delete("/api/admin/cobrancas-teste/:correlationID", async (req, res) => {
     if (!found.rowCount) return res.status(404).json({ error: "Cobrança não encontrada." });
     if (found.rows[0].credited_at) return res.status(409).json({ error: "Cobrança creditada não pode ser excluída." });
 
-    const charge = await getOpenPixCharge(correlationID);
+    // O endpoint individual da Woovi não aceita nosso correlationID em todos os casos.
+    // Resolve primeiro a cobrança pela listagem e usa o ID real retornado pelo provedor.
+    const listed = await listWooviChargesDiagnostic();
+    if (listed.response.status < 200 || listed.response.status >= 300) {
+      return res.status(502).json({ error: "Não foi possível listar as cobranças na Woovi." });
+    }
+    const charge = listed.charges.find(c => String(c.correlationID || "") === correlationID);
+    if (!charge) {
+      return res.status(404).json({ error: "Cobrança não encontrada na Woovi." });
+    }
     if (String(charge.status || "").toUpperCase() === "COMPLETED") {
       return res.status(409).json({ error: "Pagamento concluído não pode ser excluído." });
     }
-    // A documentação atual da Woovi define a exclusão no host oficial api.woovi.com.
-    // Mantemos o host configurável para criação/consulta, mas usamos o endpoint oficial
-    // para DELETE, evitando incompatibilidade com domínios legados da OpenPix.
-    const deleteUrl = "https://api.woovi.com/api/v1/charge/" + encodeURIComponent(correlationID);
+    const providerChargeID = String(charge.globalID || charge.id || charge.identifier || "").trim();
+    if (!providerChargeID || providerChargeID.length > 300) {
+      return res.status(502).json({ error: "A Woovi não retornou um identificador válido para exclusão." });
+    }
+    const deleteUrl = WOOVI_API_URL + "/charge/" + encodeURIComponent(providerChargeID);
+    console.log("WOOVI DELETE tentativa:", JSON.stringify({
+      correlationID,
+      providerChargeID,
+      method: "DELETE",
+      requestUrl: deleteUrl
+    }));
     const response = await requestJson(
       deleteUrl,
       { method: "DELETE", headers: openPixHeaders(), timeout: 15000 }
