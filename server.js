@@ -912,6 +912,44 @@ app.get("/api/admin/funil", async (req, res) => {
   } catch(err){console.error("Falha no painel do funil:",err.message);return res.status(500).json({mensagem:"Não foi possível carregar o painel."})}
 });
 
+app.get("/api/admin/monitor-consultas", async (req, res) => {
+  if (!requireAdminSecret(req, res)) return;
+  try {
+    requireDatabase();
+    const days = Math.min(90, Math.max(1, Number(req.query.days) || 7));
+    const summary = await pool.query(`
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE status='completed')::int AS concluidas,
+        COUNT(*) FILTER (WHERE status='failed')::int AS falhas,
+        COUNT(*) FILTER (WHERE status='pending')::int AS pendentes
+      FROM vehicle_queries
+      WHERE created_at >= NOW()-($1::text||' days')::interval
+    `, [days]);
+    const refunds = await pool.query(`
+      SELECT COUNT(*)::int AS total
+      FROM credit_transactions
+      WHERE type='refund' AND created_at >= NOW()-($1::text||' days')::interval
+    `, [days]);
+    const row = summary.rows[0];
+    const finalized = Number(row.concluidas) + Number(row.falhas);
+    res.json({
+      ok: true,
+      somenteLeitura: true,
+      days,
+      total: Number(row.total),
+      concluidas: Number(row.concluidas),
+      falhas: Number(row.falhas),
+      pendentes: Number(row.pendentes),
+      estornos: Number(refunds.rows[0].total),
+      taxaSucesso: finalized ? Number((Number(row.concluidas) / finalized * 100).toFixed(1)) : 0
+    });
+  } catch (err) {
+    console.error("Falha no monitor de consultas:", err.message);
+    res.status(500).json({ error: "Falha ao carregar monitor de consultas." });
+  }
+});
+
 app.get("/api/admin/saude-integracoes", async (req, res) => {
   if (!requireAdminSecret(req, res)) return;
   const started = Date.now();
