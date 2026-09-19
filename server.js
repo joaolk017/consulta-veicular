@@ -1007,7 +1007,7 @@ app.post("/api/funil/evento", async (req, res) => {
   try {
     requireDatabase();
     const eventName = String(req.body && req.body.event || "").trim();
-    const allowed = new Set(["consulta_iniciada","previa_exibida","pacote_selecionado","pix_gerado","relatorio_entregue"]);
+    const allowed = new Set(["consulta_iniciada","previa_exibida","pacote_selecionado","pix_modal_aberto","pix_email_preenchido","pix_gerado","pix_copiado","relatorio_entregue","upsell_pos_consulta_exibido","upsell_pos_consulta_clique"]);
     // pix_pago nunca é aceito do navegador; ele é criado internamente após confirmação da Woovi/OpenPix.
     if (!allowed.has(eventName)) return res.status(400).json({ ok:false });
     const sessionId = String(req.body && req.body.sessionId || "").trim();
