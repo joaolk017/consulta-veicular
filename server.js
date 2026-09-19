@@ -971,6 +971,43 @@ app.get("/api/admin/saude-integracoes", async (req, res) => {
   res.json({ ok: true, somenteLeitura: true, todosOperacionais, integracoes: health, duracaoMs: Date.now() - started, verificadoEm: new Date().toISOString() });
 });
 
+app.get("/api/admin/pre-lancamento", async (req, res) => {
+  if (!requireAdminSecret(req, res)) return;
+  const checks = [];
+  try {
+    requireDatabase();
+    await pool.query("SELECT 1");
+    checks.push({ id:"banco", nome:"Banco PostgreSQL", ok:true, detalhe:"Conexão disponível." });
+  } catch { checks.push({ id:"banco", nome:"Banco PostgreSQL", ok:false, detalhe:"Banco indisponível." }); }
+
+  checks.push({ id:"checkout", nome:"Configuração do checkout", ok:Boolean(OPENPIX_APP_ID && PAYMENT_SIGNING_SECRET), detalhe:OPENPIX_APP_ID && PAYMENT_SIGNING_SECRET ? "Credenciais essenciais configuradas." : "Configuração essencial ausente." });
+  checks.push({ id:"api-veicular", nome:"Configuração da API veicular", ok:Boolean(FALCON_TOKEN), detalhe:FALCON_TOKEN ? "Token configurado; nenhuma consulta foi consumida." : "Token não configurado." });
+
+  if (OPENPIX_APP_ID) {
+    try {
+      const response = await requestJson(WOOVI_API_URL + "/charge", { headers: openPixHeaders(), timeout: 10000 });
+      checks.push({ id:"woovi", nome:"Woovi / PIX", ok:response.status>=200 && response.status<300, detalhe:"HTTP "+response.status+" em leitura." });
+    } catch { checks.push({ id:"woovi", nome:"Woovi / PIX", ok:false, detalhe:"Não foi possível validar a integração." }); }
+  } else checks.push({ id:"woovi", nome:"Woovi / PIX", ok:false, detalhe:"App ID não configurado." });
+
+  if (pool) {
+    try {
+      const integrity = await Promise.all([
+        pool.query(`SELECT COUNT(*)::int AS total FROM payments p WHERE p.status='completed' AND p.credited_at IS NOT NULL AND NOT EXISTS (SELECT 1 FROM credit_transactions ct WHERE ct.type='purchase' AND ct.reference=p.correlation_id)`),
+        pool.query(`SELECT COUNT(*)::int AS total FROM credit_transactions ct WHERE ct.type='purchase' AND NOT EXISTS (SELECT 1 FROM payments p WHERE p.correlation_id=ct.reference AND p.status='completed' AND p.credited_at IS NOT NULL)`),
+        pool.query(`SELECT COUNT(*)::int AS total FROM vehicle_queries WHERE status='pending' AND created_at < NOW()-INTERVAL '5 minutes'`),
+        pool.query(`SELECT COUNT(*)::int AS total FROM vehicle_queries vq WHERE vq.status='failed' AND vq.credit_consumed=TRUE AND NOT EXISTS (SELECT 1 FROM credit_transactions ct WHERE ct.type='refund' AND ct.reference=vq.id::text)`),
+        pool.query(`SELECT COUNT(*)::int AS total FROM credit_accounts ca WHERE ca.balance <> COALESCE((SELECT SUM(ct.quantity) FROM credit_transactions ct WHERE ct.account_id=ca.id),0)`)
+      ]);
+      const problems=integrity.reduce((n,q)=>n+Number(q.rows[0].total||0),0);
+      checks.push({ id:"integridade", nome:"Pagamentos e créditos", ok:problems===0, detalhe:problems===0 ? "Nenhuma inconsistência encontrada." : problems+" inconsistência(s) encontrada(s)." });
+    } catch { checks.push({ id:"integridade", nome:"Pagamentos e créditos", ok:false, detalhe:"Não foi possível verificar a integridade." }); }
+  }
+
+  const pronto = checks.length >= 5 && checks.every(c=>c.ok);
+  return res.json({ ok:true, somenteLeitura:true, geraCobranca:false, consomeConsulta:false, prontoParaReceberClientes:pronto, verificacoes:checks, verificadoEm:new Date().toISOString() });
+});
+
 app.get("/api/admin/integridade", async (req, res) => {
   if (!requireAdminSecret(req, res)) return;
   try {
