@@ -669,14 +669,32 @@ app.get("/api/admin/cobrancas-teste", async (req, res) => {
       encontradosNaWoovi: cobrancas.length,
       locaisAusentesNaWoovi: registrosLocaisAusentesNaWoovi
     }));
+    // Também expõe, separadamente, cobranças que existem na Woovi mas não
+    // possuem registro local correspondente. Elas ficam apenas para conferência;
+    // não recebem autorização automática de exclusão.
+    const localIDs = new Set(rows.rows.map(p => String(p.correlation_id)));
+    const somenteWoovi = listed.charges
+      .filter(c => c && c.correlationID && !localIDs.has(String(c.correlationID)))
+      .map(c => ({
+        correlationID: String(c.correlationID),
+        providerChargeID: c.globalID || c.id || c.identifier || null,
+        valorCentavos: Number(c.value || 0),
+        statusWoovi: String(c.status || "").toUpperCase() || "DESCONHECIDO",
+        criadoEm: c.createdAt || null,
+        somenteWoovi: true,
+        podeExcluir: false
+      }));
+
     res.json({
       ok: true,
       total: cobrancas.length,
       cobrancas,
+      somenteWoovi,
       sincronizacao: {
         registrosLocais: rows.rowCount,
         encontradosNaWoovi: cobrancas.length,
-        ocultadosPorNaoExistiremNaWoovi: registrosLocaisAusentesNaWoovi
+        ocultadosPorNaoExistiremNaWoovi: registrosLocaisAusentesNaWoovi,
+        encontradosSomenteNaWoovi: somenteWoovi.length
       }
     });
   } catch (err) {
