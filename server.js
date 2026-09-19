@@ -709,6 +709,60 @@ app.get("/api/admin/cobrancas-teste", async (req, res) => {
   }
 });
 
+app.get("/api/admin/auditoria-pagamentos-locais", async (req, res) => {
+  if (!requireAdminSecret(req, res)) return;
+  try {
+    requireDatabase();
+    const result = await pool.query(`
+      SELECT
+        p.correlation_id,
+        p.product,
+        p.cents,
+        p.credits,
+        p.status,
+        p.credited_at,
+        p.created_at,
+        ca.balance AS saldo_atual,
+        EXISTS (
+          SELECT 1 FROM credit_transactions ct
+          WHERE ct.type = 'purchase' AND ct.reference = p.correlation_id
+        ) AS possui_transacao_compra,
+        (SELECT COUNT(*)::int FROM vehicle_queries vq WHERE vq.account_id = p.account_id) AS consultas_da_conta
+      FROM payments p
+      JOIN credit_accounts ca ON ca.id = p.account_id
+      WHERE p.correlation_id LIKE 'cv-%'
+      ORDER BY p.created_at DESC
+      LIMIT 200
+    `);
+    const registros = result.rows.map(r => ({
+      correlationID: r.correlation_id,
+      produto: r.product,
+      valorCentavos: Number(r.cents),
+      creditos: Number(r.credits),
+      statusLocal: r.status,
+      creditado: Boolean(r.credited_at),
+      possuiTransacaoCompra: Boolean(r.possui_transacao_compra),
+      saldoAtualConta: Number(r.saldo_atual),
+      consultasDaConta: Number(r.consultas_da_conta),
+      criadoEm: r.created_at,
+      classificacao: (r.credited_at || r.possui_transacao_compra)
+        ? "PRESERVAR_CREDITADO"
+        : "HISTORICO_NAO_CREDITADO"
+    }));
+    res.json({
+      ok: true,
+      somenteLeitura: true,
+      total: registros.length,
+      preservar: registros.filter(r => r.classificacao === "PRESERVAR_CREDITADO").length,
+      historicosNaoCreditados: registros.filter(r => r.classificacao === "HISTORICO_NAO_CREDITADO").length,
+      registros
+    });
+  } catch (err) {
+    console.error("Falha na auditoria local de pagamentos:", err.message);
+    res.status(500).json({ error: "Falha ao auditar pagamentos locais." });
+  }
+});
+
 app.delete("/api/admin/cobrancas-teste-woovi/:correlationID", async (req, res) => {
   const correlationIDEntrada = String(req.params.correlationID || "").trim();
   console.log("ADMIN DELETE Woovi recebido:", JSON.stringify({
