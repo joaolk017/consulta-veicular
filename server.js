@@ -153,6 +153,7 @@ async function initDatabase() {
       credited_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE payments ADD COLUMN IF NOT EXISTS funnel_session_id TEXT;
     CREATE TABLE IF NOT EXISTS vehicle_queries (
       id UUID PRIMARY KEY,
       account_id UUID NOT NULL REFERENCES credit_accounts(id) ON DELETE CASCADE,
@@ -326,7 +327,7 @@ async function creditPaidPayment(checked) {
     // correlation_id + índice único tornam o evento idempotente e impedem contagem duplicada.
     await client.query(
       "INSERT INTO funnel_events(session_id,event_name,product,amount_cents,is_test,correlation_id) VALUES($1,'pix_pago',$2,$3,FALSE,$4) ON CONFLICT DO NOTHING",
-      ["pay_" + crypto.createHash("sha256").update(p.correlation_id).digest("hex").slice(0,24), p.product, Number(p.cents), p.correlation_id]
+      [p.funnel_session_id || ("pay_" + crypto.createHash("sha256").update(p.correlation_id).digest("hex").slice(0,24)), p.product, Number(p.cents), p.correlation_id]
     );
     const b = await client.query("SELECT balance FROM credit_accounts WHERE id=$1", [p.account_id]);
     await client.query("COMMIT");
@@ -1275,6 +1276,8 @@ app.post("/api/pagamento/pix/criar", async (req, res) => {
   }
   catch (err) { return res.status(err.status || 503).json({ error: "conta_creditos", mensagem: err.message }); }
 
+  const funnelSessionId = String(req.body && req.body.sessionId || "").trim();
+  const validFunnelSessionId = /^[a-zA-Z0-9_-]{16,80}$/.test(funnelSessionId) ? funnelSessionId : null;
   const correlationID = `cv-${plate}-${Date.now()}-${crypto.randomBytes(6).toString("hex")}`;
 
   try {
@@ -1284,7 +1287,7 @@ app.post("/api/pagamento/pix/criar", async (req, res) => {
     if (!qrcodeUrl && copyPaste) {
       try { qrcodeUrl = await QRCode.toDataURL(copyPaste, { width: 420, margin: 2 }); } catch {}
     }
-    await pool.query("INSERT INTO payments(correlation_id,account_id,product,cents,credits) VALUES($1,$2,$3,$4,$5) ON CONFLICT(correlation_id) DO NOTHING", [correlationID, account.id, product.id, product.cents, product.credits]);
+    await pool.query("INSERT INTO payments(correlation_id,account_id,product,cents,credits,funnel_session_id) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(correlation_id) DO NOTHING", [correlationID, account.id, product.id, product.cents, product.credits, validFunnelSessionId]);
     const paymentToken = signPaymentToken({
       v: 3,
       provider: "openpix",
