@@ -412,7 +412,13 @@ function requestJson(url, options = {}, payload = null, maxBytes = 2_000_000) {
           raw,
           requestUrl: parsed.toString(),
           method,
-          location: response.headers.location || null
+          location: response.headers.location || null,
+          responseHeaders: {
+            allow: response.headers.allow || null,
+            server: response.headers.server || null,
+            contentType: response.headers["content-type"] || null,
+            via: response.headers.via || null
+          }
         });
       });
     });
@@ -732,6 +738,7 @@ app.get("/api/admin/diagnostico-woovi-delete/:correlationID", async (req, res) =
       requestUrl: r.requestUrl || null,
       httpStatus: r.status,
       location: r.location || null,
+      responseHeaders: r.responseHeaders || {},
       recognized: r.status >= 200 && r.status < 300,
       providerMessage: r.data && (r.data.error || r.data.message)
         ? String(r.data.error || r.data.message).slice(0, 180)
@@ -814,7 +821,8 @@ app.delete("/api/admin/cobrancas-teste-woovi/:correlationID", async (req, res) =
     );
     console.log("WOOVI DELETE órfã resposta:", JSON.stringify({
       correlationID, providerChargeID, httpStatus: response.status,
-      location: response.location || null, response: response.data || response.raw || null
+      location: response.location || null, responseHeaders: response.responseHeaders || {},
+      response: response.data || response.raw || null
     }));
     if (response.status < 200 || response.status >= 300) {
       const providerMessage = response.data && (response.data.error || response.data.message);
