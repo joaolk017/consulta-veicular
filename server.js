@@ -912,6 +912,32 @@ app.get("/api/admin/funil", async (req, res) => {
   } catch(err){console.error("Falha no painel do funil:",err.message);return res.status(500).json({mensagem:"Não foi possível carregar o painel."})}
 });
 
+app.get("/api/admin/integridade", async (req, res) => {
+  if (!requireAdminSecret(req, res)) return;
+  try {
+    requireDatabase();
+    const checks = await Promise.all([
+      pool.query(`SELECT COUNT(*)::int AS total FROM payments p WHERE p.status='completed' AND p.credited_at IS NOT NULL AND NOT EXISTS (SELECT 1 FROM credit_transactions ct WHERE ct.type='purchase' AND ct.reference=p.correlation_id)`),
+      pool.query(`SELECT COUNT(*)::int AS total FROM credit_transactions ct WHERE ct.type='purchase' AND NOT EXISTS (SELECT 1 FROM payments p WHERE p.correlation_id=ct.reference AND p.status='completed' AND p.credited_at IS NOT NULL)`),
+      pool.query(`SELECT COUNT(*)::int AS total FROM vehicle_queries vq WHERE vq.status='pending' AND vq.created_at < NOW()-INTERVAL '5 minutes'`),
+      pool.query(`SELECT COUNT(*)::int AS total FROM vehicle_queries vq WHERE vq.status='failed' AND vq.credit_consumed=TRUE AND NOT EXISTS (SELECT 1 FROM credit_transactions ct WHERE ct.type='refund' AND ct.reference=vq.id::text)`),
+      pool.query(`SELECT COUNT(*)::int AS total FROM credit_accounts ca WHERE ca.balance <> COALESCE((SELECT SUM(ct.quantity) FROM credit_transactions ct WHERE ct.account_id=ca.id),0)`)
+    ]);
+    const integrity = {
+      pagamentosCreditadosSemCompra: checks[0].rows[0].total,
+      comprasSemPagamentoConfirmado: checks[1].rows[0].total,
+      consultasPendentesMais5Min: checks[2].rows[0].total,
+      consultasFalhasSemEstorno: checks[3].rows[0].total,
+      saldosIncompativeis: checks[4].rows[0].total
+    };
+    const problemas = Object.values(integrity).reduce((sum, value) => sum + Number(value || 0), 0);
+    res.json({ ok: true, somenteLeitura: true, saudavel: problemas === 0, problemas, verificacoes: integrity, verificadoEm: new Date().toISOString() });
+  } catch (err) {
+    console.error("Falha na checagem de integridade:", err.message);
+    res.status(500).json({ error: "Falha ao verificar integridade." });
+  }
+});
+
 app.post("/api/funil/evento", async (req, res) => {
   try {
     requireDatabase();
