@@ -703,6 +703,51 @@ app.get("/api/admin/cobrancas-teste", async (req, res) => {
   }
 });
 
+app.get("/api/admin/diagnostico-woovi-delete/:correlationID", async (req, res) => {
+  if (!requireAdminSecret(req, res)) return;
+  try {
+    requireDatabase();
+    const correlationID = String(req.params.correlationID || "").trim();
+    if (!correlationID.startsWith("cv-") || correlationID.length > 160) {
+      return res.status(400).json({ error: "Cobrança inválida." });
+    }
+    const local = await pool.query("SELECT correlation_id, credited_at FROM payments WHERE correlation_id=$1 LIMIT 1", [correlationID]);
+    const listed = await listWooviChargesDiagnostic();
+    if (listed.response.status < 200 || listed.response.status >= 300) {
+      return res.status(502).json({ error: "Não foi possível consultar a Woovi." });
+    }
+    const charge = listed.charges.find(c => String(c.correlationID || "") === correlationID);
+    if (!charge) return res.status(404).json({ error: "Cobrança não encontrada na Woovi." });
+    const providerChargeID = String(charge.globalID || charge.id || charge.identifier || "").trim();
+    const deleteUrl = WOOVI_API_URL + "/charge/" + encodeURIComponent(providerChargeID);
+    const correlationUrl = WOOVI_API_URL + "/charge/" + encodeURIComponent(correlationID);
+    const diagnostic = {
+      dryRun: true,
+      destructiveRequestSent: false,
+      correlationID,
+      providerChargeID,
+      statusWoovi: String(charge.status || "").toUpperCase(),
+      possuiRegistroLocal: Boolean(local.rowCount),
+      creditadoLocalmente: Boolean(local.rowCount && local.rows[0].credited_at),
+      configuredBaseUrl: WOOVI_API_URL,
+      candidateByProviderId: { method: "DELETE", url: deleteUrl },
+      candidateByCorrelationId: { method: "DELETE", url: correlationUrl },
+      listRequest: {
+        method: listed.response.method || "GET",
+        requestUrl: listed.response.requestUrl || null,
+        httpStatus: listed.response.status,
+        location: listed.response.location || null
+      },
+      note: "Diagnóstico somente leitura: nenhum DELETE foi enviado."
+    };
+    console.log("WOOVI DELETE DRY-RUN:", JSON.stringify(diagnostic));
+    res.json({ ok: true, diagnostico: diagnostic });
+  } catch (err) {
+    console.error("Falha no diagnóstico Woovi DELETE:", err.message);
+    res.status(500).json({ error: "Falha ao preparar diagnóstico da Woovi." });
+  }
+});
+
 app.delete("/api/admin/cobrancas-teste-woovi/:correlationID", async (req, res) => {
   if (!requireAdminSecret(req, res)) return;
   try {
