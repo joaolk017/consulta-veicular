@@ -891,14 +891,8 @@ app.get("/api/admin/funil", async (req, res) => {
     const supplied=String(req.get("X-Admin-Secret")||"").trim();
     if(!ADMIN_FUNNEL_SECRET||ADMIN_FUNNEL_SECRET.length<24||supplied.length!==ADMIN_FUNNEL_SECRET.length||!crypto.timingSafeEqual(Buffer.from(supplied),Buffer.from(ADMIN_FUNNEL_SECRET))) return res.status(404).json({error:"Endpoint não encontrado."});
     const days=Math.min(90,Math.max(1,Number(req.query.days)||7));
-    // Reconcilia o financeiro diretamente com payments: é a fonte de verdade das vendas confirmadas.
-    // Também repara automaticamente eventual evento pix_pago ausente sem duplicar correlation_id.
-    await pool.query(`INSERT INTO funnel_events(session_id,event_name,product,amount_cents,is_test,correlation_id)
-      SELECT 'pay_'||SUBSTRING(MD5(p.correlation_id),1,24),'pix_pago',p.product,p.cents,FALSE,p.correlation_id
-      FROM payments p
-      WHERE p.status='completed' AND p.credited_at IS NOT NULL
-        AND p.created_at>=NOW()-($1::text||' days')::interval
-      ON CONFLICT DO NOTHING`,[days]);
+    // Painel administrativo somente leitura: eventos pix_pago são gravados
+    // no processamento transacional do pagamento confirmado, nunca ao abrir o painel.
     const totals=await pool.query(`SELECT event_name,COUNT(*)::int AS total,COUNT(DISTINCT session_id)::int AS sessions FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval AND is_test=FALSE GROUP BY event_name`,[days]);
     const products=await pool.query(`SELECT COALESCE(product,'sem-produto') AS product,event_name,COUNT(*)::int AS total,COALESCE(SUM(amount_cents),0)::bigint AS amount_cents FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval AND is_test=FALSE AND event_name IN ('pacote_selecionado','pix_gerado','pix_pago','relatorio_entregue') GROUP BY product,event_name ORDER BY product,event_name`,[days]);
     const daily=await pool.query(`SELECT TO_CHAR(created_at AT TIME ZONE 'America/Sao_Paulo','YYYY-MM-DD') AS day,event_name,COUNT(*)::int AS total FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval AND is_test=FALSE GROUP BY day,event_name ORDER BY day`,[days]);
