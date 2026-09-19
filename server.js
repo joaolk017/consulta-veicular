@@ -912,6 +912,33 @@ app.get("/api/admin/funil", async (req, res) => {
   } catch(err){console.error("Falha no painel do funil:",err.message);return res.status(500).json({mensagem:"Não foi possível carregar o painel."})}
 });
 
+app.get("/api/admin/saude-integracoes", async (req, res) => {
+  if (!requireAdminSecret(req, res)) return;
+  const started = Date.now();
+  const health = {
+    banco: { ok: false, latenciaMs: null },
+    woovi: { ok: false, latenciaMs: null, httpStatus: null },
+    apiVeicular: { ok: Boolean(FALCON_TOKEN), modo: "configuracao", observacao: "Token configurado; nenhuma consulta veicular foi consumida." }
+  };
+  try {
+    const t = Date.now();
+    requireDatabase();
+    await pool.query("SELECT 1");
+    health.banco = { ok: true, latenciaMs: Date.now() - t };
+  } catch {}
+  if (OPENPIX_APP_ID) {
+    try {
+      const t = Date.now();
+      const response = await requestJson(WOOVI_API_URL + "/charge", { headers: openPixHeaders(), timeout: 10000 });
+      health.woovi = { ok: response.status >= 200 && response.status < 300, latenciaMs: Date.now() - t, httpStatus: response.status };
+    } catch {
+      health.woovi = { ok: false, latenciaMs: null, httpStatus: null };
+    }
+  }
+  const todosOperacionais = health.banco.ok && health.woovi.ok && health.apiVeicular.ok;
+  res.json({ ok: true, somenteLeitura: true, todosOperacionais, integracoes: health, duracaoMs: Date.now() - started, verificadoEm: new Date().toISOString() });
+});
+
 app.get("/api/admin/integridade", async (req, res) => {
   if (!requireAdminSecret(req, res)) return;
   try {
