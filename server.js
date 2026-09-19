@@ -366,9 +366,20 @@ async function finishCreditQuery(accountId, queryId, ok, vehicle = null) {
     if (ok) {
       await client.query("UPDATE vehicle_queries SET status='completed',completed_at=NOW(),result_json=$2::jsonb WHERE id=$1", [queryId, JSON.stringify(vehicle || {})]);
     } else {
-      await client.query("UPDATE credit_accounts SET balance=balance+1,updated_at=NOW() WHERE id=$1", [accountId]);
+      // O registro de refund é a trava idempotente. O saldo só volta a subir
+      // quando este queryId recebe seu primeiro estorno efetivo.
+      const refund = await client.query(
+        "INSERT INTO credit_transactions(account_id,type,quantity,reference,plate) VALUES($1,'refund',1,$2,$3) ON CONFLICT(type,reference) DO NOTHING RETURNING id",
+        [accountId, queryId, q.rows[0].plate]
+      );
+      if (refund.rowCount) {
+        const restored = await client.query(
+          "UPDATE credit_accounts SET balance=balance+1,updated_at=NOW() WHERE id=$1 RETURNING balance",
+          [accountId]
+        );
+        if (!restored.rowCount) throw Object.assign(new Error("Conta de créditos não encontrada para estorno."), { status: 409 });
+      }
       await client.query("UPDATE vehicle_queries SET status='failed',completed_at=NOW() WHERE id=$1", [queryId]);
-      await client.query("INSERT INTO credit_transactions(account_id,type,quantity,reference,plate) VALUES($1,'refund',1,$2,$3) ON CONFLICT(type,reference) DO NOTHING", [accountId, queryId, q.rows[0].plate]);
     }
     await client.query("COMMIT");
   } catch(e) { await client.query("ROLLBACK"); throw e; } finally { client.release(); }
@@ -1297,7 +1308,18 @@ app.post("/api/consulta-completa", async (req, res) => {
       await finishCreditQuery(accountId, debit.queryId, true, safeVehicleDetails(vehicle,plate));
       return res.json({ ok:true, paid:true, vehicle:safeVehicleDetails(vehicle,plate), creditosRestantes:debit.balance, price:CONSULTA_SALE_PRICE, currency:"BRL" });
     } catch (err) {
-      await finishCreditQuery(accountId, debit.queryId, false);
+      try {
+        await finishCreditQuery(accountId, debit.queryId, false);
+      } catch (refundErr) {
+        console.error("Falha crítica ao estornar crédito da consulta:", JSON.stringify({
+          queryId: debit.queryId,
+          erro: refundErr.message
+        }));
+        const protectedErr = new Error("A consulta falhou e o estorno automático precisa de verificação. Não tente novamente agora.");
+        protectedErr.status = 503;
+        protectedErr.code = "ESTORNO_PENDENTE";
+        throw protectedErr;
+      }
       throw err;
     }
   } catch (err) {
