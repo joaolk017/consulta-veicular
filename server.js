@@ -763,6 +763,42 @@ app.get("/api/admin/auditoria-pagamentos-locais", async (req, res) => {
   }
 });
 
+app.delete("/api/admin/historicos-pagamentos-nao-creditados", async (req, res) => {
+  if (!requireAdminSecret(req, res)) return;
+  try {
+    requireDatabase();
+    const listed = await listWooviChargesDiagnostic();
+    if (listed.response.status < 200 || listed.response.status >= 300) {
+      return res.status(502).json({ error: "Limpeza bloqueada: não foi possível confirmar a Woovi." });
+    }
+    const idsNaWoovi = new Set(listed.charges.filter(c => c && c.correlationID).map(c => String(c.correlationID)));
+    const candidatos = await pool.query(`
+      SELECT p.correlation_id
+      FROM payments p
+      WHERE p.correlation_id LIKE 'cv-%'
+        AND p.status = 'pending'
+        AND p.credited_at IS NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM credit_transactions ct
+          WHERE ct.type = 'purchase' AND ct.reference = p.correlation_id
+        )
+      ORDER BY p.created_at
+      LIMIT 200
+    `);
+    const seguros = candidatos.rows.map(r => String(r.correlation_id)).filter(id => !idsNaWoovi.has(id));
+    if (!seguros.length) return res.json({ ok: true, excluidos: 0 });
+    const result = await pool.query(
+      "DELETE FROM payments WHERE correlation_id = ANY($1::text[]) AND status = 'pending' AND credited_at IS NULL RETURNING correlation_id",
+      [seguros]
+    );
+    console.log("ADMIN limpeza históricos locais:", JSON.stringify({ candidatos: candidatos.rowCount, excluidos: result.rowCount }));
+    res.json({ ok: true, excluidos: result.rowCount });
+  } catch (err) {
+    console.error("Falha na limpeza dos históricos locais:", err.message);
+    res.status(500).json({ error: "Falha ao limpar históricos locais." });
+  }
+});
+
 app.delete("/api/admin/cobrancas-teste-woovi/:correlationID", async (req, res) => {
   const correlationIDEntrada = String(req.params.correlationID || "").trim();
   console.log("ADMIN DELETE Woovi recebido:", JSON.stringify({
