@@ -12,7 +12,7 @@ const generalApiStore = new Map();
 const sensitiveStores = new Map();
 
 const ALLOWED_METHODS = new Set(['GET', 'HEAD', 'POST', 'OPTIONS']);
-const ADMIN_DELETE_CHARGE_PATH = /^(?:\/api\/admin\/(?:cobrancas-teste|cobrancas-teste-woovi)\/[^/]+|\/api\/admin\/historicos-pagamentos-nao-creditados)$/;
+const ADMIN_DELETE_CHARGE_PATH = /^\/api\/admin\/(?:cobrancas-teste|cobrancas-teste-woovi)\/[^/]+$/;
 const BLOCKED_EXTENSIONS = /\.(?:js|json|map|md|lock)$/i;
 const BLOCKED_PREFIXES = ['/node_modules/', '/.git/', '/.github/', '/.env'];
 const PAYMENT_SIGNING_SECRET = String(process.env.PAYMENT_SIGNING_SECRET || '');
