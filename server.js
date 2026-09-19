@@ -308,9 +308,20 @@ async function creditPaidPayment(checked) {
       return { accountId: p.account_id, balance: b.rows[0].balance, alreadyCredited: true };
     }
     if (!checked.paid || Number(p.cents) !== Number(checked.payload.cents)) throw Object.assign(new Error("Pagamento ainda não confirmado."), { status: 402 });
-    await client.query("UPDATE credit_accounts SET balance=balance+$1, updated_at=NOW() WHERE id=$2", [p.credits, p.account_id]);
-    await client.query("INSERT INTO credit_transactions(account_id,type,quantity,reference) VALUES($1,'purchase',$2,$3) ON CONFLICT(type,reference) DO NOTHING", [p.account_id, p.credits, p.correlation_id]);
-    await client.query("UPDATE payments SET status='completed', credited_at=NOW() WHERE correlation_id=$1", [p.correlation_id]);
+    // A transação de compra é a trava idempotente definitiva. Só incrementa
+    // o saldo se esta correlation_id ainda não tiver sido creditada.
+    const purchase = await client.query(
+      "INSERT INTO credit_transactions(account_id,type,quantity,reference) VALUES($1,'purchase',$2,$3) ON CONFLICT(type,reference) DO NOTHING RETURNING id",
+      [p.account_id, p.credits, p.correlation_id]
+    );
+    if (purchase.rowCount) {
+      const credited = await client.query(
+        "UPDATE credit_accounts SET balance=balance+$1, updated_at=NOW() WHERE id=$2 RETURNING balance",
+        [p.credits, p.account_id]
+      );
+      if (!credited.rowCount) throw Object.assign(new Error("Conta de créditos não encontrada."), { status: 409 });
+    }
+    await client.query("UPDATE payments SET status='completed', credited_at=COALESCE(credited_at,NOW()) WHERE correlation_id=$1", [p.correlation_id]);
     // Venda real: registrada somente após confirmação do provedor e dentro da mesma transação do crédito.
     // correlation_id + índice único tornam o evento idempotente e impedem contagem duplicada.
     await client.query(
