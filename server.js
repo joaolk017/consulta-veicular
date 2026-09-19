@@ -721,6 +721,22 @@ app.get("/api/admin/diagnostico-woovi-delete/:correlationID", async (req, res) =
     const providerChargeID = String(charge.globalID || charge.id || charge.identifier || "").trim();
     const deleteUrl = WOOVI_API_URL + "/charge/" + encodeURIComponent(providerChargeID);
     const correlationUrl = WOOVI_API_URL + "/charge/" + encodeURIComponent(correlationID);
+    const providerIdGet = await requestJson(deleteUrl, {
+      method: "GET", headers: openPixHeaders(), timeout: 15000
+    });
+    const correlationIdGet = await requestJson(correlationUrl, {
+      method: "GET", headers: openPixHeaders(), timeout: 15000
+    });
+    const safeProbe = r => ({
+      method: r.method || "GET",
+      requestUrl: r.requestUrl || null,
+      httpStatus: r.status,
+      location: r.location || null,
+      recognized: r.status >= 200 && r.status < 300,
+      providerMessage: r.data && (r.data.error || r.data.message)
+        ? String(r.data.error || r.data.message).slice(0, 180)
+        : null
+    });
     const diagnostic = {
       dryRun: true,
       destructiveRequestSent: false,
@@ -732,13 +748,17 @@ app.get("/api/admin/diagnostico-woovi-delete/:correlationID", async (req, res) =
       configuredBaseUrl: WOOVI_API_URL,
       candidateByProviderId: { method: "DELETE", url: deleteUrl },
       candidateByCorrelationId: { method: "DELETE", url: correlationUrl },
+      identifierReadProbes: {
+        providerChargeID: safeProbe(providerIdGet),
+        correlationID: safeProbe(correlationIdGet)
+      },
       listRequest: {
         method: listed.response.method || "GET",
         requestUrl: listed.response.requestUrl || null,
         httpStatus: listed.response.status,
         location: listed.response.location || null
       },
-      note: "Diagnóstico somente leitura: nenhum DELETE foi enviado."
+      note: "Diagnóstico somente leitura: foram enviados apenas GETs; nenhum DELETE foi enviado."
     };
     console.log("WOOVI DELETE DRY-RUN:", JSON.stringify(diagnostic));
     res.json({ ok: true, diagnostico: diagnostic });
