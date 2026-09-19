@@ -189,6 +189,7 @@ async function initDatabase() {
     ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS amount_cents INTEGER;
     ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT FALSE;
     ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS correlation_id TEXT;
+    ALTER TABLE funnel_events ADD COLUMN IF NOT EXISTS device TEXT;
     CREATE UNIQUE INDEX IF NOT EXISTS uq_funnel_pix_pago_correlation ON funnel_events(correlation_id) WHERE event_name='pix_pago' AND correlation_id IS NOT NULL;
     -- Migração única: eventos anteriores à separação teste/produção eram da fase de validação.
     -- Marca somente o legado existente; eventos novos permanecem reais por padrão.
@@ -896,6 +897,7 @@ app.get("/api/admin/funil", async (req, res) => {
     // no processamento transacional do pagamento confirmado, nunca ao abrir o painel.
     const totals=await pool.query(`SELECT event_name,COUNT(*)::int AS total,COUNT(DISTINCT session_id)::int AS sessions FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval AND is_test=FALSE GROUP BY event_name`,[days]);
     const products=await pool.query(`SELECT COALESCE(product,'sem-produto') AS product,event_name,COUNT(DISTINCT session_id)::int AS total,COALESCE(SUM(amount_cents),0)::bigint AS amount_cents FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval AND is_test=FALSE AND event_name IN ('pacote_selecionado','pix_gerado','pix_pago','relatorio_entregue') GROUP BY product,event_name ORDER BY product,event_name`,[days]);
+    const devices=await pool.query(`SELECT COALESCE(device,'nao_identificado') AS device,event_name,COUNT(DISTINCT session_id)::int AS total FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval AND is_test=FALSE GROUP BY device,event_name ORDER BY device,event_name`,[days]);
     const daily=await pool.query(`SELECT TO_CHAR(created_at AT TIME ZONE 'America/Sao_Paulo','YYYY-MM-DD') AS day,event_name,COUNT(DISTINCT session_id)::int AS total FROM funnel_events WHERE created_at>=NOW()-($1::text||' days')::interval AND is_test=FALSE GROUP BY day,event_name ORDER BY day`,[days]);
     const finance=await pool.query(`SELECT COUNT(*)::int AS paid_orders,COALESCE(SUM(cents),0)::bigint AS revenue_cents,COALESCE(SUM(credits),0)::int AS credits_sold FROM payments WHERE status='completed' AND credited_at IS NOT NULL AND created_at>=NOW()-($1::text||' days')::interval`,[days]);
     { const row=finance.rows[0],revenue=Number(row.revenue_cents)||0,credits=Number(row.credits_sold)||0,apiCost=credits*VEHICLE_API_COST_CENTS,paymentFee=Math.round(revenue*PAYMENT_FEE_RATE),profit=Math.max(0,revenue-apiCost-paymentFee);row.api_cost_cents=apiCost;row.payment_fee_cents=paymentFee;row.estimated_profit_cents=profit;row.estimated_margin_pct=revenue?Number((profit/revenue*100).toFixed(1)):0; }
@@ -903,7 +905,7 @@ app.get("/api/admin/funil", async (req, res) => {
     financeDaily.rows=financeDaily.rows.map(row=>{const revenue=Number(row.revenue_cents)||0,credits=Number(row.credits_sold)||0,apiCost=credits*VEHICLE_API_COST_CENTS,paymentFee=Math.round(revenue*PAYMENT_FEE_RATE),profit=Math.max(0,revenue-apiCost-paymentFee);return {...row,api_cost_cents:apiCost,payment_fee_cents:paymentFee,estimated_profit_cents:profit,estimated_margin_pct:revenue?Number((profit/revenue*100).toFixed(1)):0};});
     const financeByProduct=await pool.query(`SELECT product,COUNT(*)::int AS paid_orders,COALESCE(SUM(cents),0)::bigint AS revenue_cents,COALESCE(SUM(credits),0)::int AS credits_sold FROM payments WHERE status='completed' AND credited_at IS NOT NULL AND created_at>=NOW()-($1::text||' days')::interval GROUP BY product ORDER BY revenue_cents DESC`,[days]);
     financeByProduct.rows=financeByProduct.rows.map(row=>{const revenue=Number(row.revenue_cents)||0,credits=Number(row.credits_sold)||0,apiCost=credits*VEHICLE_API_COST_CENTS,paymentFee=Math.round(revenue*PAYMENT_FEE_RATE),estimatedProfit=Math.max(0,revenue-apiCost-paymentFee);return {...row,api_cost_cents:apiCost,payment_fee_cents:paymentFee,estimated_profit_cents:estimatedProfit,estimated_margin_pct:revenue?Number((estimatedProfit/revenue*100).toFixed(1)):0};});
-    return res.json({ok:true,days,totals:totals.rows,products:products.rows,daily:daily.rows,finance:finance.rows[0],financeDaily:financeDaily.rows,financeByProduct:financeByProduct.rows});
+    return res.json({ok:true,days,totals:totals.rows,products:products.rows,devices:devices.rows,daily:daily.rows,finance:finance.rows[0],financeDaily:financeDaily.rows,financeByProduct:financeByProduct.rows});
   } catch(err){console.error("Falha no painel do funil:",err.message);return res.status(500).json({mensagem:"Não foi possível carregar o painel."})}
 });
 
@@ -1045,6 +1047,7 @@ app.post("/api/funil/evento", async (req, res) => {
     const sessionId = String(req.body && req.body.sessionId || "").trim();
     if (!/^[a-zA-Z0-9_-]{16,80}$/.test(sessionId)) return res.status(400).json({ ok:false });
     const product = String(req.body && req.body.product || "").trim().slice(0,40) || null;
+    const device = ["mobile","desktop"].includes(String(req.body && req.body.device || "").trim()) ? String(req.body.device).trim() : null;
     const plate = normalizePlate(req.body && req.body.plate);
     const plateHash = validPlate(plate) ? crypto.createHash("sha256").update(plate + "|" + PAYMENT_SIGNING_SECRET).digest("hex").slice(0,32) : null;
     const knownProduct = paymentProduct(product);
@@ -1052,14 +1055,14 @@ app.post("/api/funil/evento", async (req, res) => {
     const testSecret = String(req.get("X-Funnel-Test-Secret") || "").trim();
     const configuredTestSecret = String(process.env.FUNNEL_TEST_SECRET || "").trim();
     const isTest = Boolean(configuredTestSecret && configuredTestSecret.length >= 24 && testSecret.length === configuredTestSecret.length && crypto.timingSafeEqual(Buffer.from(testSecret), Buffer.from(configuredTestSecret)));
-    await pool.query(`INSERT INTO funnel_events(session_id,event_name,product,plate_hash,amount_cents,is_test)
-      SELECT $1,$2,$3,$4,$5,$6
+    await pool.query(`INSERT INTO funnel_events(session_id,event_name,product,plate_hash,amount_cents,is_test,device)
+      SELECT $1,$2,$3,$4,$5,$6,$7
       WHERE NOT EXISTS (
         SELECT 1 FROM funnel_events
         WHERE session_id=$1 AND event_name=$2 AND is_test=$6
           AND COALESCE(product,'')=COALESCE($3,'')
           AND created_at >= NOW()-INTERVAL '24 hours'
-      )`, [sessionId,eventName,product,plateHash,amountCents,isTest]);
+      )`, [sessionId,eventName,product,plateHash,amountCents,isTest,device]);
     return res.status(204).end();
   } catch (err) {
     console.error("Falha ao registrar evento do funil:", err.message);
