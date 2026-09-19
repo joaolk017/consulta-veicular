@@ -627,30 +627,32 @@ app.get("/api/admin/cobrancas-teste", async (req, res) => {
     const rows = await pool.query(
       "SELECT correlation_id, product, cents, credits, status, credited_at, created_at FROM payments WHERE correlation_id LIKE 'cv-%' ORDER BY created_at DESC LIMIT 200"
     );
-    const cobrancas = [];
-    try {
-      await listWooviChargesDiagnostic();
-    } catch (err) {
-      console.error("WOOVI LIST cobranças falhou:", String(err && err.message || err).slice(0, 300));
+
+    // A Woovi é a fonte de verdade para cobranças ainda existentes no provedor.
+    // Fazemos uma única listagem e cruzamos pelo correlationID, evitando GETs
+    // individuais que retornam 400 para registros locais antigos.
+    const listed = await listWooviChargesDiagnostic();
+    if (listed.response.status < 200 || listed.response.status >= 300) {
+      return res.status(502).json({ error: "Não foi possível sincronizar as cobranças com a Woovi." });
     }
+    const byCorrelation = new Map(
+      listed.charges
+        .filter(c => c && c.correlationID)
+        .map(c => [String(c.correlationID), c])
+    );
+
+    const cobrancas = [];
+    let registrosLocaisAusentesNaWoovi = 0;
     for (const p of rows.rows) {
-      let providerStatus = "DESCONHECIDO";
-      try {
-        const charge = await getOpenPixCharge(p.correlation_id);
-        providerStatus = String(charge.status || "").toUpperCase() || "DESCONHECIDO";
-      } catch (err) {
-        console.error("WOOVI GET cobrança diagnóstico:", JSON.stringify({
-          correlationID: String(p.correlation_id || "").slice(0, 160),
-          method: "GET",
-          requestUrl: WOOVI_API_URL + "/charge/" + encodeURIComponent(String(p.correlation_id || "")),
-          httpStatus: Number(err && (err.providerHttpStatus || err.status)) || null,
-          error: String(err && err.message || "Erro desconhecido").slice(0, 300),
-          providerResponse: err && err.providerResponse ? err.providerResponse : null,
-          providerRaw: err && !err.providerResponse && err.providerRaw ? err.providerRaw : null
-        }));
+      const charge = byCorrelation.get(String(p.correlation_id));
+      if (!charge) {
+        registrosLocaisAusentesNaWoovi += 1;
+        continue; // não mostra lixo histórico no painel administrativo
       }
+      const providerStatus = String(charge.status || "").toUpperCase() || "DESCONHECIDO";
       cobrancas.push({
         correlationID: p.correlation_id,
+        providerChargeID: charge.globalID || charge.id || charge.identifier || null,
         produto: p.product,
         valorCentavos: Number(p.cents),
         creditos: Number(p.credits),
@@ -661,7 +663,22 @@ app.get("/api/admin/cobrancas-teste", async (req, res) => {
         podeExcluir: providerStatus !== "COMPLETED" && !p.credited_at
       });
     }
-    res.json({ ok: true, total: cobrancas.length, cobrancas });
+
+    console.log("WOOVI SYNC painel:", JSON.stringify({
+      locais: rows.rowCount,
+      encontradosNaWoovi: cobrancas.length,
+      locaisAusentesNaWoovi: registrosLocaisAusentesNaWoovi
+    }));
+    res.json({
+      ok: true,
+      total: cobrancas.length,
+      cobrancas,
+      sincronizacao: {
+        registrosLocais: rows.rowCount,
+        encontradosNaWoovi: cobrancas.length,
+        ocultadosPorNaoExistiremNaWoovi: registrosLocaisAusentesNaWoovi
+      }
+    });
   } catch (err) {
     console.error("Falha ao listar cobranças administrativas:", err.message);
     res.status(500).json({ error: "Falha ao listar cobranças." });
