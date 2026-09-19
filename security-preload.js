@@ -114,7 +114,7 @@ function rateLimitFor(req, res, pathname) {
   else if (req.method === 'POST' && pathname === '/api/pagamento/pix/status') rule = ['pix-status', 300];
   else if (req.method === 'POST' && pathname === '/api/consulta-completa') rule = ['unlock', 60];
   else if (req.method === 'POST' && pathname === '/api/consulta-salva') rule = ['saved-report', 120];
-  else if (req.method === 'POST' && pathname === '/api/misticpay/webhook') rule = ['webhook', 600];
+  else if (req.method === 'POST' && (pathname === '/api/pagamento/pix/webhook' || pathname === '/api/misticpay/webhook')) rule = ['webhook', 600];
   else if (req.method === 'POST' && pathname === '/api/crlv/sp') rule = ['crlv', 30];
   else if (pathname.includes('/diagnostico')) rule = ['diagnostic', 20];
 
