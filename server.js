@@ -703,6 +703,69 @@ app.get("/api/admin/cobrancas-teste", async (req, res) => {
   }
 });
 
+app.delete("/api/admin/cobrancas-teste-woovi/:correlationID", async (req, res) => {
+  if (!requireAdminSecret(req, res)) return;
+  try {
+    requireDatabase();
+    const correlationID = String(req.params.correlationID || "").trim();
+    if (!correlationID.startsWith("cv-") || correlationID.length > 160) {
+      return res.status(400).json({ error: "Cobrança inválida." });
+    }
+
+    // Segurança: esta rota é exclusiva para órfãs (existem na Woovi, não no banco local).
+    const local = await pool.query(
+      "SELECT correlation_id, credited_at FROM payments WHERE correlation_id=$1 LIMIT 1",
+      [correlationID]
+    );
+    if (local.rowCount) {
+      return res.status(409).json({ error: "Esta cobrança possui registro local e não pode ser excluída por esta rota." });
+    }
+
+    // Reconsulta a Woovi imediatamente antes do DELETE.
+    const listed = await listWooviChargesDiagnostic();
+    if (listed.response.status < 200 || listed.response.status >= 300) {
+      return res.status(502).json({ error: "Não foi possível reconferir as cobranças na Woovi." });
+    }
+    const charge = listed.charges.find(c => String(c.correlationID || "") === correlationID);
+    if (!charge) return res.status(404).json({ error: "Cobrança não encontrada na Woovi." });
+
+    const status = String(charge.status || "").toUpperCase();
+    if (status !== "EXPIRED") {
+      return res.status(409).json({ error: "Somente cobranças EXPIRED podem ser excluídas por esta rota." });
+    }
+
+    const providerChargeID = String(charge.globalID || charge.id || charge.identifier || "").trim();
+    if (!providerChargeID || providerChargeID.length > 300) {
+      return res.status(502).json({ error: "Identificador da Woovi inválido." });
+    }
+
+    const deleteUrl = WOOVI_API_URL + "/charge/" + encodeURIComponent(providerChargeID);
+    console.log("WOOVI DELETE órfã tentativa:", JSON.stringify({
+      correlationID, providerChargeID, status, method: "DELETE", requestUrl: deleteUrl
+    }));
+    const response = await requestJson(
+      deleteUrl,
+      { method: "DELETE", headers: openPixHeaders(), timeout: 15000 }
+    );
+    console.log("WOOVI DELETE órfã resposta:", JSON.stringify({
+      correlationID, providerChargeID, httpStatus: response.status,
+      location: response.location || null, response: response.data || response.raw || null
+    }));
+    if (response.status < 200 || response.status >= 300) {
+      const providerMessage = response.data && (response.data.error || response.data.message);
+      return res.status(response.status === 400 ? 409 : 502).json({
+        error: providerMessage ? "Woovi: " + String(providerMessage).slice(0, 180) : "A Woovi não confirmou a exclusão.",
+        providerHttpStatus: response.status
+      });
+    }
+    confirmedPaymentCache.delete(correlationID);
+    res.json({ ok: true, correlationID, providerHttpStatus: response.status });
+  } catch (err) {
+    console.error("Falha ao excluir cobrança órfã da Woovi:", err.message);
+    res.status(500).json({ error: "Falha ao excluir cobrança da Woovi." });
+  }
+});
+
 app.delete("/api/admin/cobrancas-teste/:correlationID", async (req, res) => {
   console.log("ADMIN DELETE entrada:", JSON.stringify({
     method: req.method,
