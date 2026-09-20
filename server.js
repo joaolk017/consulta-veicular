@@ -1050,6 +1050,46 @@ async function runComplete360MultiProductOptimizerOnce(){
   }
 }
 
+function optimizeComplete360VerifiedV3() {
+  const groups=["identificacao","dados_tecnicos","fipe","roubo_furto","leilao","sinistro","gravame","renajud","multas","ipva","recall","proprietarios"];
+  const target=new Set(groups);
+  // Coberturas e preços confirmados na documentação CredPro em 20/09/2026.
+  // O catálogo vivo GET /v1/pesquisas/itens continua sendo a fonte da verdade antes de produção.
+  const products=[
+    {provider:"credpro",item:"placa_fipe",price:0.12,covers:["identificacao","dados_tecnicos","fipe"]},
+    {provider:"credpro",item:"bin_estadual",price:2.00,covers:["identificacao","dados_tecnicos","ipva","multas","gravame","proprietarios"]},
+    {provider:"credpro",item:"bin_nacional",price:2.00,covers:["identificacao","dados_tecnicos","proprietarios"]},
+    {provider:"credpro",item:"gravame",price:3.00,covers:["gravame"]},
+    {provider:"credpro",item:"roubo_furto",price:5.00,covers:["roubo_furto"]},
+    {provider:"credpro",item:"leilao",price:5.50,covers:["leilao"]},
+    {provider:"credpro",item:"leilao_completo",price:11.00,covers:["leilao","sinistro"]},
+    {provider:"credpro",item:"sinistro",price:3.30,covers:["sinistro"]},
+    {provider:"credpro",item:"renajud",price:4.10,covers:["renajud","multas","identificacao","dados_tecnicos"]},
+    {provider:"credpro",item:"renainf",price:4.15,covers:["multas"]},
+    {provider:"credpro",item:"recall",price:0.90,covers:["recall"]},
+    {provider:"credpro",item:"certificado",price:5.50,covers:["identificacao","dados_tecnicos","renajud","multas","proprietarios"]},
+    {provider:"credpro",item:"historico_proprietarios",price:6.00,covers:["proprietarios"]}
+  ];
+  let best=null,n=products.length;
+  for(let mask=1;mask<(1<<n);mask++){
+    let cost=0;const covered=new Set(),selected=[];
+    for(let i=0;i<n;i++)if(mask&(1<<i)){const p=products[i];cost+=p.price;selected.push(p);p.covers.forEach(g=>target.has(g)&&covered.add(g));}
+    const missing=groups.filter(g=>!covered.has(g));
+    const cand={complete:missing.length===0,coveredCount:covered.size,cost,covered,missing,selected};
+    if(!best||cand.coveredCount>best.coveredCount||(cand.coveredCount===best.coveredCount&&cand.cost<best.cost))best=cand;
+  }
+  const apiCost=Number(best.cost.toFixed(2)), complete=best.complete;
+  const pricing=complete?[.45,.50,.55,.60].map(m=>({targetMarginPercent:m*100,minimumSalePrice:Number((apiCost/(1-PAYMENT_FEE_RATE-m)).toFixed(2))})):[];
+  return {mode:"complete_360_verified_v3",apiCallsMade:0,catalogDate:"2026-09-20",complete,coveredCount:best.coveredCount,totalGroups:groups.length,missingIds:best.missing,selected:best.selected.map(p=>({provider:p.provider,item:p.item,price:p.price,covers:p.covers})),estimatedApiCost:apiCost,targetApiCostRange:{min:10,max:15},withinTargetCost:complete&&apiCost>=10&&apiCost<=15,pricing,saleAllowedAsComplete:complete,note:"Cálculo local com catálogo documentado; nenhuma pesquisa veicular foi executada. Validar preços no GET /v1/pesquisas/itens antes de produção."};
+}
+async function runComplete360VerifiedV3Once(){
+ try{
+  requireDatabase();await pool.query(`CREATE TABLE IF NOT EXISTS admin_one_time_actions (action_key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+  const q=await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key",["complete-360-verified-v3"]);
+  if(q.rowCount)console.log("COMPLETE 360 OPTIMIZER V3:",JSON.stringify(optimizeComplete360VerifiedV3()));
+ }catch(err){console.error("COMPLETE 360 OPTIMIZER V3: falha:",String(err.message||err).slice(0,300));}
+}
+
 function analyzeVehicle360Coverage(vehicle) {
   const v = vehicle && typeof vehicle === "object" ? vehicle : {};
   const i = v.indicators && typeof v.indicators === "object" ? v.indicators : {};
@@ -2808,6 +2848,7 @@ runStoredCoverageDryRunOnStartupOnce();
 runFalconStoredCoverageDryRunOnce();
 runComplete360OptimizerOnce();
 runComplete360MultiProductOptimizerOnce();
+runComplete360VerifiedV3Once();
 runStoredFonteDataShapeAuditOnce();
 runFonteDataStoredCoverageOnce();
 app.listen(PORT, () => console.log(`Consulta Veicular 360 ativa na porta ${PORT}. Checkout PIX: Woovi/OpenPix. Créditos: ${pool ? "PostgreSQL" : "indisponível"}.`));
