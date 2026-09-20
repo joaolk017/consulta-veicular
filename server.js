@@ -1507,9 +1507,29 @@ app.post("/api/admin/fontedata-teste", async (req, res) => {
     if (!FONTEDATA_API_KEY) return res.status(503).json({ error: "fontedata_nao_configurada" });
     const plate = normalizePlate(req.body && req.body.placa);
     if (!validPlate(plate)) return res.status(400).json({ error: "placa_invalida", mensagem: "Placa inválida." });
-    const result = await requestJson("https://app.dabradata.com/api/v1/consulta/consulta-veicular?placa=" + encodeURIComponent(plate), { headers: { "X-API-Key": FONTEDATA_API_KEY } });
-    if (result.status < 200 || result.status >= 300) return res.status(result.status >= 400 && result.status < 500 ? result.status : 502).json({ error: "fontedata_http", status: result.status });
-    return res.json({ ok: true, provider: "fontedata", plate, data: result.data });
+
+    requireDatabase();
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS admin_one_time_actions (
+        action_key TEXT PRIMARY KEY,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    const actionKey = "fontedata-controlled-test:" + plate;
+    const claimed = await pool.query(
+      "INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key",
+      [actionKey]
+    );
+    if (!claimed.rowCount) return res.status(409).json({ error: "teste_ja_utilizado", mensagem: "O teste controlado desta placa já foi utilizado." });
+
+    try {
+      const result = await requestJson("https://app.dabradata.com/api/v1/consulta/consulta-veicular?placa=" + encodeURIComponent(plate), { headers: { "X-API-Key": FONTEDATA_API_KEY } });
+      if (result.status < 200 || result.status >= 300) return res.status(result.status >= 400 && result.status < 500 ? result.status : 502).json({ error: "fontedata_http", status: result.status });
+      return res.json({ ok: true, provider: "fontedata", plate, data: result.data });
+    } catch (providerErr) {
+      console.error("Falha após reservar teste único FonteData:", providerErr.message);
+      throw providerErr;
+    }
   } catch (err) {
     console.error("Erro no teste administrativo FonteData:", err.message);
     return res.status(err.status || 502).json({ error: "fontedata_teste", mensagem: err.message || "Falha na consulta FonteData." });
