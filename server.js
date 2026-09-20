@@ -1920,6 +1920,34 @@ initDatabase().then(() => {
     }, 6000);
   }
 
+  // Consulta fictícia CredPro de uso único, restrita ao sandbox.
+  // A placa termina em 9 para acionar o cenário fictício "com histórico" documentado pelo sandbox.
+  if (String(process.env.CREDPRO_RUN_SANDBOX_HISTORY_ONCE || "").trim() === "1") {
+    setTimeout(async () => {
+      if (!CREDPRO_TEST_API_KEY || !CREDPRO_TEST_API_KEY.startsWith("cpk_test_")) {
+        return console.log("CREDPRO SANDBOX HISTORY: bloqueado; chave de sandbox ausente.");
+      }
+      try {
+        if (!pool) return console.log("CREDPRO SANDBOX HISTORY: banco indisponível; teste não executado.");
+        await pool.query(`CREATE TABLE IF NOT EXISTS admin_one_time_actions (action_key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+        const actionKey = "credpro-sandbox-history-query-v1";
+        const claimed = await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key", [actionKey]);
+        if (!claimed.rowCount) return console.log("CREDPRO SANDBOX HISTORY: teste único já executado; nenhuma nova consulta feita.");
+        const result = await requestJson(CREDPRO_API_URL + "/v1/pesquisas", {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + CREDPRO_TEST_API_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({ placa: "ABC1D29", itens: ["pesquisa_completa"] }),
+          timeout: 30000
+        });
+        const data = result.data || {};
+        const safe = JSON.parse(JSON.stringify(data, (key, value) => /token|authorization|api.?key|secret/i.test(key) ? "[REDACTED]" : value));
+        console.log("CREDPRO SANDBOX HISTORY:", JSON.stringify({ httpStatus: result.status, resposta: safe }));
+      } catch (err) {
+        console.error("CREDPRO SANDBOX HISTORY: falha sem nova tentativa automática:", String(err.message || "erro").slice(0,300));
+      }
+    }, 9000);
+  }
+
   // Segunda tentativa FonteData autorizada: dispara internamente uma única vez após o deploy.
   // A própria rota usa trava persistente, então reinícios posteriores não repetem a consulta.
   if (String(process.env.FONTEDATA_AUTHORIZED_RETRY_ONCE || "").trim() === "1" && FONTEDATA_TEST_TOKEN) {
