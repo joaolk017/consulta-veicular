@@ -1729,6 +1729,23 @@ initDatabase().then(() => {
   const server = app.listen(PORT, () => console.log(`Consulta Veicular 360 ativa na porta ${PORT}. Checkout PIX: Woovi/OpenPix. Créditos: ${pool ? "PostgreSQL" : "indisponível"}.`));
 // Auditoria FonteData permanece manual; nunca é executada automaticamente em deploy/startup.
 
+  // Segunda tentativa FonteData autorizada: dispara internamente uma única vez após o deploy.
+  // A própria rota usa trava persistente, então reinícios posteriores não repetem a consulta.
+  if (String(process.env.FONTEDATA_AUTHORIZED_RETRY_ONCE || "").trim() === "1" && FONTEDATA_TEST_TOKEN) {
+    setTimeout(async () => {
+      try {
+        const base = "http://127.0.0.1:" + PORT;
+        const response = await fetch(base + "/api/admin/fontedata-retry-manual", {
+          method: "POST",
+          headers: { "X-FonteData-Test-Token": FONTEDATA_TEST_TOKEN }
+        });
+        console.log("FONTEDATA RETRY TRIGGER: HTTP", response.status);
+      } catch (err) {
+        console.error("FONTEDATA RETRY TRIGGER:", err.message);
+      }
+    }, 5000);
+  }
+
   let shuttingDown = false;
   const shutdown = signal => {
     if (shuttingDown) return;
