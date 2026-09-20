@@ -489,21 +489,6 @@ async function falconRequest(plate) {
   throw err;
 }
 
-async function fonteDataDiagnosticRequest(plate) {
-  if (!FONTEDATA_API_KEY) throw Object.assign(new Error("FonteData não configurada."), { status: 503 });
-  const url = `https://app.dabradata.com/api/v1/consulta/consulta-veicular?placa=${encodeURIComponent(plate)}`;
-  const response = await requestJson(url, {
-    headers: { "X-API-Key": FONTEDATA_API_KEY },
-    timeout: 30000
-  });
-  if (response.status < 200 || response.status >= 300 || !response.data || typeof response.data !== "object") {
-    const err = new Error(`FonteData respondeu HTTP ${response.status}.`);
-    err.status = response.status >= 400 && response.status < 500 ? response.status : 502;
-    throw err;
-  }
-  return response.data;
-}
-
 async function getVehicle(plate) {
   const cached = previewCache.get(plate);
   if (cached && Date.now() < cached.expiresAt) return cached.vehicle;
@@ -1513,19 +1498,18 @@ app.post("/api/pagamento/pix/status", async (req, res) => {
   }
 });
 
-// Diagnóstico administrativo da FonteData. Cada chamada bem-sucedida pode gerar cobrança do fornecedor.
-// Não é usado pelo fluxo dos clientes e exige o mesmo segredo administrativo do painel.
+// Teste administrativo isolado da FonteData; não participa do fluxo dos clientes.
 app.post("/api/admin/fontedata-teste", async (req, res) => {
   if (!enforceSensitiveRateLimit(req, res, "fontedata-teste", 3)) return;
   try {
     const supplied = String(req.get("X-Admin-Secret") || "").trim();
-    if (!ADMIN_FUNNEL_SECRET || !supplied || !secureEqual(supplied, ADMIN_FUNNEL_SECRET)) {
-      return res.status(404).json({ error: "Endpoint não encontrado." });
-    }
+    if (!ADMIN_FUNNEL_SECRET || !supplied || !secureEqual(supplied, ADMIN_FUNNEL_SECRET)) return res.status(404).json({ error: "Endpoint não encontrado." });
+    if (!FONTEDATA_API_KEY) return res.status(503).json({ error: "fontedata_nao_configurada" });
     const plate = normalizePlate(req.body && req.body.placa);
     if (!validPlate(plate)) return res.status(400).json({ error: "placa_invalida", mensagem: "Placa inválida." });
-    const data = await fonteDataDiagnosticRequest(plate);
-    return res.json({ ok: true, provider: "fontedata", plate, data });
+    const result = await requestJson("https://app.dabradata.com/api/v1/consulta/consulta-veicular?placa=" + encodeURIComponent(plate), { headers: { "X-API-Key": FONTEDATA_API_KEY } });
+    if (result.status < 200 || result.status >= 300) return res.status(result.status >= 400 && result.status < 500 ? result.status : 502).json({ error: "fontedata_http", status: result.status });
+    return res.json({ ok: true, provider: "fontedata", plate, data: result.data });
   } catch (err) {
     console.error("Erro no teste administrativo FonteData:", err.message);
     return res.status(err.status || 502).json({ error: "fontedata_teste", mensagem: err.message || "Falha na consulta FonteData." });
@@ -1621,7 +1605,6 @@ app.use((req, res) => {
 });
 
 if (!FALCON_TOKEN) console.warn("FALCON_TOKEN não configurado.");
-if (!FONTEDATA_API_KEY) console.warn("FONTEDATA_API_KEY não configurado. O diagnóstico FonteData ficará indisponível.");
 if (!OPENPIX_APP_ID) console.warn("OPENPIX_APP_ID não configurado. O checkout PIX ficará indisponível.");
 if (!PAYMENT_SIGNING_SECRET) console.warn("PAYMENT_SIGNING_SECRET não configurado.");
 if (!DATABASE_URL) console.warn("DATABASE_URL não configurado. O controle persistente de créditos ficará indisponível.");
@@ -1634,3 +1617,23 @@ initDatabase().then(() => {
     if (shuttingDown) return;
     shuttingDown = true;
     console.log(`${signal} recebido. Encerrando servidor com segurança...`);
+
+    server.close(async () => {
+      try {
+        if (pool) await pool.end();
+      } catch (err) {
+        console.error("Erro ao encerrar PostgreSQL:", err.message);
+      } finally {
+        process.exit(0);
+      }
+    });
+
+    setTimeout(() => process.exit(1), 10000).unref();
+  };
+
+  process.once("SIGTERM", () => shutdown("SIGTERM"));
+  process.once("SIGINT", () => shutdown("SIGINT"));
+}).catch(err => {
+  console.error("Falha ao inicializar banco de créditos:", err);
+  process.exit(1);
+});
