@@ -701,6 +701,94 @@ function mergeVehicleReports(primary, complementary) {
   return mergeObject(a, b);
 }
 
+
+// Relatório 360: camada de apresentação/decisão construída apenas com dados já
+// retornados pelos provedores. Não chama APIs e não altera o fluxo de pagamento.
+function buildVehicle360Report(vehicle, providerCoverage = VEHICLE_PROVIDER_COVERAGE) {
+  const v = vehicle && typeof vehicle === "object" ? vehicle : {};
+  const has = value => {
+    if (value === null || value === undefined || value === "") return false;
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === "object") return Object.values(value).some(has);
+    return true;
+  };
+  const indicator = key => v.indicators && typeof v.indicators[key] === "boolean" ? v.indicators[key] : null;
+  const item = (id, title, value, detail, coverageKey) => {
+    const available = value !== null && value !== undefined;
+    return {
+      id, title,
+      status: available ? (value ? "atencao" : "sem_ocorrencia_retornada") : "nao_informado",
+      detail: available ? detail : "Informação não retornada pelas fontes usadas nesta consulta.",
+      coverage: providerCoverage[coverageKey] || null
+    };
+  };
+
+  const alerts = [
+    item("roubo_furto", "Roubo e furto", indicator("theft"), indicator("theft") ? "A fonte retornou indicação de roubo/furto. Confira a ocorrência antes da compra." : "Nenhuma indicação de roubo/furto foi retornada pela fonte consultada.", "theft"),
+    item("leilao", "Leilão", indicator("auction"), indicator("auction") ? "Há informação de leilão no retorno consultado." : "Nenhuma informação de leilão foi retornada pela fonte consultada.", "auction"),
+    item("sinistro", "Sinistro", indicator("accidentClaim"), indicator("accidentClaim") ? "Há indício de sinistro no retorno consultado." : "Nenhum indício de sinistro foi retornado pela fonte consultada.", "accidentClaim"),
+    item("gravame", "Gravame", indicator("lien"), indicator("lien") ? "Há informação de gravame no retorno consultado." : "Nenhum gravame foi retornado pela fonte consultada.", "lien"),
+    item("renajud", "RENAJUD", indicator("renajud"), indicator("renajud") ? "Há restrição RENAJUD no retorno consultado." : "Nenhuma restrição RENAJUD foi retornada pela fonte consultada.", "renajud"),
+    item("multas", "Multas / RENAINF", indicator("renainf"), indicator("renainf") ? "Há multas/ocorrências RENAINF no retorno consultado." : "Nenhuma multa/ocorrência RENAINF foi retornada pela fonte consultada.", "renainfFines"),
+    item("ipva", "IPVA", indicator("ipvaPending"), indicator("ipvaPending") ? "Há pendência de IPVA no retorno consultado." : "Nenhuma pendência de IPVA foi retornada pela fonte consultada.", "ipvaPending"),
+    item("recall", "Recall", indicator("recall"), indicator("recall") ? "Há campanha de recall no retorno consultado." : "Nenhuma campanha de recall foi retornada pela fonte consultada.", "recall")
+  ];
+
+  const attentionCount = alerts.filter(x => x.status === "atencao").length;
+  const informedCount = alerts.filter(x => x.status !== "nao_informado").length;
+  const checklist = [
+    "Confirme placa, chassi e RENAVAM diretamente no veículo e nos documentos.",
+    "Compare o estado físico do veículo com eventuais registros de leilão ou sinistro.",
+    "Consulte débitos e restrições novamente próximo da transferência, pois podem mudar.",
+    "Verifique recalls pendentes e solicite comprovantes de atendimento quando aplicável.",
+    "Faça inspeção mecânica e estrutural independente antes de concluir a compra.",
+    "Confira a identidade e a legitimidade do vendedor antes de qualquer pagamento."
+  ];
+
+  return {
+    version: 1,
+    title: "Relatório 360",
+    generatedFromProviderData: true,
+    summary: {
+      attentionCount,
+      informedChecks: informedCount,
+      totalChecks: alerts.length,
+      message: attentionCount
+        ? `${attentionCount} ponto(s) merecem conferência antes da compra.`
+        : informedCount === alerts.length
+          ? "Nenhuma ocorrência foi retornada nos principais indicadores consultados."
+          : "Não houve ocorrência nos indicadores informados, mas algumas informações não foram retornadas pelas fontes."
+    },
+    vehicle: {
+      plate: v.plate || null,
+      brand: v.brand || null,
+      model: v.model || null,
+      brandModel: v.brandModel || null,
+      fabricationYear: v.fabricationYear || null,
+      modelYear: v.modelYear || null,
+      color: v.color || null,
+      city: v.city || null,
+      state: v.state || null,
+      fuel: v.fuel || null,
+      chassis: v.chassis || null,
+      renavam: v.renavam || null
+    },
+    alerts,
+    details: {
+      fipe: has(v.fipe) ? v.fipe : null,
+      technical: has(v.technical) ? v.technical : null,
+      auction: has(v.auction) ? v.auction : null,
+      accidentClaim: has(v.accidentClaim) ? v.accidentClaim : null,
+      lien: has(v.lien) ? v.lien : null,
+      debts: has(v.debts) ? v.debts : null,
+      recalls: has(v.recalls) ? v.recalls : null,
+      ownershipHistory: has(v.ownershipHistory) ? v.ownershipHistory : null
+    },
+    checklist,
+    disclaimer: "O relatório consolida dados retornados pelas fontes consultadas e não substitui vistoria, consulta oficial atualizada ou análise documental. Ausência de ocorrência no retorno não garante inexistência do fato."
+  };
+}
+
 function paymentProduct(product) {
   return PACKAGES[String(product || "")] || null;
 }
