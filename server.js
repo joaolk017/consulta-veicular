@@ -804,14 +804,18 @@ function detectProviderCoverageFromStoredPayload(payload) {
   walk(payload);
   const hasAny = terms => [...keys].some(k => terms.some(t => k.includes(t)));
   return {
-    "Gravame":hasAny(["gravame","financ","alienacao"]),
-    "Leilão":hasAny(["leilao","auction"]),
-    "Sinistro":hasAny(["sinistro","indenizacao","perda_total"]),
-    "Multas / RENAINF":hasAny(["multa","renainf","debito"]),
-    "Recall":hasAny(["recall"]),
-    "Histórico de proprietários":hasAny(["historico_propriet","proprietario"]),
-    "Roubo / furto":hasAny(["roubo","furto"]),
-    "RENAJUD":hasAny(["renajud","judicial"])
+    // IDs canônicos compartilhados com analyzeVehicle360Coverage().
+    // Detectamos somente cobertura estrutural explícita; campos genéricos como
+    // "restricoes" e "indicadores" não são promovidos para um grupo específico
+    // sem uma chave que identifique o assunto, evitando falsos positivos.
+    gravame:hasAny(["gravame","financ","alienacao"]),
+    leilao:hasAny(["leilao","auction"]),
+    sinistro:hasAny(["sinistro","indenizacao","perda_total"]),
+    multas:hasAny(["multa","renainf","debito"]),
+    recall:hasAny(["recall"]),
+    proprietarios:hasAny(["historico_propriet","proprietario"]),
+    roubo_furto:hasAny(["roubo","furto"]),
+    renajud:hasAny(["renajud","judicial"])
   };
 }
 
@@ -2267,7 +2271,7 @@ async function runStoredCoverageDryRunOnStartupOnce() {
   try {
     requireDatabase();
     await pool.query(`CREATE TABLE IF NOT EXISTS admin_one_time_actions (action_key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
-    const actionKey = "stored-coverage-dry-run-v3-canonical";
+    const actionKey = "stored-coverage-dry-run-v4-canonical-detector";
     const claimed = await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key", [actionKey]);
     if (!claimed.rowCount) return;
     const q = await pool.query(`
@@ -2277,7 +2281,7 @@ async function runStoredCoverageDryRunOnStartupOnce() {
         SELECT result_json, created_at FROM admin_provider_audits WHERE provider='fontedata' AND result_json IS NOT NULL
       ) x ORDER BY created_at DESC LIMIT 1
     `);
-    if (!q.rowCount) return console.log("STORED COVERAGE DRY RUN V3: nenhum resultado FonteData armazenado.");
+    if (!q.rowCount) return console.log("STORED COVERAGE DRY RUN V4: nenhum resultado FonteData armazenado.");
 
     // Somente leitura local. Não chama Falcon, FonteData ou CredPro.
     const detected = detectProviderCoverageFromStoredPayload(q.rows[0].result_json);
@@ -2296,7 +2300,7 @@ async function runStoredCoverageDryRunOnStartupOnce() {
     const cap = Math.min(...caps.rows.map(r => r.maxApiCostPerConsult));
     const recommendation = recommendCredProModulesFromCoverage({ missing }, cap);
 
-    console.log("STORED COVERAGE DRY RUN V3:", JSON.stringify({
+    console.log("STORED COVERAGE DRY RUN V4:", JSON.stringify({
       apiCallsMade:0,
       source:"stored_postgresql_only",
       availableIds,
@@ -2309,7 +2313,7 @@ async function runStoredCoverageDryRunOnStartupOnce() {
       stillMissing:recommendation.stillMissing
     }));
   } catch (err) {
-    console.error("STORED COVERAGE DRY RUN V3: falha:", String(err.message || err).slice(0,300));
+    console.error("STORED COVERAGE DRY RUN V4: falha:", String(err.message || err).slice(0,300));
   }
 }
 
