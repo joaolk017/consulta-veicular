@@ -821,29 +821,33 @@ function analyzeVehicle360Coverage(vehicle) {
   const present = value => value !== null && value !== undefined && value !== "";
   const explicit = value => typeof value === "boolean";
 
+  // IDs canônicos evitam divergência entre nomes exibidos no relatório e
+  // nomes usados pelos provedores/otimizador. A presença é tri-state:
+  // available = o provedor respondeu ao grupo, missing = não há cobertura.
   const checks = [
-    ["Dados básicos", present(v.brand) || present(v.model) || present(v.brandModel)],
-    ["Dados técnicos", !!(v.technical && Object.values(v.technical).some(present))],
-    ["FIPE", !!(v.fipe && Object.values(v.fipe).some(present))],
-    ["Roubo / furto", explicit(i.theft)],
-    ["Leilão", explicit(i.auction) || !!v.auction],
-    ["Sinistro", explicit(i.accidentClaim) || !!v.accidentClaim],
-    ["Gravame", explicit(i.lien) || !!v.lien],
-    ["RENAJUD", explicit(i.renajud)],
-    ["Multas / RENAINF", explicit(i.renainf) || !!(v.debts && present(v.debts.finesCount))],
-    ["IPVA pendente", explicit(i.ipvaPending) || !!(v.debts && explicit(v.debts.ipvaPending))],
-    ["Recall", explicit(i.recall) || (Array.isArray(v.recalls) && v.recalls.length > 0)],
-    ["Histórico de proprietários", !!(v.ownershipHistory && (present(v.ownershipHistory.count) || (Array.isArray(v.ownershipHistory.records) && v.ownershipHistory.records.length > 0)))]
+    { id:"identificacao", label:"Dados básicos", available:present(v.brand) || present(v.model) || present(v.brandModel) },
+    { id:"dados_tecnicos", label:"Dados técnicos", available:!!(v.technical && Object.values(v.technical).some(present)) },
+    { id:"fipe", label:"FIPE", available:!!(v.fipe && Object.values(v.fipe).some(present)) },
+    { id:"roubo_furto", label:"Roubo / furto", available:explicit(i.theft) },
+    { id:"leilao", label:"Leilão", available:explicit(i.auction) || !!v.auction },
+    { id:"sinistro", label:"Sinistro", available:explicit(i.accidentClaim) || !!v.accidentClaim },
+    { id:"gravame", label:"Gravame", available:explicit(i.lien) || !!v.lien },
+    { id:"renajud", label:"RENAJUD", available:explicit(i.renajud) },
+    { id:"multas", label:"Multas / RENAINF", available:explicit(i.renainf) || !!(v.debts && present(v.debts.finesCount)) },
+    { id:"ipva", label:"IPVA pendente", available:explicit(i.ipvaPending) || !!(v.debts && explicit(v.debts.ipvaPending)) },
+    { id:"recall", label:"Recall", available:explicit(i.recall) || (Array.isArray(v.recalls) && v.recalls.length > 0) },
+    { id:"proprietarios", label:"Histórico de proprietários", available:!!(v.ownershipHistory && (present(v.ownershipHistory.count) || (Array.isArray(v.ownershipHistory.records) && v.ownershipHistory.records.length > 0))) }
   ];
 
-  const available = checks.filter(x => x[1]).map(x => x[0]);
-  const missing = checks.filter(x => !x[1]).map(x => x[0]);
+  const available = checks.filter(x => x.available).map(x => x.label);
+  const missing = checks.filter(x => !x.available).map(x => x.label);
   return {
     total: checks.length,
     availableCount: available.length,
     missingCount: missing.length,
     available,
     missing,
+    groups: checks.map(x => ({ id:x.id, label:x.label, status:x.available ? "available" : "missing" })),
     note: "Cobertura calculada apenas pelos campos efetivamente presentes no relatório. Campo ausente não significa ausência de ocorrência."
   };
 }
@@ -2389,9 +2393,15 @@ app.post("/api/consulta-completa", async (req, res) => {
       const report360 = buildVehicle360Report(safeVehicle);
       const coverage360 = analyzeVehicle360Coverage(safeVehicle);
       const storedCoverage = safeVehicle._storedProviderCoverage || {};
-      if (Array.isArray(coverage360.missing)) {
-        coverage360.missing = coverage360.missing.filter(group => storedCoverage[group] !== true);
-        coverage360.available = [...new Set([...(coverage360.available || []), ...Object.keys(storedCoverage).filter(k => storedCoverage[k] === true)])];
+      if (Array.isArray(coverage360.groups)) {
+        // FonteData salva usa IDs canônicos (leilao, sinistro, gravame etc.).
+        // Marcar cobertura significa apenas que o grupo foi fornecido; nunca
+        // transforma "sem dado" em "sem ocorrência".
+        coverage360.groups = coverage360.groups.map(group =>
+          storedCoverage[group.id] === true ? { ...group, status:"available" } : group
+        );
+        coverage360.available = coverage360.groups.filter(g => g.status === "available").map(g => g.label);
+        coverage360.missing = coverage360.groups.filter(g => g.status !== "available").map(g => g.label);
         coverage360.availableCount = coverage360.available.length;
         coverage360.missingCount = coverage360.missing.length;
       }
