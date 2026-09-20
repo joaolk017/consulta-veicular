@@ -823,23 +823,46 @@ function analyzeVehicle360Coverage(vehicle) {
   };
 }
 
-function recommendCredProModulesFromCoverage(coverage) {
+function recommendCredProModulesFromCoverage(coverage, maxCost = 5) {
   const missing = new Set(coverage && Array.isArray(coverage.missing) ? coverage.missing : []);
-  const modules = [];
-  const add = (item, reason) => modules.push({ item, reason });
+  const catalog = [
+    { item:"recall", price:0.90, covers:["Recall"], priority:90 },
+    { item:"gravame", price:3.00, covers:["Gravame"], priority:100 },
+    { item:"sinistro", price:3.30, covers:["Sinistro"], priority:100 },
+    { item:"renajud", price:4.10, covers:["RENAJUD"], priority:95 },
+    { item:"renainf", price:4.15, covers:["Multas / RENAINF"], priority:90 },
+    { item:"leilao", price:5.50, covers:["Leilão"], priority:100 },
+    { item:"historico_proprietarios", price:6.00, covers:["Histórico de proprietários"], priority:70 },
+    { item:"leilao_completo", price:11.00, covers:["Leilão","Sinistro"], priority:100 }
+  ];
 
-  if (missing.has("Leilão")) add("leilao_completo", "Complementar indicador e detalhes de leilão.");
-  if (missing.has("Sinistro")) add("sinistro", "Complementar indícios de sinistro.");
-  if (missing.has("Gravame")) add("gravame", "Complementar situação de gravame.");
-  if (missing.has("RENAJUD") || missing.has("Multas / RENAINF")) add("renajud", "Complementar restrições e registros relacionados quando disponíveis.");
-  if (missing.has("Recall")) add("recall", "Complementar campanhas de recall.");
-  if (missing.has("Histórico de proprietários")) add("historico_proprietarios", "Complementar histórico quando o produto contratado disponibilizar esse dado.");
+  const wanted = catalog.filter(x => x.covers.some(g => missing.has(g)));
+  let best = { items:[], cost:0, score:0, covered:new Set() };
+  const n = wanted.length;
+  for (let mask=1; mask < (1 << n); mask++) {
+    let cost=0, score=0; const items=[], covered=new Set();
+    for (let j=0;j<n;j++) if(mask & (1<<j)) {
+      const x=wanted[j]; cost+=x.price; items.push(x);
+      for(const g of x.covers) if(missing.has(g)) covered.add(g);
+    }
+    if(cost > maxCost + 1e-9) continue;
+    for(const g of covered) {
+      const candidates=wanted.filter(x=>x.covers.includes(g));
+      score += Math.max(...candidates.map(x=>x.priority));
+    }
+    const better = score>best.score || (score===best.score && covered.size>best.covered.size) || (score===best.score && covered.size===best.covered.size && cost<best.cost);
+    if(better) best={items,cost,score,covered};
+  }
 
   return {
-    mode: "recommendation_only",
-    apiCallsMade: 0,
-    modules,
-    note: "Lista calculada somente a partir dos grupos ausentes. Não executa CredPro e não consome saldo."
+    mode:"budget_optimizer",
+    apiCallsMade:0,
+    maxCost:Number(maxCost.toFixed(2)),
+    estimatedCost:Number(best.cost.toFixed(2)),
+    selected:best.items.map(x=>({item:x.item,price:x.price,covers:x.covers.filter(g=>missing.has(g))})),
+    coveredMissingGroups:[...best.covered],
+    stillMissing:[...missing].filter(g=>!best.covered.has(g)),
+    note:"Combinação calculada localmente com preços do catálogo CredPro Sandbox. Não executa módulos nem consome saldo."
   };
 }
 
