@@ -601,6 +601,64 @@ function safeVehicleDetails(vehicle, plate) {
   };
 }
 
+// Mapeamento passivo da CredPro para o modelo interno do relatório.
+// Não realiza chamadas externas e não está conectado ao fluxo dos clientes.
+function normalizeCredProResult(payload, fallbackPlate = "") {
+  const root = payload && typeof payload === "object" ? payload : {};
+  const results = Array.isArray(root.resultados) ? root.resultados : [];
+  const byItem = Object.fromEntries(results.filter(x => x && x.item).map(x => [x.item, x.dados || {}]));
+  const estadual = byItem.bin_estadual?.VEICULAR?.BIN_ESTADUAL || {};
+  const nacional = byItem.bin_nacional?.VEICULAR?.BIN_NACIONAL || {};
+  const base = Object.keys(estadual).length ? estadual : nacional;
+  const restr = estadual.RESTRICOES || nacional.RESTRICOES || {};
+  const gravames = byItem.gravame?.dados?.VEICULAR?.GRAVAME?.OCORRENCIAS || [];
+  const leilao = byItem.leilao_completo?.VEICULAR?.LEILAO_CONJUGADO || {};
+  const sinistro = byItem.sinistro?.VEICULAR?.INDICIO_SINISTRO_CONJUGADO || {};
+  const renajudRoot = byItem.renajud?.dados?.VEICULAR || {};
+  const recalls = Array.isArray(byItem.recall?.recalls) ? byItem.recall.recalls : [];
+  const owners = Array.isArray(byItem.historico_proprietarios?.registros) ? byItem.historico_proprietarios.registros : [];
+  const auctionOccurrences = Array.isArray(leilao.OCORRENCIAS) ? leilao.OCORRENCIAS : [];
+  const auctionFirst = auctionOccurrences[0] || {};
+  const auctionEvents = Array.isArray(auctionFirst.OCORRENCIAS) ? auctionFirst.OCORRENCIAS : [];
+  const sinistroEvents = Array.isArray(sinistro.OCORRENCIAS) ? sinistro.OCORRENCIAS : [];
+  const fines = Array.isArray(renajudRoot.RENAINF?.OCORRENCIAS) ? renajudRoot.RENAINF.OCORRENCIAS : [];
+  return {
+    plate: String(base.PLACA || root.placa || fallbackPlate || "").trim().toUpperCase() || null,
+    brandModel: base.MARCA_MODELO || null,
+    fabricationYear: base.ANO_FABRICACAO || null,
+    modelYear: base.ANO_MODELO || null,
+    color: base.COR_VEICULO || null,
+    city: base.MUNICIPIO || null,
+    state: base.UF || null,
+    fuel: base.COMBUSTIVEL || null,
+    type: base.TIPO_VEICULO || null,
+    renavam: base.RENAVAM || null,
+    chassis: base.CHASSI || null,
+    status: base.SITUACAO || null,
+    origin: base.PROCEDENCIA || null,
+    category: base.CATEGORIA_VEICULO || null,
+    species: base.ESPECIE_VEICULO || null,
+    technical: { displacement: base.CILINDRADA || null, power: base.POTENCIA_VEICULO || null, axles: base.NUMERO_EIXOS || null, passengers: base.QUANTIDADE_PASSAGEIROS || null },
+    indicators: {
+      theft: restr.EXISTE_RESTRICAO_ROUBO_FURTO === "1",
+      auction: auctionOccurrences.length > 0,
+      accidentClaim: sinistroEvents.some(x => String(x.EXISTE_OCORRENCIA) === "1"),
+      lien: gravames.length > 0,
+      renajud: String(restr.EXISTE_RESTRICAO_RENAJUD) === "1" || Number(renajudRoot.RENAJUD?.QUANTIDADE_OCORRENCIAS || 0) > 0,
+      renainf: fines.length > 0,
+      recall: recalls.length > 0,
+      ipvaPending: String(restr.IPVA?.EXISTE_PENDENCIA) === "1"
+    },
+    auction: { count: auctionEvents.length, score: auctionFirst.SCORE?.PONTUACAO || null, damage: auctionFirst.SCORE?.DESCRICAO_PONTUACAO || null, acceptance: auctionFirst.SCORE?.ACEITACAO || null },
+    accidentClaim: { count: sinistroEvents.length, descriptions: sinistroEvents.map(x => x.DESCRICAO_OCORRENCIA).filter(Boolean).slice(0, 20) },
+    lien: { active: gravames.some(x => /ATIVO/i.test(String(x.STATUS_GRAVAME || ""))), count: gravames.length },
+    debts: { ipvaPending: String(restr.IPVA?.EXISTE_PENDENCIA) === "1", ipvaValue: restr.IPVA?.VALOR_PENDENCIA || null, finesCount: fines.length, finesTotal: fines.reduce((sum, x) => sum + (Number(String(x.VALOR || "0").replace(".", "").replace(",", ".")) || 0), 0) },
+    recalls: recalls.slice(0, 20).map(x => ({ campaign: x.campanha || null, startDate: x.data_inicio || null, status: x.status || null })),
+    ownershipHistory: { count: owners.length, records: owners.slice(0, 20).map(x => ({ year: x.ano || null, transferDate: x.data_transferencia || null, city: x.municipio || null, state: x.uf || null, documentType: x.tp_doc || null })) },
+    source: { provider: "credpro", sandbox: root.sandbox === true, chargedValue: Number(root.valor_cobrado || 0) }
+  };
+}
+
 // Combina relatórios já normalizados sem realizar chamadas externas.
 // O provedor principal sempre vence; o complementar só preenche campos ausentes.
 function mergeVehicleReports(primary, complementary) {
