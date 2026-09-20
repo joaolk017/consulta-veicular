@@ -1577,6 +1577,20 @@ app.get("/api/admin/fontedata-retry-status", async (req, res) => {
   });
 });
 
+app.post("/api/admin/fontedata-retry-manual", async (req, res) => {
+  // Preparado para diagnóstico, mas deliberadamente bloqueado até autorização explícita.
+  if (!enforceSensitiveRateLimit(req, res, "fontedata-retry-manual", 2)) return;
+  const testToken = String(req.get("X-FonteData-Test-Token") || "").trim();
+  if (!FONTEDATA_TEST_TOKEN || !testToken || !secureEqual(testToken, FONTEDATA_TEST_TOKEN)) return res.status(404).json({ error: "Endpoint não encontrado." });
+  return res.status(423).json({
+    error: "retry_bloqueado",
+    provider: "fontedata",
+    plate: "DDB0A86",
+    timeoutMs: 120000,
+    mensagem: "Retry manual ainda bloqueado; nenhuma chamada ao provedor foi realizada."
+  });
+});
+
 app.get("/api/admin/fontedata-auditoria-unica", async (req, res) => {
   if (!enforceSensitiveRateLimit(req, res, "fontedata-auditoria-unica", 3)) return;
   try {
