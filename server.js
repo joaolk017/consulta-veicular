@@ -866,6 +866,28 @@ function recommendCredProModulesFromCoverage(coverage, maxCost = 5) {
   };
 }
 
+function calculateSafeApiCaps(targetMarginPercent = 55) {
+  const target = Math.max(0, Math.min(95, Number(targetMarginPercent))) / 100;
+  const rows = Object.values(PACKAGES).map(p => {
+    const revenue = Number(p.amount);
+    const paymentFee = revenue * PAYMENT_FEE_RATE;
+    const maxTotalApiCost = Math.max(0, revenue - paymentFee - (revenue * target));
+    return {
+      product:p.id,
+      credits:p.credits,
+      revenue:Number(revenue.toFixed(2)),
+      targetMarginPercent:Number((target*100).toFixed(1)),
+      maxTotalApiCost:Number(maxTotalApiCost.toFixed(2)),
+      maxApiCostPerConsult:Number((maxTotalApiCost/p.credits).toFixed(2))
+    };
+  });
+  return {
+    targetMarginPercent:Number((target*100).toFixed(1)),
+    rows,
+    note:"Teto gerencial calculado para preservar a margem de contribuição alvo; não autoriza nem executa chamadas de API."
+  };
+}
+
 function calculatePackageEconomics(apiCostPerConsult = 5) {
   const rows = Object.values(PACKAGES).map(p => {
     const revenue = Number(p.amount);
@@ -2222,6 +2244,7 @@ app.post("/api/consulta-completa", async (req, res) => {
       report360.coverage = coverage360;
       report360.credproRecommendation = recommendCredProModulesFromCoverage(coverage360);
       report360.internalEconomics = calculatePackageEconomics(report360.credproRecommendation.estimatedCost);
+      report360.safeApiCaps = calculateSafeApiCaps(55);
       const deliveredVehicle = { ...safeVehicle, report360 };
       await finishCreditQuery(accountId, debit.queryId, true, deliveredVehicle);
       return res.json({ ok:true, paid:true, vehicle:deliveredVehicle, report360, creditosRestantes:debit.balance, price:CONSULTA_SALE_PRICE, currency:"BRL" });
