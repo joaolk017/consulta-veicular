@@ -840,6 +840,123 @@ function detectProviderCoverageFromStoredPayload(payload) {
     renajud:covered(["renajud","judicial"])
   };
 }
+function optimizeComplete360Consult(options = {}) {
+  const paymentFeeRate = Number.isFinite(Number(options.paymentFeeRate)) ? Number(options.paymentFeeRate) : PAYMENT_FEE_RATE;
+  const taxRate = Number.isFinite(Number(options.taxRate)) ? Number(options.taxRate) : 0;
+  const fixedCost = Number.isFinite(Number(options.fixedCost)) ? Number(options.fixedCost) : 0;
+  const targetMargins = Array.isArray(options.targetMargins) && options.targetMargins.length
+    ? options.targetMargins.map(Number).filter(x => x > 0 && x < 1)
+    : [0.45, 0.50, 0.55, 0.60];
+
+  const groups = [
+    { id:"identificacao", label:"Dados básicos" },
+    { id:"dados_tecnicos", label:"Dados técnicos" },
+    { id:"fipe", label:"FIPE" },
+    { id:"roubo_furto", label:"Roubo / furto" },
+    { id:"leilao", label:"Leilão" },
+    { id:"sinistro", label:"Sinistro" },
+    { id:"gravame", label:"Gravame" },
+    { id:"renajud", label:"RENAJUD" },
+    { id:"multas", label:"Multas / RENAINF" },
+    { id:"ipva", label:"IPVA pendente" },
+    { id:"recall", label:"Recall" },
+    { id:"proprietarios", label:"Histórico de proprietários" }
+  ];
+
+  // Catálogo conservador: só entra cobertura já conhecida/configurada.
+  // FonteData cobre a base cadastral/FIPE observada no retorno armazenado.
+  // Os módulos CredPro usam os preços de Sandbox já cadastrados no projeto.
+  // Grupos sem preço/fonte comprovada ficam sem candidato: o otimizador NÃO
+  // chama a solução de "completa" até os 12 grupos terem cobertura.
+  const catalog = [
+    { provider:"fontedata", item:"consulta_base", price:1.99, covers:["identificacao","dados_tecnicos","fipe"] },
+    { provider:"credpro", item:"recall", price:0.90, covers:["recall"] },
+    { provider:"credpro", item:"gravame", price:3.00, covers:["gravame"] },
+    { provider:"credpro", item:"sinistro", price:3.30, covers:["sinistro"] },
+    { provider:"credpro", item:"renajud", price:4.10, covers:["renajud"] },
+    { provider:"credpro", item:"renainf", price:4.15, covers:["multas"] },
+    { provider:"credpro", item:"leilao", price:5.50, covers:["leilao"] },
+    { provider:"credpro", item:"historico_proprietarios", price:6.00, covers:["proprietarios"] },
+    { provider:"credpro", item:"leilao_completo", price:11.00, covers:["leilao","sinistro"] }
+  ];
+
+  const allIds = new Set(groups.map(g => g.id));
+  let best = null;
+  const n = catalog.length;
+  for (let mask=1; mask < (1 << n); mask++) {
+    let cost=0; const selected=[]; const covered=new Set();
+    for (let j=0;j<n;j++) if (mask & (1 << j)) {
+      const x=catalog[j]; cost += x.price; selected.push(x);
+      x.covers.forEach(id => { if (allIds.has(id)) covered.add(id); });
+    }
+    const complete = covered.size === allIds.size;
+    if (!complete) continue;
+    if (!best || cost < best.cost) best={cost,selected,covered};
+  }
+
+  // Mesmo quando ainda não existe combinação 100%, mostra a maior cobertura
+  // de menor custo para sabermos exatamente o que falta contratar.
+  let fallback = { cost:0, selected:[], covered:new Set() };
+  for (let mask=1; mask < (1 << n); mask++) {
+    let cost=0; const selected=[]; const covered=new Set();
+    for (let j=0;j<n;j++) if(mask & (1 << j)) {
+      const x=catalog[j]; cost+=x.price; selected.push(x);
+      x.covers.forEach(id => { if(allIds.has(id)) covered.add(id); });
+    }
+    if (covered.size > fallback.covered.size ||
+        (covered.size === fallback.covered.size && cost < fallback.cost)) {
+      fallback={cost,selected,covered};
+    }
+  }
+
+  const chosen = best || fallback;
+  const missingIds = groups.filter(g => !chosen.covered.has(g.id)).map(g => g.id);
+  const complete = missingIds.length === 0;
+  const apiCost = Number(chosen.cost.toFixed(2));
+  const priceForMargin = margin => {
+    const denominator = 1 - paymentFeeRate - taxRate - margin;
+    if (denominator <= 0) return null;
+    return Number(((apiCost + fixedCost) / denominator).toFixed(2));
+  };
+  const pricing = complete ? targetMargins.map(margin => ({
+    targetMarginPercent:Number((margin*100).toFixed(0)),
+    minimumSalePrice:priceForMargin(margin)
+  })) : [];
+
+  return {
+    mode:"complete_360_optimizer",
+    apiCallsMade:0,
+    complete,
+    coveredCount:chosen.covered.size,
+    totalGroups:groups.length,
+    covered:groups.filter(g=>chosen.covered.has(g.id)),
+    missing:groups.filter(g=>missingIds.includes(g.id)),
+    selected:chosen.selected.map(x=>({provider:x.provider,item:x.item,price:x.price,covers:x.covers})),
+    estimatedApiCost:apiCost,
+    paymentFeeRate,
+    taxRate,
+    fixedCost,
+    pricing,
+    saleAllowedAsComplete:complete,
+    note: complete
+      ? "Todos os 12 grupos têm fonte/custo definido. Preços calculados localmente; nenhuma API foi chamada."
+      : "Ainda não existe combinação comprovada para os 12 grupos. Não vender como Consulta 360 Completa até definir fonte/custo para cada grupo ausente."
+  };
+}
+
+async function runComplete360OptimizerOnce() {
+  try {
+    requireDatabase();
+    await pool.query(`CREATE TABLE IF NOT EXISTS admin_one_time_actions (action_key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+    const actionKey="complete-360-optimizer-v1";
+    const claimed=await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key",[actionKey]);
+    if(!claimed.rowCount) return;
+    console.log("COMPLETE 360 OPTIMIZER V1:", JSON.stringify(optimizeComplete360Consult()));
+  } catch(err) {
+    console.error("COMPLETE 360 OPTIMIZER V1: falha:", String(err.message||err).slice(0,300));
+  }
+}
+
 function analyzeVehicle360Coverage(vehicle) {
   const v = vehicle && typeof vehicle === "object" ? vehicle : {};
   const i = v.indicators && typeof v.indicators === "object" ? v.indicators : {};
@@ -2596,6 +2713,7 @@ initDatabase().then(() => {
   const server = runCredProCatalogMetadataOnce();
 runStoredCoverageDryRunOnStartupOnce();
 runFalconStoredCoverageDryRunOnce();
+runComplete360OptimizerOnce();
 runStoredFonteDataShapeAuditOnce();
 runFonteDataStoredCoverageOnce();
 app.listen(PORT, () => console.log(`Consulta Veicular 360 ativa na porta ${PORT}. Checkout PIX: Woovi/OpenPix. Créditos: ${pool ? "PostgreSQL" : "indisponível"}.`));
