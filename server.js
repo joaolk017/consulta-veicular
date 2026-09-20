@@ -1571,6 +1571,23 @@ function storedFieldNames(value, prefix = "", depth = 0, out = []) {
   return out;
 }
 
+// Endpoint administrativo: retorna apenas os nomes dos campos do último relatório salvo.
+// Não retorna valores e não faz chamada a nenhum provedor.
+app.get("/api/admin/estrutura-relatorio-salvo", requireAdminFunnelAuth, async (req, res) => {
+  try {
+    requireDatabase();
+    const q = await pool.query(
+      "SELECT result_json FROM vehicle_queries WHERE result_json IS NOT NULL ORDER BY created_at DESC LIMIT 1"
+    );
+    if (!q.rowCount) return res.status(404).json({ ok: false, error: "Nenhum relatório salvo encontrado." });
+    const fields = [...new Set(storedFieldNames(q.rows[0].result_json))].sort();
+    return res.json({ ok: true, fieldCount: fields.length, fields });
+  } catch (err) {
+    console.error("STORED FIELD AUDIT:", err.message);
+    return res.status(500).json({ ok: false, error: "Falha ao auditar estrutura salva." });
+  }
+});
+
 // Teste administrativo isolado da FonteData; não participa do fluxo dos clientes.
 function sanitizeFonteDataAudit(value, depth = 0) {
   if (depth > 8 || value === null || value === undefined) return value;
