@@ -594,6 +594,29 @@ function safeVehicleDetails(vehicle, plate) {
   };
 }
 
+// Combina relatórios já normalizados sem realizar chamadas externas.
+// O provedor principal sempre vence; o complementar só preenche campos ausentes.
+function mergeVehicleReports(primary, complementary) {
+  const a = primary && typeof primary === "object" ? primary : {};
+  const b = complementary && typeof complementary === "object" ? complementary : {};
+
+  const mergeObject = (left, right) => {
+    const out = { ...(right && typeof right === "object" ? right : {}), ...(left && typeof left === "object" ? left : {}) };
+    for (const key of Object.keys(out)) {
+      const lv = left && typeof left === "object" ? left[key] : undefined;
+      const rv = right && typeof right === "object" ? right[key] : undefined;
+      if (lv && rv && typeof lv === "object" && typeof rv === "object" && !Array.isArray(lv) && !Array.isArray(rv)) {
+        out[key] = mergeObject(lv, rv);
+      } else if (lv === undefined || lv === null || lv === "") {
+        out[key] = rv ?? null;
+      }
+    }
+    return out;
+  };
+
+  return mergeObject(a, b);
+}
+
 function paymentProduct(product) {
   return PACKAGES[String(product || "")] || null;
 }
