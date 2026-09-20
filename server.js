@@ -1547,6 +1547,24 @@ app.get("/api/admin/fontedata-retry-status", async (req, res) => {
   if (!enforceSensitiveRateLimit(req, res, "fontedata-retry-status", 10)) return;
   const testToken = String(req.get("X-FonteData-Test-Token") || req.query.token || "").trim();
   if (!FONTEDATA_TEST_TOKEN || !testToken || !secureEqual(testToken, FONTEDATA_TEST_TOKEN)) return res.status(404).json({ error: "Endpoint não encontrado." });
+  requireDatabase();
+  await pool.query(`CREATE TABLE IF NOT EXISTS admin_provider_retry_audits (
+    id BIGSERIAL PRIMARY KEY,
+    provider TEXT NOT NULL,
+    plate TEXT NOT NULL,
+    status TEXT NOT NULL,
+    started_at TIMESTAMPTZ,
+    finished_at TIMESTAMPTZ,
+    duration_ms INTEGER,
+    http_status INTEGER,
+    error_message TEXT,
+    result_json JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`);
+  const history = await pool.query(
+    "SELECT status, started_at, finished_at, duration_ms, http_status, error_message, created_at FROM admin_provider_retry_audits WHERE provider=$1 AND plate=$2 ORDER BY id DESC LIMIT 5",
+    ["fontedata", "DDB0A86"]
+  );
   return res.json({
     ok: true,
     provider: "fontedata",
@@ -1554,7 +1572,8 @@ app.get("/api/admin/fontedata-retry-status", async (req, res) => {
     retryEnabled: false,
     timeoutMs: 120000,
     mode: "manual_only",
-    mensagem: "Segunda tentativa bloqueada. Nenhuma chamada ao provedor é feita por este endpoint."
+    history: history.rows,
+    mensagem: "Segunda tentativa bloqueada. Este endpoint apenas prepara e consulta o histórico; não chama o provedor."
   });
 });
 
