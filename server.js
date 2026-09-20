@@ -1884,7 +1884,7 @@ async function runCredProCatalogMetadataOnce() {
   if (!CREDPRO_TEST_API_KEY || !CREDPRO_TEST_API_KEY.startsWith("cpk_test_")) return console.warn("CREDPRO CATALOGO META: sandbox não configurado.");
   try {
     requireDatabase();
-    await pool.query(\`CREATE TABLE IF NOT EXISTS admin_one_time_actions (action_key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())\`);
+    await pool.query(`CREATE TABLE IF NOT EXISTS admin_one_time_actions (action_key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
     const actionKey = "credpro-catalog-metadata-v1";
     const claimed = await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key", [actionKey]);
     if (!claimed.rowCount) return console.log("CREDPRO CATALOGO META: inspeção já executada; nenhuma nova chamada feita.");
