@@ -1516,7 +1516,29 @@ if (!PAYMENT_SIGNING_SECRET) console.warn("PAYMENT_SIGNING_SECRET não configura
 if (!DATABASE_URL) console.warn("DATABASE_URL não configurado. O controle persistente de créditos ficará indisponível.");
 
 initDatabase().then(() => {
-  app.listen(PORT, () => console.log(`Consulta Veicular 360 ativa na porta ${PORT}. Checkout PIX: Woovi/OpenPix. Créditos: ${pool ? "PostgreSQL" : "indisponível"}.`));
+  const server = app.listen(PORT, () => console.log(`Consulta Veicular 360 ativa na porta ${PORT}. Checkout PIX: Woovi/OpenPix. Créditos: ${pool ? "PostgreSQL" : "indisponível"}.`));
+
+  let shuttingDown = false;
+  const shutdown = signal => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(`${signal} recebido. Encerrando servidor com segurança...`);
+
+    server.close(async () => {
+      try {
+        if (pool) await pool.end();
+      } catch (err) {
+        console.error("Erro ao encerrar PostgreSQL:", err.message);
+      } finally {
+        process.exit(0);
+      }
+    });
+
+    setTimeout(() => process.exit(1), 10000).unref();
+  };
+
+  process.once("SIGTERM", () => shutdown("SIGTERM"));
+  process.once("SIGINT", () => shutdown("SIGINT"));
 }).catch(err => {
   console.error("Falha ao inicializar banco de créditos:", err);
   process.exit(1);
