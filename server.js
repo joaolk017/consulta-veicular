@@ -1573,7 +1573,7 @@ function storedFieldNames(value, prefix = "", depth = 0, out = []) {
 
 // Endpoint administrativo: retorna apenas os nomes dos campos do último relatório salvo.
 // Não retorna valores e não faz chamada a nenhum provedor.
-app.get("/api/admin/estrutura-relatorio-salvo", requireAdminFunnelAuth, async (req, res) => {
+app.get("/api/admin/estrutura-relatorio-salvo", requireAdminSecret, async (req, res) => {
   try {
     requireDatabase();
     const q = await pool.query(
