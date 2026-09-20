@@ -1582,12 +1582,33 @@ app.post("/api/admin/fontedata-retry-manual", async (req, res) => {
   if (!enforceSensitiveRateLimit(req, res, "fontedata-retry-manual", 2)) return;
   const testToken = String(req.get("X-FonteData-Test-Token") || "").trim();
   if (!FONTEDATA_TEST_TOKEN || !testToken || !secureEqual(testToken, FONTEDATA_TEST_TOKEN)) return res.status(404).json({ error: "Endpoint não encontrado." });
+  requireDatabase();
+  await pool.query(`CREATE TABLE IF NOT EXISTS admin_provider_retry_audits (
+    id BIGSERIAL PRIMARY KEY,
+    provider TEXT NOT NULL,
+    plate TEXT NOT NULL,
+    status TEXT NOT NULL,
+    started_at TIMESTAMPTZ,
+    finished_at TIMESTAMPTZ,
+    duration_ms INTEGER,
+    http_status INTEGER,
+    error_message TEXT,
+    result_json JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`);
+  const latest = await pool.query(
+    "SELECT status, started_at, finished_at, duration_ms, http_status, error_message, created_at FROM admin_provider_retry_audits WHERE provider=$1 AND plate=$2 ORDER BY id DESC LIMIT 1",
+    ["fontedata", "DDB0A86"]
+  );
   return res.status(423).json({
     error: "retry_bloqueado",
     provider: "fontedata",
     plate: "DDB0A86",
     timeoutMs: 120000,
-    mensagem: "Retry manual ainda bloqueado; nenhuma chamada ao provedor foi realizada."
+    diagnosticReady: true,
+    fields: ["status", "started_at", "finished_at", "duration_ms", "http_status", "error_message", "result_json"],
+    latest: latest.rows[0] || null,
+    mensagem: "Diagnóstico preparado; retry permanece bloqueado e nenhuma chamada ao provedor foi realizada."
   });
 });
 
