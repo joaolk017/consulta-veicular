@@ -1513,6 +1513,36 @@ function sanitizeFonteDataAudit(value, depth = 0) {
   return out;
 }
 
+async function runFonteDataControlledAuditOnce() {
+  if (String(process.env.FONTEDATA_RUN_CONTROLLED_AUDIT || "").trim() !== "1") return;
+  if (!FONTEDATA_API_KEY) return console.warn("FONTEDATA AUDIT: chave não configurada.");
+  const plate = "DDB0A86";
+  try {
+    requireDatabase();
+    await pool.query(`CREATE TABLE IF NOT EXISTS admin_one_time_actions (action_key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+    await pool.query(`CREATE TABLE IF NOT EXISTS admin_provider_audits (
+      action_key TEXT PRIMARY KEY,
+      provider TEXT NOT NULL,
+      plate TEXT NOT NULL,
+      result_json JSONB,
+      http_status INTEGER,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`);
+    const actionKey = "fontedata-controlled-test:" + plate;
+    const claimed = await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key", [actionKey]);
+    if (!claimed.rowCount) return console.log("FONTEDATA AUDIT: teste único já utilizado; nenhuma nova chamada feita.");
+    const result = await requestJson("https://app.dabradata.com/api/v1/consulta/consulta-veicular?placa=" + encodeURIComponent(plate), { headers: { "X-API-Key": FONTEDATA_API_KEY }, timeout: 30000 });
+    const safeData = sanitizeFonteDataAudit(result.data);
+    await pool.query(
+      "INSERT INTO admin_provider_audits(action_key, provider, plate, result_json, http_status) VALUES($1,$2,$3,$4::jsonb,$5) ON CONFLICT(action_key) DO NOTHING",
+      [actionKey, "fontedata", plate, JSON.stringify(safeData || {}), Number(result.status || 0)]
+    );
+    console.log("FONTEDATA AUDIT: execução única concluída e resposta sanitizada armazenada. HTTP", result.status);
+  } catch (err) {
+    console.error("FONTEDATA AUDIT: falha na execução única:", err.message);
+  }
+}
+
 app.get("/api/admin/fontedata-auditoria-unica", async (req, res) => {
   if (!enforceSensitiveRateLimit(req, res, "fontedata-auditoria-unica", 3)) return;
   try {
@@ -1629,6 +1659,7 @@ if (!DATABASE_URL) console.warn("DATABASE_URL não configurado. O controle persi
 
 initDatabase().then(() => {
   const server = app.listen(PORT, () => console.log(`Consulta Veicular 360 ativa na porta ${PORT}. Checkout PIX: Woovi/OpenPix. Créditos: ${pool ? "PostgreSQL" : "indisponível"}.`));
+setTimeout(() => { runFonteDataControlledAuditOnce().catch((err) => console.error("FONTEDATA AUDIT:", err.message)); }, 5000);
 
   let shuttingDown = false;
   const shutdown = signal => {
