@@ -1781,7 +1781,11 @@ initDatabase().then(() => {
           if (v && typeof v === "object") {
             const out={}; for (const [k,val] of Object.entries(v)) out[k]=summarize(val,depth+1); return out;
           }
-          return v;
+          // Nunca grava valores do provedor no log. Mantemos somente o tipo
+          // para auditar a estrutura dos campos já salvos sem expor placa,
+          // chassi, RENAVAM, documentos ou outros identificadores.
+          if (v === null) return "null";
+          return typeof v;
         };
         console.log("FONTEDATA SAVED SUMMARY:", JSON.stringify({
           httpStatus:saved.rows[0].http_status,
