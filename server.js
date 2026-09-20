@@ -957,6 +957,96 @@ async function runComplete360OptimizerOnce() {
   }
 }
 
+function optimizeComplete360MultiProduct(options = {}) {
+  const groups = [
+    "identificacao","dados_tecnicos","fipe","roubo_furto","leilao","sinistro",
+    "gravame","renajud","multas","ipva","recall","proprietarios"
+  ];
+  const target = new Set(groups);
+  const paymentFeeRate = PAYMENT_FEE_RATE;
+
+  // Somente produtos/preços já conhecidos no projeto. O V2 está preparado
+  // para receber pacotes multiproduto adicionais quando sua cobertura e preço
+  // forem confirmados; não inventamos cobertura para fechar artificialmente 12/12.
+  const products = [
+    {provider:"fontedata",item:"consulta_base",price:1.99,covers:["identificacao","dados_tecnicos","fipe"]},
+    {provider:"credpro",item:"recall",price:0.90,covers:["recall"]},
+    {provider:"credpro",item:"gravame",price:3.00,covers:["gravame"]},
+    {provider:"credpro",item:"sinistro",price:3.30,covers:["sinistro"]},
+    {provider:"credpro",item:"renajud",price:4.10,covers:["renajud"]},
+    {provider:"credpro",item:"renainf",price:4.15,covers:["multas"]},
+    {provider:"credpro",item:"leilao",price:5.50,covers:["leilao"]},
+    {provider:"credpro",item:"historico_proprietarios",price:6.00,covers:["proprietarios"]},
+    {provider:"credpro",item:"leilao_completo",price:11.00,covers:["leilao","sinistro"]}
+  ];
+
+  const dominates = (a,b) => {
+    const ac=new Set(a.covers), bc=new Set(b.covers);
+    return a.price <= b.price && [...bc].every(x=>ac.has(x)) &&
+      (a.price < b.price || ac.size > bc.size);
+  };
+  const dominated = products.filter((p,i)=>products.some((q,j)=>i!==j && dominates(q,p)))
+    .map(p=>({provider:p.provider,item:p.item,price:p.price,reason:"dominated_by_cheaper_or_broader_product"}));
+  const candidates = products.filter(p=>!dominated.some(d=>d.provider===p.provider&&d.item===p.item));
+
+  let best=null;
+  const n=candidates.length;
+  for(let mask=1;mask<(1<<n);mask++){
+    let cost=0; const selected=[],covered=new Set();
+    for(let i=0;i<n;i++) if(mask&(1<<i)){
+      const p=candidates[i]; cost+=p.price; selected.push(p);
+      p.covers.forEach(g=>target.has(g)&&covered.add(g));
+    }
+    const missing=groups.filter(g=>!covered.has(g));
+    const score={complete:missing.length===0,covered:covered.size,cost};
+    if(!best || (score.complete&&!best.complete) ||
+       (score.complete===best.complete && score.covered>best.covered) ||
+       (score.complete===best.complete && score.covered===best.covered && score.cost<best.cost)){
+      best={...score,selected,covered,missing};
+    }
+  }
+
+  const cost=Number((best?.cost||0).toFixed(2));
+  const complete=!!best?.complete;
+  const pricing=complete ? [0.45,0.50,0.55,0.60].map(m=>{
+    const price=cost/(1-paymentFeeRate-m);
+    return {targetMarginPercent:m*100,minimumSalePrice:Number(price.toFixed(2))};
+  }) : [];
+
+  return {
+    mode:"complete_360_multi_product_optimizer_v2",
+    apiCallsMade:0,
+    complete,
+    coveredCount:best?.covered?.size||0,
+    totalGroups:groups.length,
+    missingIds:best?.missing||groups,
+    selected:(best?.selected||[]).map(p=>({provider:p.provider,item:p.item,price:p.price,covers:p.covers})),
+    excludedDominatedProducts:dominated,
+    estimatedApiCost:cost,
+    targetApiCostRange:{min:10,max:15},
+    withinTargetCost:complete && cost>=10 && cost<=15,
+    pricing,
+    nextCatalogNeed:(best?.missing||groups).map(id=>({group:id,need:"produto/pacote com cobertura e preço confirmados"})),
+    saleAllowedAsComplete:complete,
+    note:complete
+      ? "Combinação 12/12 encontrada pelo menor custo conhecido; nenhuma API foi chamada."
+      : "V2 eliminou redundâncias, mas não força 12/12. É necessário adicionar ao catálogo ofertas confirmadas que cubram os grupos restantes, preferencialmente pacotes multiproduto."
+  };
+}
+
+async function runComplete360MultiProductOptimizerOnce(){
+  try{
+    requireDatabase();
+    await pool.query(`CREATE TABLE IF NOT EXISTS admin_one_time_actions (action_key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+    const key="complete-360-multiproduct-optimizer-v2";
+    const claimed=await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key",[key]);
+    if(!claimed.rowCount)return;
+    console.log("COMPLETE 360 OPTIMIZER V2:",JSON.stringify(optimizeComplete360MultiProduct()));
+  }catch(err){
+    console.error("COMPLETE 360 OPTIMIZER V2: falha:",String(err.message||err).slice(0,300));
+  }
+}
+
 function analyzeVehicle360Coverage(vehicle) {
   const v = vehicle && typeof vehicle === "object" ? vehicle : {};
   const i = v.indicators && typeof v.indicators === "object" ? v.indicators : {};
@@ -2714,6 +2804,7 @@ initDatabase().then(() => {
 runStoredCoverageDryRunOnStartupOnce();
 runFalconStoredCoverageDryRunOnce();
 runComplete360OptimizerOnce();
+runComplete360MultiProductOptimizerOnce();
 runStoredFonteDataShapeAuditOnce();
 runFonteDataStoredCoverageOnce();
 app.listen(PORT, () => console.log(`Consulta Veicular 360 ativa na porta ${PORT}. Checkout PIX: Woovi/OpenPix. Créditos: ${pool ? "PostgreSQL" : "indisponível"}.`));
