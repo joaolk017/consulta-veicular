@@ -792,33 +792,54 @@ function buildVehicle360Report(vehicle, providerCoverage = VEHICLE_PROVIDER_COVE
 
 function detectProviderCoverageFromStoredPayload(payload) {
   const keys = new Set();
-  const walk = (v, prefix="", depth=0) => {
-    if (depth > 7 || v == null) return;
-    if (Array.isArray(v)) return v.slice(0,3).forEach(x => walk(x, prefix+"[]", depth+1));
-    if (typeof v !== "object") return;
+  const genericSignals = new Set();
+  const normalizeSignal = value => String(value || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  const walk = (v, prefix="", depth=0, insideGeneric=false) => {
+    if (depth > 8 || v == null) return;
+    if (Array.isArray(v)) {
+      return v.slice(0,20).forEach(x => walk(x, prefix+"[]", depth+1, insideGeneric));
+    }
+    if (typeof v !== "object") {
+      // FonteData pode devolver "restricoes" e "indicadores" como texto/lista
+      // sem subchaves. Usamos o conteúdo somente para reconhecer o ASSUNTO
+      // coberto; nenhum valor é registrado em log.
+      if (insideGeneric) {
+        const s = normalizeSignal(v);
+        if (s && s.length <= 2000) genericSignals.add(s);
+      }
+      return;
+    }
     for (const [k,val] of Object.entries(v)) {
       const path = (prefix ? prefix+"."+k : k).toLowerCase();
-      keys.add(path); walk(val,path,depth+1);
+      keys.add(path);
+      const generic = insideGeneric || /(?:^|\.)(restricoes?|indicadores?)(?:\.|$)/i.test(path);
+      if (generic) genericSignals.add(normalizeSignal(k));
+      walk(val,path,depth+1,generic);
     }
   };
   walk(payload);
-  const hasAny = terms => [...keys].some(k => terms.some(t => k.includes(t)));
+
+  const structural = terms => [...keys].some(k => terms.some(t => normalizeSignal(k).includes(t)));
+  const generic = terms => [...genericSignals].some(s => terms.some(t => s.includes(t)));
+  const covered = terms => structural(terms) || generic(terms);
+
   return {
-    // IDs canônicos compartilhados com analyzeVehicle360Coverage().
-    // Detectamos somente cobertura estrutural explícita; campos genéricos como
-    // "restricoes" e "indicadores" não são promovidos para um grupo específico
-    // sem uma chave que identifique o assunto, evitando falsos positivos.
-    gravame:hasAny(["gravame","financ","alienacao"]),
-    leilao:hasAny(["leilao","auction"]),
-    sinistro:hasAny(["sinistro","indenizacao","perda_total"]),
-    multas:hasAny(["multa","renainf","debito"]),
-    recall:hasAny(["recall"]),
-    proprietarios:hasAny(["historico_propriet","proprietario"]),
-    roubo_furto:hasAny(["roubo","furto"]),
-    renajud:hasAny(["renajud","judicial"])
+    // Cobertura = o retorno contém um campo/sinal explícito daquele assunto.
+    // Não significa que exista ocorrência; "sem roubo", por exemplo, continua
+    // provando que a fonte consultou o grupo roubo/furto.
+    gravame:covered(["gravame","financ","alienacao"]),
+    leilao:covered(["leilao","auction"]),
+    sinistro:covered(["sinistro","indenizacao","perda total","perda_total"]),
+    multas:covered(["multa","renainf","debito"]),
+    recall:covered(["recall"]),
+    proprietarios:covered(["historico propriet","historico_propriet","proprietario"]),
+    roubo_furto:covered(["roubo","furto"]),
+    renajud:covered(["renajud","judicial"])
   };
 }
-
 function analyzeVehicle360Coverage(vehicle) {
   const v = vehicle && typeof vehicle === "object" ? vehicle : {};
   const i = v.indicators && typeof v.indicators === "object" ? v.indicators : {};
@@ -2271,7 +2292,7 @@ async function runStoredCoverageDryRunOnStartupOnce() {
   try {
     requireDatabase();
     await pool.query(`CREATE TABLE IF NOT EXISTS admin_one_time_actions (action_key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
-    const actionKey = "stored-coverage-dry-run-v4-canonical-detector";
+    const actionKey = "stored-coverage-dry-run-v5-generic-containers";
     const claimed = await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key", [actionKey]);
     if (!claimed.rowCount) return;
     const q = await pool.query(`
@@ -2281,7 +2302,7 @@ async function runStoredCoverageDryRunOnStartupOnce() {
         SELECT result_json, created_at FROM admin_provider_audits WHERE provider='fontedata' AND result_json IS NOT NULL
       ) x ORDER BY created_at DESC LIMIT 1
     `);
-    if (!q.rowCount) return console.log("STORED COVERAGE DRY RUN V4: nenhum resultado FonteData armazenado.");
+    if (!q.rowCount) return console.log("STORED COVERAGE DRY RUN V5: nenhum resultado FonteData armazenado.");
 
     // Somente leitura local. Não chama Falcon, FonteData ou CredPro.
     const detected = detectProviderCoverageFromStoredPayload(q.rows[0].result_json);
@@ -2300,7 +2321,7 @@ async function runStoredCoverageDryRunOnStartupOnce() {
     const cap = Math.min(...caps.rows.map(r => r.maxApiCostPerConsult));
     const recommendation = recommendCredProModulesFromCoverage({ missing }, cap);
 
-    console.log("STORED COVERAGE DRY RUN V4:", JSON.stringify({
+    console.log("STORED COVERAGE DRY RUN V5:", JSON.stringify({
       apiCallsMade:0,
       source:"stored_postgresql_only",
       availableIds,
@@ -2313,7 +2334,7 @@ async function runStoredCoverageDryRunOnStartupOnce() {
       stillMissing:recommendation.stillMissing
     }));
   } catch (err) {
-    console.error("STORED COVERAGE DRY RUN V4: falha:", String(err.message || err).slice(0,300));
+    console.error("STORED COVERAGE DRY RUN V5: falha:", String(err.message || err).slice(0,300));
   }
 }
 
