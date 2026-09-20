@@ -375,7 +375,8 @@ async function finishCreditQuery(accountId, queryId, ok, vehicle = null) {
     if (!q.rowCount) throw new Error("Consulta não encontrada.");
     if (q.rows[0].status !== "pending") { await client.query("COMMIT"); return; }
     if (ok) {
-      await client.query("UPDATE vehicle_queries SET status='completed',completed_at=NOW(),result_json=$2::jsonb WHERE id=$1", [queryId, JSON.stringify(vehicle || {})]);
+      const storedVehicle = vehicle && typeof vehicle === "object" ? { ...vehicle, report360: buildVehicle360Report(vehicle) } : { report360: buildVehicle360Report({}) };
+      await client.query("UPDATE vehicle_queries SET status='completed',completed_at=NOW(),result_json=$2::jsonb WHERE id=$1", [queryId, JSON.stringify(storedVehicle)]);
     } else {
       // O registro de refund é a trava idempotente. O saldo só volta a subir
       // quando este queryId recebe seu primeiro estorno efetivo.
