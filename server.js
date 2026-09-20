@@ -2231,6 +2231,34 @@ async function runCredProCatalogMetadataOnce() {
   } catch (err) { console.error("CREDPRO CATALOGO META: falha:", err.message); }
 }
 
+async function runStoredFonteDataShapeAuditOnce() {
+  try {
+    requireDatabase();
+    await pool.query(`CREATE TABLE IF NOT EXISTS admin_one_time_actions (action_key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+    const actionKey = "fontedata-shape-audit-v1";
+    const claimed = await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key", [actionKey]);
+    if (!claimed.rowCount) return;
+    const q = await pool.query(`
+      SELECT result_json FROM (
+        SELECT result_json, created_at FROM admin_provider_retry_audits WHERE provider='fontedata' AND status='success' AND result_json IS NOT NULL
+        UNION ALL
+        SELECT result_json, created_at FROM admin_provider_audits WHERE provider='fontedata' AND result_json IS NOT NULL
+      ) x ORDER BY created_at DESC LIMIT 1
+    `);
+    if (!q.rowCount) return console.log("FONTEDATA SHAPE AUDIT: nenhum resultado armazenado.");
+    const paths = storedFieldNames(q.rows[0].result_json).filter(p => !/token|authorization|api.?key|secret|cpf|cnpj|email|telefone/i.test(p));
+    console.log("FONTEDATA SHAPE AUDIT:", JSON.stringify({
+      apiCallsMade:0,
+      fieldCount:paths.length,
+      fields:paths.slice(0,250),
+      truncated:paths.length > 250,
+      note:"Somente nomes de campos do JSON já salvo; nenhum valor do veículo é registrado."
+    }));
+  } catch (err) {
+    console.error("FONTEDATA SHAPE AUDIT: falha:", String(err.message || err).slice(0,300));
+  }
+}
+
 async function runStoredCoverageDryRunOnStartupOnce() {
   try {
     requireDatabase();
@@ -2456,6 +2484,7 @@ if (!DATABASE_URL) console.warn("DATABASE_URL não configurado. O controle persi
 initDatabase().then(() => {
   const server = runCredProCatalogMetadataOnce();
 runStoredCoverageDryRunOnStartupOnce();
+runStoredFonteDataShapeAuditOnce();
 runFonteDataStoredCoverageOnce();
 app.listen(PORT, () => console.log(`Consulta Veicular 360 ativa na porta ${PORT}. Checkout PIX: Woovi/OpenPix. Créditos: ${pool ? "PostgreSQL" : "indisponível"}.`));
 // Auditoria FonteData permanece manual; nunca é executada automaticamente em deploy/startup.
