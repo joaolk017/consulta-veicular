@@ -1500,43 +1500,37 @@ app.post("/api/pagamento/pix/status", async (req, res) => {
 });
 
 // Teste administrativo isolado da FonteData; não participa do fluxo dos clientes.
-app.post("/api/admin/fontedata-teste", async (req, res) => {
-  if (!enforceSensitiveRateLimit(req, res, "fontedata-teste", 3)) return;
+function sanitizeFonteDataAudit(value, depth = 0) {
+  if (depth > 8 || value === null || value === undefined) return value;
+  if (Array.isArray(value)) return value.slice(0, 100).map((item) => sanitizeFonteDataAudit(item, depth + 1));
+  if (typeof value !== "object") return value;
+  const blocked = /(cpf|cnpj|propriet|owner|nome.*pessoa|pessoa.*nome|endereco|address|telefone|phone|email|e-mail)/i;
+  const out = {};
+  for (const [key, item] of Object.entries(value)) {
+    if (blocked.test(key)) continue;
+    out[key] = sanitizeFonteDataAudit(item, depth + 1);
+  }
+  return out;
+}
+
+app.get("/api/admin/fontedata-auditoria-unica", async (req, res) => {
+  if (!enforceSensitiveRateLimit(req, res, "fontedata-auditoria-unica", 3)) return;
   try {
-    const supplied = String(req.get("X-Admin-Secret") || "").trim();
-    const testToken = String(req.get("X-FonteData-Test-Token") || "").trim();
-    const adminOk = ADMIN_FUNNEL_SECRET && supplied && secureEqual(supplied, ADMIN_FUNNEL_SECRET);
-    const testOk = FONTEDATA_TEST_TOKEN && testToken && secureEqual(testToken, FONTEDATA_TEST_TOKEN);
-    if (!adminOk && !testOk) return res.status(404).json({ error: "Endpoint não encontrado." });
+    const testToken = String(req.get("X-FonteData-Test-Token") || req.query.token || "").trim();
+    if (!FONTEDATA_TEST_TOKEN || !testToken || !secureEqual(testToken, FONTEDATA_TEST_TOKEN)) return res.status(404).json({ error: "Endpoint não encontrado." });
     if (!FONTEDATA_API_KEY) return res.status(503).json({ error: "fontedata_nao_configurada" });
-    const plate = normalizePlate(req.body && req.body.placa);
-    if (!validPlate(plate)) return res.status(400).json({ error: "placa_invalida", mensagem: "Placa inválida." });
-
+    const plate = "DDB0A86";
     requireDatabase();
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS admin_one_time_actions (
-        action_key TEXT PRIMARY KEY,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )
-    `);
+    await pool.query(`CREATE TABLE IF NOT EXISTS admin_one_time_actions (action_key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
     const actionKey = "fontedata-controlled-test:" + plate;
-    const claimed = await pool.query(
-      "INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key",
-      [actionKey]
-    );
-    if (!claimed.rowCount) return res.status(409).json({ error: "teste_ja_utilizado", mensagem: "O teste controlado desta placa já foi utilizado." });
-
-    try {
-      const result = await requestJson("https://app.dabradata.com/api/v1/consulta/consulta-veicular?placa=" + encodeURIComponent(plate), { headers: { "X-API-Key": FONTEDATA_API_KEY } });
-      if (result.status < 200 || result.status >= 300) return res.status(result.status >= 400 && result.status < 500 ? result.status : 502).json({ error: "fontedata_http", status: result.status });
-      return res.json({ ok: true, provider: "fontedata", plate, data: result.data });
-    } catch (providerErr) {
-      console.error("Falha após reservar teste único FonteData:", providerErr.message);
-      throw providerErr;
-    }
+    const claimed = await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key", [actionKey]);
+    if (!claimed.rowCount) return res.status(409).json({ error: "teste_ja_utilizado", mensagem: "A auditoria controlada já foi utilizada." });
+    const result = await requestJson("https://app.dabradata.com/api/v1/consulta/consulta-veicular?placa=" + encodeURIComponent(plate), { headers: { "X-API-Key": FONTEDATA_API_KEY }, timeout: 30000 });
+    if (result.status < 200 || result.status >= 300) return res.status(result.status >= 400 && result.status < 500 ? result.status : 502).json({ error: "fontedata_http", status: result.status });
+    return res.json({ ok: true, provider: "fontedata", plate, data: sanitizeFonteDataAudit(result.data) });
   } catch (err) {
-    console.error("Erro no teste administrativo FonteData:", err.message);
-    return res.status(err.status || 502).json({ error: "fontedata_teste", mensagem: err.message || "Falha na consulta FonteData." });
+    console.error("Erro na auditoria única FonteData:", err.message);
+    return res.status(err.status || 502).json({ error: "fontedata_auditoria", mensagem: err.message || "Falha na consulta FonteData." });
   }
 });
 
