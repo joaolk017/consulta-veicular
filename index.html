@@ -49,20 +49,29 @@
   .hero-card>.report-value,.hero-card>.report-sample{margin-top:8px}
 }
 @media(min-width:901px){
-  .hero-grid{padding:22px 0 52px}
-  .hero-copy{width:min(760px,100%)}
-  .hero h1{font-size:clamp(42px,4.4vw,58px);margin:14px 0 10px}
-  .hero-text{max-width:650px;margin:0 auto 14px}
-  .hero-card{max-width:680px;padding:24px 30px}
-  .hero-card>.title{font-size:27px}
+  .shell{width:min(1320px,calc(100% - 48px))}
+  .top{padding:18px 0 8px}
+  .site-logo{width:min(620px,48vw);max-height:170px}
+  .hero-grid{padding:18px 0 48px}
+  .hero-copy{width:min(1040px,100%)}
+  .hero h1{font-size:clamp(44px,4.2vw,62px);margin:14px 0 10px}
+  .hero-text{max-width:760px;margin:0 auto 14px;font-size:17px}
+  .hero-copy>.hero-infos{justify-content:center}
+  .hero-card{max-width:900px;padding:26px 32px}
+  .hero-card>.title{font-size:29px}
   .hero-card>.sub{font-size:14px}
-  .hero-card>.plate{min-height:82px;font-size:36px}
-  .hero-card>#btn{min-height:62px;font-size:16px}
+  .hero-card>.plate{min-height:86px;font-size:38px}
+  .hero-card>#btn{min-height:64px;font-size:17px}
   .hero-card>#btn+.hero-infos{justify-content:center;text-align:center;font-size:12px}
-  .hero-card>.report-value{margin-top:16px}
-  .report-chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-  .report-chips span{display:flex;align-items:center;justify-content:center;text-align:center;min-height:38px}
   .preview-reassurance span{width:100%;text-align:center}
+  .hero-card>.report-value,.hero-card>.report-sample{margin-top:16px}
+  .report-value,.report-sample{padding:18px}
+  .report-value>b,.sample-head b{font-size:18px}
+  .report-chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+  .report-chips span{display:flex;align-items:center;justify-content:center;text-align:center;min-height:42px;font-size:11px}
+  .sample-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+  .sample-grid div{min-height:62px}
+  .creditbar{max-width:900px}
 }
 @media print{.top,.pill,.hero-text,.notice,.trust,.identity,.footer,.unlock,.overlay,#consultCard{display:none!important}.hero{background:white!important;box-shadow:none}.card{border:0;box-shadow:none;background:white;color:black}.vehicle,.section{background:white;color:black;border-color:#bbb}}
 
