@@ -11,6 +11,7 @@ const PORT = Number(process.env.PORT || 3000);
 
 const FALCON_TOKEN = String(process.env.FALCON_TOKEN || "").trim();
 const FONTEDATA_API_KEY = String(process.env.FONTEDATA_API_KEY || "").trim();
+const FONTEDATA_TEST_TOKEN = String(process.env.FONTEDATA_TEST_TOKEN || "").trim();
 const OPENPIX_APP_ID = String(process.env.OPENPIX_APP_ID || process.env.WOOVI_APP_ID || "").trim();
 const OPENPIX_API_URL = String(process.env.OPENPIX_API_URL || "https://api.woovi.com/api/v1").replace(/\/+$/, "");
 const WOOVI_API_URL = "https://api.woovi.com/api/v1";
@@ -1503,7 +1504,10 @@ app.post("/api/admin/fontedata-teste", async (req, res) => {
   if (!enforceSensitiveRateLimit(req, res, "fontedata-teste", 3)) return;
   try {
     const supplied = String(req.get("X-Admin-Secret") || "").trim();
-    if (!ADMIN_FUNNEL_SECRET || !supplied || !secureEqual(supplied, ADMIN_FUNNEL_SECRET)) return res.status(404).json({ error: "Endpoint não encontrado." });
+    const testToken = String(req.get("X-FonteData-Test-Token") || "").trim();
+    const adminOk = ADMIN_FUNNEL_SECRET && supplied && secureEqual(supplied, ADMIN_FUNNEL_SECRET);
+    const testOk = FONTEDATA_TEST_TOKEN && testToken && secureEqual(testToken, FONTEDATA_TEST_TOKEN);
+    if (!adminOk && !testOk) return res.status(404).json({ error: "Endpoint não encontrado." });
     if (!FONTEDATA_API_KEY) return res.status(503).json({ error: "fontedata_nao_configurada" });
     const plate = normalizePlate(req.body && req.body.placa);
     if (!validPlate(plate)) return res.status(400).json({ error: "placa_invalida", mensagem: "Placa inválida." });
