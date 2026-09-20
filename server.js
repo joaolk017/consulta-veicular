@@ -1611,6 +1611,24 @@ app.post("/api/admin/fontedata-retry-manual", async (req, res) => {
   }
 });
 
+app.get("/api/admin/fontedata-resultado-salvo", async (req, res) => {
+  if (!enforceSensitiveRateLimit(req, res, "fontedata-resultado-salvo", 10)) return;
+  const testToken = String(req.get("X-FonteData-Test-Token") || req.query.token || "").trim();
+  if (!FONTEDATA_TEST_TOKEN || !testToken || !secureEqual(testToken, FONTEDATA_TEST_TOKEN)) return res.status(404).json({ error: "Endpoint não encontrado." });
+  try {
+    requireDatabase();
+    const saved = await pool.query(
+      "SELECT status, duration_ms, http_status, result_json, created_at FROM admin_provider_retry_audits WHERE provider=$1 AND plate=$2 AND status=$3 ORDER BY id DESC LIMIT 1",
+      ["fontedata", "DDB0A86", "success"]
+    );
+    if (!saved.rowCount) return res.status(404).json({ error: "resultado_nao_encontrado" });
+    return res.json({ ok:true, provider:"fontedata", plate:"DDB0A86", ...saved.rows[0] });
+  } catch (err) {
+    console.error("FONTEDATA SAVED RESULT:", err.message);
+    return res.status(500).json({ error:"falha_leitura_resultado" });
+  }
+});
+
 app.get("/api/admin/fontedata-auditoria-unica", async (req, res) => {
   if (!enforceSensitiveRateLimit(req, res, "fontedata-auditoria-unica", 3)) return;
   try {
