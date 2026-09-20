@@ -866,6 +866,31 @@ function recommendCredProModulesFromCoverage(coverage, maxCost = 5) {
   };
 }
 
+function calculatePackageEconomics(apiCostPerConsult = 5) {
+  const rows = Object.values(PACKAGES).map(p => {
+    const revenue = Number(p.amount);
+    const paymentFee = revenue * PAYMENT_FEE_RATE;
+    const apiCost = Number(apiCostPerConsult) * Number(p.credits);
+    const contribution = revenue - paymentFee - apiCost;
+    return {
+      product:p.id,
+      credits:p.credits,
+      revenue:Number(revenue.toFixed(2)),
+      revenuePerConsult:Number((revenue/p.credits).toFixed(2)),
+      apiCost:Number(apiCost.toFixed(2)),
+      paymentFee:Number(paymentFee.toFixed(2)),
+      contribution:Number(contribution.toFixed(2)),
+      contributionPerConsult:Number((contribution/p.credits).toFixed(2)),
+      contributionMarginPercent:Number(((contribution/revenue)*100).toFixed(1))
+    };
+  });
+  return {
+    apiCostPerConsult:Number(Number(apiCostPerConsult).toFixed(2)),
+    rows,
+    note:"Margem de contribuição estimada antes de impostos, anúncios, hospedagem, suporte e outros custos operacionais."
+  };
+}
+
 function paymentProduct(product) {
   return PACKAGES[String(product || "")] || null;
 }
@@ -2196,6 +2221,7 @@ app.post("/api/consulta-completa", async (req, res) => {
       const coverage360 = analyzeVehicle360Coverage(safeVehicle);
       report360.coverage = coverage360;
       report360.credproRecommendation = recommendCredProModulesFromCoverage(coverage360);
+      report360.internalEconomics = calculatePackageEconomics(report360.credproRecommendation.estimatedCost);
       const deliveredVehicle = { ...safeVehicle, report360 };
       await finishCreditQuery(accountId, debit.queryId, true, deliveredVehicle);
       return res.json({ ok:true, paid:true, vehicle:deliveredVehicle, report360, creditosRestantes:debit.balance, price:CONSULTA_SALE_PRICE, currency:"BRL" });
