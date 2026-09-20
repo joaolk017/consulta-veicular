@@ -790,6 +790,39 @@ function buildVehicle360Report(vehicle, providerCoverage = VEHICLE_PROVIDER_COVE
   };
 }
 
+function analyzeVehicle360Coverage(vehicle) {
+  const v = vehicle && typeof vehicle === "object" ? vehicle : {};
+  const i = v.indicators && typeof v.indicators === "object" ? v.indicators : {};
+  const present = value => value !== null && value !== undefined && value !== "";
+  const explicit = value => typeof value === "boolean";
+
+  const checks = [
+    ["Dados básicos", present(v.brand) || present(v.model) || present(v.brandModel)],
+    ["Dados técnicos", !!(v.technical && Object.values(v.technical).some(present))],
+    ["FIPE", !!(v.fipe && Object.values(v.fipe).some(present))],
+    ["Roubo / furto", explicit(i.theft)],
+    ["Leilão", explicit(i.auction) || !!v.auction],
+    ["Sinistro", explicit(i.accidentClaim) || !!v.accidentClaim],
+    ["Gravame", explicit(i.lien) || !!v.lien],
+    ["RENAJUD", explicit(i.renajud)],
+    ["Multas / RENAINF", explicit(i.renainf) || !!(v.debts && present(v.debts.finesCount))],
+    ["IPVA pendente", explicit(i.ipvaPending) || !!(v.debts && explicit(v.debts.ipvaPending))],
+    ["Recall", explicit(i.recall) || (Array.isArray(v.recalls) && v.recalls.length > 0)],
+    ["Histórico de proprietários", !!(v.ownershipHistory && (present(v.ownershipHistory.count) || (Array.isArray(v.ownershipHistory.records) && v.ownershipHistory.records.length > 0)))]
+  ];
+
+  const available = checks.filter(x => x[1]).map(x => x[0]);
+  const missing = checks.filter(x => !x[1]).map(x => x[0]);
+  return {
+    total: checks.length,
+    availableCount: available.length,
+    missingCount: missing.length,
+    available,
+    missing,
+    note: "Cobertura calculada apenas pelos campos efetivamente presentes no relatório. Campo ausente não significa ausência de ocorrência."
+  };
+}
+
 function paymentProduct(product) {
   return PACKAGES[String(product || "")] || null;
 }
@@ -2117,6 +2150,8 @@ app.post("/api/consulta-completa", async (req, res) => {
       }
 
       const report360 = buildVehicle360Report(safeVehicle);
+      const coverage360 = analyzeVehicle360Coverage(safeVehicle);
+      report360.coverage = coverage360;
       const deliveredVehicle = { ...safeVehicle, report360 };
       await finishCreditQuery(accountId, debit.queryId, true, deliveredVehicle);
       return res.json({ ok:true, paid:true, vehicle:deliveredVehicle, report360, creditosRestantes:debit.balance, price:CONSULTA_SALE_PRICE, currency:"BRL" });
