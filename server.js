@@ -2242,9 +2242,13 @@ app.post("/api/consulta-completa", async (req, res) => {
       const report360 = buildVehicle360Report(safeVehicle);
       const coverage360 = analyzeVehicle360Coverage(safeVehicle);
       report360.coverage = coverage360;
-      report360.credproRecommendation = recommendCredProModulesFromCoverage(coverage360);
+      const safeApiCaps = calculateSafeApiCaps(55);
+      // Um crédito representa uma consulta. Usa o menor teto por consulta entre os pacotes,
+      // preservando a margem mesmo quando o crédito veio de um pacote promocional.
+      const conservativeCap = Math.min(...safeApiCaps.rows.map(r => r.maxApiCostPerConsult));
+      report360.credproRecommendation = recommendCredProModulesFromCoverage(coverage360, conservativeCap);
       report360.internalEconomics = calculatePackageEconomics(report360.credproRecommendation.estimatedCost);
-      report360.safeApiCaps = calculateSafeApiCaps(55);
+      report360.safeApiCaps = { ...safeApiCaps, appliedPerConsultCap: conservativeCap };
       const deliveredVehicle = { ...safeVehicle, report360 };
       await finishCreditQuery(accountId, debit.queryId, true, deliveredVehicle);
       return res.json({ ok:true, paid:true, vehicle:deliveredVehicle, report360, creditosRestantes:debit.balance, price:CONSULTA_SALE_PRICE, currency:"BRL" });
