@@ -1930,15 +1930,14 @@ initDatabase().then(() => {
       try {
         if (!pool) return console.log("CREDPRO SANDBOX HISTORY: banco indisponível; teste não executado.");
         await pool.query(`CREATE TABLE IF NOT EXISTS admin_one_time_actions (action_key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
-        const actionKey = "credpro-sandbox-history-query-v1";
+        const actionKey = "credpro-sandbox-history-query-v2";
         const claimed = await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key", [actionKey]);
         if (!claimed.rowCount) return console.log("CREDPRO SANDBOX HISTORY: teste único já executado; nenhuma nova consulta feita.");
         const result = await requestJson(CREDPRO_API_URL + "/v1/pesquisas", {
           method: "POST",
-          headers: { "Authorization": "Bearer " + CREDPRO_TEST_API_KEY, "Content-Type": "application/json" },
-          body: JSON.stringify({ placa: "ABC1D29", itens: ["pesquisa_completa"] }),
+          headers: { "Authorization": "Bearer " + CREDPRO_TEST_API_KEY },
           timeout: 30000
-        });
+        }, { placa: "ABC1D29", itens: ["pesquisa_completa"] });
         const data = result.data || {};
         const safe = JSON.parse(JSON.stringify(data, (key, value) => /token|authorization|api.?key|secret/i.test(key) ? "[REDACTED]" : value));
         console.log("CREDPRO SANDBOX HISTORY:", JSON.stringify({ httpStatus: result.status, resposta: safe }));
