@@ -502,18 +502,93 @@ async function getVehicle(plate) {
   return vehicle;
 }
 
+function firstDefined(obj, keys) {
+  for (const key of keys) {
+    if (obj && obj[key] !== undefined && obj[key] !== null && obj[key] !== "") return obj[key];
+  }
+  return null;
+}
+
+function boolIndicator(vehicle, keys) {
+  const value = firstDefined(vehicle, keys);
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value > 0;
+  if (typeof value === "string") {
+    const v = value.trim().toLowerCase();
+    if (["true","sim","s","1","consta","positivo","com restricao","com restrição"].includes(v)) return true;
+    if (["false","nao","não","n","0","nada consta","negativo","sem restricao","sem restrição"].includes(v)) return false;
+  }
+  return null;
+}
+
+// Whitelist: aproveita somente campos conhecidos do provedor e nunca expõe o JSON bruto.
 function safeVehicleDetails(vehicle, plate) {
+  const fipeRaw = firstDefined(vehicle, ["fipe","tabelaFipe","valorFipe"]);
+  const technicalRaw = firstDefined(vehicle, ["technical","dadosTecnicos","fichaTecnica"]) || {};
+  const documentsRaw = firstDefined(vehicle, ["documents","documentos"]) || {};
+  const restrictionsRaw = firstDefined(vehicle, ["restrictions","restricoes","restrições"]);
+  const restrictions = Array.isArray(restrictionsRaw)
+    ? restrictionsRaw.map(x => typeof x === "string" ? x : firstDefined(x, ["description","descricao","tipo","name","nome"])).filter(Boolean).slice(0,50)
+    : null;
+
+  let fipe = null;
+  if (fipeRaw && typeof fipeRaw === "object") {
+    fipe = {
+      value: firstDefined(fipeRaw, ["value","valor","preco","preço"]),
+      numericValue: firstDefined(fipeRaw, ["numericValue","valorNumerico","valor_numerico"]),
+      code: firstDefined(fipeRaw, ["code","codigo","codigoFipe","codigo_fipe"])
+    };
+  } else if (fipeRaw !== null) {
+    fipe = { value: fipeRaw, numericValue: null, code: null };
+  }
+
   return {
     plate,
-    brand: vehicle.brand || vehicle.marca || null,
-    model: vehicle.model || vehicle.modelo || null,
-    year: vehicle.year || vehicle.ano || vehicle.fabricationYear || vehicle.anoFabricacao || null,
-    modelYear: vehicle.modelYear || vehicle.anoModelo || null,
-    color: vehicle.color || vehicle.cor || null,
-    city: vehicle.city || vehicle.municipio || vehicle.cidade || null,
-    state: vehicle.state || vehicle.uf || null,
-    fuel: vehicle.fuel || vehicle.combustivel || null,
-    type: vehicle.type || vehicle.tipo || vehicle.tipoVeiculo || null
+    brand: firstDefined(vehicle, ["brand","marca"]),
+    model: firstDefined(vehicle, ["model","modelo"]),
+    year: firstDefined(vehicle, ["year","ano","fabricationYear","anoFabricacao"]),
+    modelYear: firstDefined(vehicle, ["modelYear","anoModelo"]),
+    color: firstDefined(vehicle, ["color","cor"]),
+    city: firstDefined(vehicle, ["city","municipio","cidade"]),
+    state: firstDefined(vehicle, ["state","uf"]),
+    fuel: firstDefined(vehicle, ["fuel","combustivel"]),
+    type: firstDefined(vehicle, ["type","tipo","tipoVeiculo"]),
+    renavam: firstDefined(vehicle, ["renavam","RENAVAM"]),
+    chassis: firstDefined(vehicle, ["chassis","chassi"]),
+    status: firstDefined(vehicle, ["status","situacao","situação"]),
+    fipe,
+    indicators: {
+      theft: boolIndicator(vehicle, ["theft","rouboFurto","roubo_furto"]),
+      auction: boolIndicator(vehicle, ["auction","leilao","leilão"]),
+      recall: boolIndicator(vehicle, ["recall"]),
+      renajud: boolIndicator(vehicle, ["renajud","RENAJUD"]),
+      renainf: boolIndicator(vehicle, ["renainf","RENAINF"]),
+      saleCommunication: boolIndicator(vehicle, ["saleCommunication","comunicacaoVenda","comunicacao_venda"]),
+      documentationPending: boolIndicator(vehicle, ["documentationPending","pendenciaDocumental","pendencia_documental"]),
+      rfb: boolIndicator(vehicle, ["rfb","restricaoRfb","restricao_rfb"]),
+      alarm: boolIndicator(vehicle, ["alarm","alarme"]),
+      siniav: boolIndicator(vehicle, ["siniav","SINIAV"]),
+      chassisRemarked: boolIndicator(vehicle, ["chassisRemarked","chassiRemarcado","remarcacaoChassi"])
+    },
+    restrictions,
+    technical: {
+      engine: firstDefined(technicalRaw, ["engine","motor"]),
+      transmission: firstDefined(technicalRaw, ["transmission","cambio","câmbio"]),
+      displacement: firstDefined(technicalRaw, ["displacement","cilindrada"]),
+      power: firstDefined(technicalRaw, ["power","potencia","potência"]),
+      axles: firstDefined(technicalRaw, ["axles","eixos"]),
+      bodyType: firstDefined(technicalRaw, ["bodyType","carroceria"]),
+      category: firstDefined(technicalRaw, ["category","categoria"]),
+      species: firstDefined(technicalRaw, ["species","especie","espécie"]),
+      grossWeight: firstDefined(technicalRaw, ["grossWeight","pesoBrutoTotal"]),
+      loadCapacity: firstDefined(technicalRaw, ["loadCapacity","capacidadeCarga"]),
+      maxTraction: firstDefined(technicalRaw, ["maxTraction","tracaoMaxima","traçãoMáxima"]),
+      passengers: firstDefined(technicalRaw, ["passengers","passageiros"])
+    },
+    documents: {
+      crvIssuedAt: firstDefined(documentsRaw, ["crvIssuedAt","emissaoCrv","emissao_crv"]),
+      crlvIssuedAt: firstDefined(documentsRaw, ["crlvIssuedAt","emissaoCrlv","emissao_crlv"])
+    }
   };
 }
 
