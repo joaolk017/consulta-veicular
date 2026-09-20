@@ -1578,38 +1578,37 @@ app.get("/api/admin/fontedata-retry-status", async (req, res) => {
 });
 
 app.post("/api/admin/fontedata-retry-manual", async (req, res) => {
-  // Preparado para diagnóstico, mas deliberadamente bloqueado até autorização explícita.
   if (!enforceSensitiveRateLimit(req, res, "fontedata-retry-manual", 2)) return;
   const testToken = String(req.get("X-FonteData-Test-Token") || "").trim();
   if (!FONTEDATA_TEST_TOKEN || !testToken || !secureEqual(testToken, FONTEDATA_TEST_TOKEN)) return res.status(404).json({ error: "Endpoint não encontrado." });
+  if (!FONTEDATA_API_KEY) return res.status(503).json({ error: "fontedata_nao_configurada" });
+  const plate = "DDB0A86";
   requireDatabase();
   await pool.query(`CREATE TABLE IF NOT EXISTS admin_provider_retry_audits (
-    id BIGSERIAL PRIMARY KEY,
-    provider TEXT NOT NULL,
-    plate TEXT NOT NULL,
-    status TEXT NOT NULL,
-    started_at TIMESTAMPTZ,
-    finished_at TIMESTAMPTZ,
-    duration_ms INTEGER,
-    http_status INTEGER,
-    error_message TEXT,
-    result_json JSONB,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id BIGSERIAL PRIMARY KEY, provider TEXT NOT NULL, plate TEXT NOT NULL, status TEXT NOT NULL,
+    started_at TIMESTAMPTZ, finished_at TIMESTAMPTZ, duration_ms INTEGER, http_status INTEGER,
+    error_message TEXT, result_json JSONB, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )`);
-  const latest = await pool.query(
-    "SELECT status, started_at, finished_at, duration_ms, http_status, error_message, created_at FROM admin_provider_retry_audits WHERE provider=$1 AND plate=$2 ORDER BY id DESC LIMIT 1",
-    ["fontedata", "DDB0A86"]
-  );
-  return res.status(423).json({
-    error: "retry_bloqueado",
-    provider: "fontedata",
-    plate: "DDB0A86",
-    timeoutMs: 120000,
-    diagnosticReady: true,
-    fields: ["status", "started_at", "finished_at", "duration_ms", "http_status", "error_message", "result_json"],
-    latest: latest.rows[0] || null,
-    mensagem: "Diagnóstico preparado; retry permanece bloqueado e nenhuma chamada ao provedor foi realizada."
-  });
+  const guardKey = "fontedata-authorized-retry-2:" + plate;
+  const guard = await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key", [guardKey]);
+  if (!guard.rowCount) return res.status(409).json({ error: "retry_ja_utilizado", mensagem: "A segunda tentativa autorizada já foi utilizada." });
+  const started = Date.now();
+  const audit = await pool.query("INSERT INTO admin_provider_retry_audits(provider,plate,status,started_at) VALUES($1,$2,$3,NOW()) RETURNING id", ["fontedata",plate,"started"]);
+  const id = audit.rows[0].id;
+  try {
+    const result = await requestJson("https://app.dabradata.com/api/v1/consulta/consulta-veicular?placa=" + encodeURIComponent(plate), { headers: { "X-API-Key": FONTEDATA_API_KEY }, timeout: 120000 });
+    const duration = Date.now() - started;
+    const safe = sanitizeFonteDataAudit(result.data);
+    const status = result.status >= 200 && result.status < 300 ? "success" : "http_error";
+    await pool.query("UPDATE admin_provider_retry_audits SET status=$1,finished_at=NOW(),duration_ms=$2,http_status=$3,result_json=$4::jsonb WHERE id=$5", [status,duration,result.status,JSON.stringify(safe || {}),id]);
+    if (status !== "success") return res.status(502).json({ error:"fontedata_http", status:result.status, durationMs:duration });
+    return res.json({ ok:true, provider:"fontedata", plate, durationMs:duration, httpStatus:result.status, data:safe });
+  } catch (err) {
+    const duration = Date.now() - started;
+    await pool.query("UPDATE admin_provider_retry_audits SET status=$1,finished_at=NOW(),duration_ms=$2,error_message=$3 WHERE id=$4", ["timeout_or_error",duration,String(err.message || "erro").slice(0,500),id]);
+    console.error("FONTEDATA RETRY: falha:", err.message);
+    return res.status(err.status || 502).json({ error:"fontedata_retry", durationMs:duration, mensagem:err.message || "Falha na consulta FonteData." });
+  }
 });
 
 app.get("/api/admin/fontedata-auditoria-unica", async (req, res) => {
