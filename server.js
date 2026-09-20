@@ -790,6 +790,31 @@ function buildVehicle360Report(vehicle, providerCoverage = VEHICLE_PROVIDER_COVE
   };
 }
 
+function detectProviderCoverageFromStoredPayload(payload) {
+  const keys = new Set();
+  const walk = (v, prefix="", depth=0) => {
+    if (depth > 7 || v == null) return;
+    if (Array.isArray(v)) return v.slice(0,3).forEach(x => walk(x, prefix+"[]", depth+1));
+    if (typeof v !== "object") return;
+    for (const [k,val] of Object.entries(v)) {
+      const path = (prefix ? prefix+"."+k : k).toLowerCase();
+      keys.add(path); walk(val,path,depth+1);
+    }
+  };
+  walk(payload);
+  const hasAny = terms => [...keys].some(k => terms.some(t => k.includes(t)));
+  return {
+    "Gravame":hasAny(["gravame","financ","alienacao"]),
+    "Leilão":hasAny(["leilao","auction"]),
+    "Sinistro":hasAny(["sinistro","indenizacao","perda_total"]),
+    "Multas / RENAINF":hasAny(["multa","renainf","debito"]),
+    "Recall":hasAny(["recall"]),
+    "Histórico de proprietários":hasAny(["historico_propriet","proprietario"]),
+    "Roubo / furto":hasAny(["roubo","furto"]),
+    "RENAJUD":hasAny(["renajud","judicial"])
+  };
+}
+
 function analyzeVehicle360Coverage(vehicle) {
   const v = vehicle && typeof vehicle === "object" ? vehicle : {};
   const i = v.indicators && typeof v.indicators === "object" ? v.indicators : {};
@@ -2254,8 +2279,10 @@ app.post("/api/consulta-completa", async (req, res) => {
             ORDER BY created_at DESC LIMIT 1
           `, [plate]);
           if (fonteSaved.rowCount) {
-            const fonteVehicle = normalizeFonteDataVehicle(fonteSaved.rows[0].result_json, plate);
+            const storedFontePayload = fonteSaved.rows[0].result_json;
+            const fonteVehicle = normalizeFonteDataVehicle(storedFontePayload, plate);
             safeVehicle = mergeVehicleReports(safeVehicle, fonteVehicle);
+            safeVehicle._storedProviderCoverage = detectProviderCoverageFromStoredPayload(storedFontePayload);
           }
         } catch (mergeErr) {
           console.warn("Relatório 360: FonteData salva não pôde ser combinada:", mergeErr.message);
@@ -2264,6 +2291,14 @@ app.post("/api/consulta-completa", async (req, res) => {
 
       const report360 = buildVehicle360Report(safeVehicle);
       const coverage360 = analyzeVehicle360Coverage(safeVehicle);
+      const storedCoverage = safeVehicle._storedProviderCoverage || {};
+      if (Array.isArray(coverage360.missing)) {
+        coverage360.missing = coverage360.missing.filter(group => storedCoverage[group] !== true);
+        coverage360.available = [...new Set([...(coverage360.available || []), ...Object.keys(storedCoverage).filter(k => storedCoverage[k] === true)])];
+        coverage360.availableCount = coverage360.available.length;
+        coverage360.missingCount = coverage360.missing.length;
+      }
+      delete safeVehicle._storedProviderCoverage;
       report360.coverage = coverage360;
       const safeApiCaps = calculateSafeApiCaps(55);
       // Um crédito representa uma consulta. Usa o menor teto por consulta entre os pacotes,
