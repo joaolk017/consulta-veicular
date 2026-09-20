@@ -1499,6 +1499,61 @@ app.post("/api/pagamento/pix/status", async (req, res) => {
   }
 });
 
+// Normaliza somente campos veiculares úteis já confirmados no retorno da FonteData.
+// Não inclui documento do proprietário/faturado e não faz nova chamada ao provedor.
+function normalizeFonteDataVehicle(payload, fallbackPlate = "") {
+  const root = payload && typeof payload === "object" ? payload : {};
+  const v = root.veiculo && typeof root.veiculo === "object" ? root.veiculo : root;
+  const fipe = v.fipe && typeof v.fipe === "object" ? v.fipe : {};
+
+  return {
+    plate: String(v.placa || fallbackPlate || "").trim().toUpperCase() || null,
+    brand: v.marca || fipe.marcaFipe || null,
+    model: v.modelo || fipe.modeloFipe || null,
+    fabricationYear: v.anoFabricacao || null,
+    modelYear: v.anoModelo || fipe.anoModelo || null,
+    color: v.cor || null,
+    city: v.municipio || null,
+    state: v.uf || null,
+    fuel: v.combustivel || fipe.combustivel || null,
+    type: v.tipo || null,
+    renavam: v.renavam || null,
+    chassis: v.chassi || null,
+    status: v.situacaoVeiculo || null,
+    origin: v.procedenciaVeiculo || null,
+    category: v.categoria || null,
+    species: v.especie || null,
+    fipe: {
+      value: fipe.valor || null,
+      numericValue: Number.isFinite(Number(fipe.valorNumerico)) ? Number(fipe.valorNumerico) : null,
+      code: fipe.codigoFipe || null,
+      referenceMonth: fipe.mesReferencia || null,
+      brand: fipe.marcaFipe || null,
+      model: fipe.modeloFipe || null
+    },
+    technical: {
+      engine: v.numeroMotor || null,
+      transmission: v.numeroCambio || null,
+      displacement: v.cilindrada || null,
+      power: v.potencia ?? null,
+      axles: v.numeroEixos ?? null,
+      bodyType: v.tipoCarroceria || null,
+      grossWeight: v.pesoBrutoTotal ?? null,
+      loadCapacity: v.capacidaDeCarga ?? v.capacidadeMaximaCarga ?? null,
+      maxTraction: v.capacidadeMaximaTracao ?? null,
+      passengers: v.capacidadedePassageiros ?? null
+    },
+    documents: {
+      crvIssuedAt: v.dataEmissaoCrv || null,
+      crlvIssuedAt: v.dataEmissaoCrlv || null
+    },
+    restrictions: Array.isArray(v.restricoes) ? v.restricoes : null,
+    indicators: v.indicadores && typeof v.indicadores === "object" ? v.indicadores : null,
+    chassisRemarked: v.indicadorRemarcacaoChassi ?? null,
+    chassisRemarkDescription: v.descricaoRemarcacaoChassi || null
+  };
+}
+
 // Teste administrativo isolado da FonteData; não participa do fluxo dos clientes.
 function sanitizeFonteDataAudit(value, depth = 0) {
   if (depth > 8 || value === null || value === undefined) return value;
