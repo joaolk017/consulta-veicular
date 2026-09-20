@@ -982,11 +982,14 @@ function optimizeComplete360MultiProduct(options = {}) {
 
   const dominates = (a,b) => {
     const ac=new Set(a.covers), bc=new Set(b.covers);
+    // A só domina B quando cobre TUDO que B cobre pelo mesmo preço ou menos.
+    // Um módulo barato de um único grupo nunca elimina outro módulo necessário
+    // para aumentar a cobertura total.
     return a.price <= b.price && [...bc].every(x=>ac.has(x)) &&
       (a.price < b.price || ac.size > bc.size);
   };
   const dominated = products.filter((p,i)=>products.some((q,j)=>i!==j && dominates(q,p)))
-    .map(p=>({provider:p.provider,item:p.item,price:p.price,reason:"dominated_by_cheaper_or_broader_product"}));
+    .map(p=>({provider:p.provider,item:p.item,price:p.price,reason:"fully_covered_by_cheaper_or_broader_product"}));
   const candidates = products.filter(p=>!dominated.some(d=>d.provider===p.provider&&d.item===p.item));
 
   let best=null;
@@ -998,11 +1001,11 @@ function optimizeComplete360MultiProduct(options = {}) {
       p.covers.forEach(g=>target.has(g)&&covered.add(g));
     }
     const missing=groups.filter(g=>!covered.has(g));
-    const score={complete:missing.length===0,covered:covered.size,cost};
-    if(!best || (score.complete&&!best.complete) ||
-       (score.complete===best.complete && score.covered>best.covered) ||
-       (score.complete===best.complete && score.covered===best.covered && score.cost<best.cost)){
-      best={...score,selected,covered,missing};
+    const candidate={complete:missing.length===0,coveredCount:covered.size,cost,selected,covered,missing};
+    if(!best ||
+       candidate.coveredCount > best.coveredCount ||
+       (candidate.coveredCount === best.coveredCount && candidate.cost < best.cost)){
+      best=candidate;
     }
   }
 
@@ -1017,7 +1020,7 @@ function optimizeComplete360MultiProduct(options = {}) {
     mode:"complete_360_multi_product_optimizer_v2",
     apiCallsMade:0,
     complete,
-    coveredCount:best?.covered?.size||0,
+    coveredCount:best?.coveredCount||0,
     totalGroups:groups.length,
     missingIds:best?.missing||groups,
     selected:(best?.selected||[]).map(p=>({provider:p.provider,item:p.item,price:p.price,covers:p.covers})),
@@ -1038,10 +1041,10 @@ async function runComplete360MultiProductOptimizerOnce(){
   try{
     requireDatabase();
     await pool.query(`CREATE TABLE IF NOT EXISTS admin_one_time_actions (action_key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
-    const key="complete-360-multiproduct-optimizer-v2";
+    const key="complete-360-multiproduct-optimizer-v2-fix1";
     const claimed=await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key",[key]);
     if(!claimed.rowCount)return;
-    console.log("COMPLETE 360 OPTIMIZER V2:",JSON.stringify(optimizeComplete360MultiProduct()));
+    console.log("COMPLETE 360 OPTIMIZER V2 FIX1:",JSON.stringify(optimizeComplete360MultiProduct()));
   }catch(err){
     console.error("COMPLETE 360 OPTIMIZER V2: falha:",String(err.message||err).slice(0,300));
   }
