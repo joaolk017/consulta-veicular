@@ -1554,6 +1554,23 @@ function normalizeFonteDataVehicle(payload, fallbackPlate = "") {
   };
 }
 
+// Lista apenas nomes de campos de um relatório já persistido.
+// Não inclui valores e não consulta nenhum provedor externo.
+function storedFieldNames(value, prefix = "", depth = 0, out = []) {
+  if (depth > 6 || value === null || value === undefined) return out;
+  if (Array.isArray(value)) {
+    if (value.length) storedFieldNames(value[0], prefix, depth + 1, out);
+    return out;
+  }
+  if (typeof value !== "object") return out;
+  for (const [key, item] of Object.entries(value)) {
+    const field = prefix ? prefix + "." + key : key;
+    out.push(field);
+    storedFieldNames(item, field, depth + 1, out);
+  }
+  return out;
+}
+
 // Teste administrativo isolado da FonteData; não participa do fluxo dos clientes.
 function sanitizeFonteDataAudit(value, depth = 0) {
   if (depth > 8 || value === null || value === undefined) return value;
