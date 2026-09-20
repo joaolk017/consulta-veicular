@@ -2906,6 +2906,7 @@ app.use(express.static(path.join(__dirname), {
 
 app.use((req, res) => {
   const notFound = path.join(__dirname, "404.html");
+  res.set("X-Robots-Tag", "noindex, follow, nosnippet");
   res.status(404).sendFile(notFound, err => {
     if (err) res.status(404).type("text/plain").send("Página não encontrada.");
   });
