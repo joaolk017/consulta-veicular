@@ -2865,6 +2865,22 @@ app.get("/preview-social.jpg", async (req, res) => {
   }
 });
 
+// Páginas descontinuadas: informa explicitamente aos buscadores que o conteúdo foi removido.
+// Mantemos 410 em vez de redirecionar para a home para evitar soft-404 e sinais SEO ambíguos.
+const REMOVED_PUBLIC_PATHS = new Set([
+  "/consulta-cnpj",
+  "/consulta-fipe",
+  "/simulador-financiamento",
+  "/custo-mensal-veiculo"
+]);
+app.use((req, res, next) => {
+  const pathname = String(req.path || "/").toLowerCase().replace(/\/+$/, "") || "/";
+  if (!REMOVED_PUBLIC_PATHS.has(pathname)) return next();
+  res.set("Cache-Control", "public, max-age=3600");
+  res.set("X-Robots-Tag", "noindex, nofollow");
+  return res.status(410).type("text/plain; charset=utf-8").send("Esta página foi removida permanentemente.");
+});
+
 app.use(express.static(path.join(__dirname), {
   dotfiles: "deny",
   index: "index.html",
