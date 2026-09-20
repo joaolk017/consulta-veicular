@@ -2070,6 +2070,42 @@ app.post("/api/admin/fontedata-retry-manual", async (req, res) => {
   }
 });
 
+app.get("/api/admin/fontedata-cobertura-salva", async (req, res) => {
+  if (!enforceSensitiveRateLimit(req, res, "fontedata-cobertura-salva", 10)) return;
+  const testToken = String(req.get("X-FonteData-Test-Token") || req.query.token || "").trim();
+  if (!FONTEDATA_TEST_TOKEN || !testToken || !secureEqual(testToken, FONTEDATA_TEST_TOKEN)) return res.status(404).json({ error:"Endpoint não encontrado." });
+  try {
+    requireDatabase();
+    const saved = await pool.query(`
+      SELECT result_json, created_at FROM (
+        SELECT result_json, created_at FROM admin_provider_retry_audits
+          WHERE provider='fontedata' AND status='success' AND result_json IS NOT NULL
+        UNION ALL
+        SELECT result_json, created_at FROM admin_provider_audits
+          WHERE provider='fontedata' AND result_json IS NOT NULL
+      ) x ORDER BY created_at DESC LIMIT 1
+    `);
+    if (!saved.rowCount) return res.status(404).json({ error:"resultado_nao_encontrado" });
+    const detected = detectProviderCoverageFromStoredPayload(saved.rows[0].result_json);
+    const available = Object.keys(detected).filter(k => detected[k] === true);
+    const missing = Object.keys(detected).filter(k => detected[k] !== true);
+    const safeApiCaps = calculateSafeApiCaps(55);
+    const cap = Math.min(...safeApiCaps.rows.map(r => r.maxApiCostPerConsult));
+    return res.json({
+      ok:true,
+      mode:"stored_read_only",
+      provider:"fontedata",
+      apiCallsMade:0,
+      coverage:{ available, missing },
+      credproDryRun:recommendCredProModulesFromCoverage({ missing }, cap),
+      note:"Usa apenas resultado FonteData já armazenado no PostgreSQL; não chama provedores e não consome saldo."
+    });
+  } catch (err) {
+    console.error("FONTEDATA STORED COVERAGE:", err.message);
+    return res.status(500).json({ error:"falha_leitura_cobertura" });
+  }
+});
+
 app.get("/api/admin/fontedata-resultado-salvo", async (req, res) => {
   if (!enforceSensitiveRateLimit(req, res, "fontedata-resultado-salvo", 10)) return;
   const testToken = String(req.get("X-FonteData-Test-Token") || req.query.token || "").trim();
