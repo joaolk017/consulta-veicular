@@ -1531,15 +1531,15 @@ async function runFonteDataControlledAuditOnce() {
     const actionKey = "fontedata-controlled-test:" + plate;
     const claimed = await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key", [actionKey]);
     if (!claimed.rowCount) return console.log("FONTEDATA AUDIT: teste único já utilizado; nenhuma nova chamada feita.");
-    const result = await requestJson("https://app.dabradata.com/api/v1/consulta/consulta-veicular?placa=" + encodeURIComponent(plate), { headers: { "X-API-Key": FONTEDATA_API_KEY }, timeout: 30000 });
+    const result = await requestJson("https://app.dabradata.com/api/v1/consulta/consulta-veicular?placa=" + encodeURIComponent(plate), { headers: { "X-API-Key": FONTEDATA_API_KEY }, timeout: 120000 });
     const safeData = sanitizeFonteDataAudit(result.data);
     await pool.query(
       "INSERT INTO admin_provider_audits(action_key, provider, plate, result_json, http_status) VALUES($1,$2,$3,$4::jsonb,$5) ON CONFLICT(action_key) DO NOTHING",
       [actionKey, "fontedata", plate, JSON.stringify(safeData || {}), Number(result.status || 0)]
     );
-    console.log("FONTEDATA AUDIT: execução única concluída e resposta sanitizada armazenada. HTTP", result.status);
+    console.log("FONTEDATA AUDIT: status=sucesso; resposta sanitizada armazenada. HTTP", result.status);
   } catch (err) {
-    console.error("FONTEDATA AUDIT: falha na execução única:", err.message);
+    console.error("FONTEDATA AUDIT: status=timeout_or_error; detalhe:", err.message);
   }
 }
 
@@ -1555,7 +1555,7 @@ app.get("/api/admin/fontedata-auditoria-unica", async (req, res) => {
     const actionKey = "fontedata-controlled-test:" + plate;
     const claimed = await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key", [actionKey]);
     if (!claimed.rowCount) return res.status(409).json({ error: "teste_ja_utilizado", mensagem: "A auditoria controlada já foi utilizada." });
-    const result = await requestJson("https://app.dabradata.com/api/v1/consulta/consulta-veicular?placa=" + encodeURIComponent(plate), { headers: { "X-API-Key": FONTEDATA_API_KEY }, timeout: 30000 });
+    const result = await requestJson("https://app.dabradata.com/api/v1/consulta/consulta-veicular?placa=" + encodeURIComponent(plate), { headers: { "X-API-Key": FONTEDATA_API_KEY }, timeout: 120000 });
     if (result.status < 200 || result.status >= 300) return res.status(result.status >= 400 && result.status < 500 ? result.status : 502).json({ error: "fontedata_http", status: result.status });
     return res.json({ ok: true, provider: "fontedata", plate, data: sanitizeFonteDataAudit(result.data) });
   } catch (err) {
