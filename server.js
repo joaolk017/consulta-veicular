@@ -1543,6 +1543,21 @@ async function runFonteDataControlledAuditOnce() {
   }
 }
 
+app.get("/api/admin/fontedata-retry-status", async (req, res) => {
+  if (!enforceSensitiveRateLimit(req, res, "fontedata-retry-status", 10)) return;
+  const testToken = String(req.get("X-FonteData-Test-Token") || req.query.token || "").trim();
+  if (!FONTEDATA_TEST_TOKEN || !testToken || !secureEqual(testToken, FONTEDATA_TEST_TOKEN)) return res.status(404).json({ error: "Endpoint não encontrado." });
+  return res.json({
+    ok: true,
+    provider: "fontedata",
+    plate: "DDB0A86",
+    retryEnabled: false,
+    timeoutMs: 120000,
+    mode: "manual_only",
+    mensagem: "Segunda tentativa bloqueada. Nenhuma chamada ao provedor é feita por este endpoint."
+  });
+});
+
 app.get("/api/admin/fontedata-auditoria-unica", async (req, res) => {
   if (!enforceSensitiveRateLimit(req, res, "fontedata-auditoria-unica", 3)) return;
   try {
