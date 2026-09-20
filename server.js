@@ -823,6 +823,26 @@ function analyzeVehicle360Coverage(vehicle) {
   };
 }
 
+function recommendCredProModulesFromCoverage(coverage) {
+  const missing = new Set(coverage && Array.isArray(coverage.missing) ? coverage.missing : []);
+  const modules = [];
+  const add = (item, reason) => modules.push({ item, reason });
+
+  if (missing.has("Leilão")) add("leilao_completo", "Complementar indicador e detalhes de leilão.");
+  if (missing.has("Sinistro")) add("sinistro", "Complementar indícios de sinistro.");
+  if (missing.has("Gravame")) add("gravame", "Complementar situação de gravame.");
+  if (missing.has("RENAJUD") || missing.has("Multas / RENAINF")) add("renajud", "Complementar restrições e registros relacionados quando disponíveis.");
+  if (missing.has("Recall")) add("recall", "Complementar campanhas de recall.");
+  if (missing.has("Histórico de proprietários")) add("historico_proprietarios", "Complementar histórico quando o produto contratado disponibilizar esse dado.");
+
+  return {
+    mode: "recommendation_only",
+    apiCallsMade: 0,
+    modules,
+    note: "Lista calculada somente a partir dos grupos ausentes. Não executa CredPro e não consome saldo."
+  };
+}
+
 function paymentProduct(product) {
   return PACKAGES[String(product || "")] || null;
 }
@@ -2152,6 +2172,7 @@ app.post("/api/consulta-completa", async (req, res) => {
       const report360 = buildVehicle360Report(safeVehicle);
       const coverage360 = analyzeVehicle360Coverage(safeVehicle);
       report360.coverage = coverage360;
+      report360.credproRecommendation = recommendCredProModulesFromCoverage(coverage360);
       const deliveredVehicle = { ...safeVehicle, report360 };
       await finishCreditQuery(accountId, debit.queryId, true, deliveredVehicle);
       return res.json({ ok:true, paid:true, vehicle:deliveredVehicle, report360, creditosRestantes:debit.balance, price:CONSULTA_SALE_PRICE, currency:"BRL" });
