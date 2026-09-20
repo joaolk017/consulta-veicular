@@ -1879,6 +1879,28 @@ app.get("/api/admin/credpro-sandbox-catalogo", async (req, res) => {
   }
 });
 
+async function runCredProCatalogMetadataOnce() {
+  if (String(process.env.CREDPRO_INSPECT_CATALOG_METADATA_ONCE || "").trim() !== "1") return;
+  if (!CREDPRO_TEST_API_KEY || !CREDPRO_TEST_API_KEY.startsWith("cpk_test_")) return console.warn("CREDPRO CATALOGO META: sandbox não configurado.");
+  try {
+    requireDatabase();
+    await pool.query(\`CREATE TABLE IF NOT EXISTS admin_one_time_actions (action_key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())\`);
+    const actionKey = "credpro-catalog-metadata-v1";
+    const claimed = await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key", [actionKey]);
+    if (!claimed.rowCount) return console.log("CREDPRO CATALOGO META: inspeção já executada; nenhuma nova chamada feita.");
+    const result = await requestJson(CREDPRO_API_URL + "/v1/pesquisas/itens", { headers: { "Authorization": "Bearer " + CREDPRO_TEST_API_KEY }, timeout: 30000 });
+    const items = Array.isArray(result.data?.itens) ? result.data.itens : [];
+    const safe = items.map(item => ({
+      codigo: item?.codigo || null,
+      nome: item?.nome || null,
+      preco: item?.preco ?? item?.valor ?? item?.preco_reais ?? item?.valor_reais ?? null,
+      creditos: item?.creditos ?? item?.custo_creditos ?? null,
+      campos: item && typeof item === "object" ? Object.keys(item).filter(k => !/token|authorization|api.?key|secret/i.test(k)).sort() : []
+    }));
+    console.log("CREDPRO CATALOGO META:", JSON.stringify({ httpStatus: result.status, sandbox: result.data?.sandbox === true, itens: safe }));
+  } catch (err) { console.error("CREDPRO CATALOGO META: falha:", err.message); }
+}
+
 app.post("/api/consulta-completa", async (req, res) => {
   if (!enforceSensitiveRateLimit(req, res, "consulta-completa", 30)) return;
   try {
@@ -1973,7 +1995,8 @@ if (!PAYMENT_SIGNING_SECRET) console.warn("PAYMENT_SIGNING_SECRET não configura
 if (!DATABASE_URL) console.warn("DATABASE_URL não configurado. O controle persistente de créditos ficará indisponível.");
 
 initDatabase().then(() => {
-  const server = app.listen(PORT, () => console.log(`Consulta Veicular 360 ativa na porta ${PORT}. Checkout PIX: Woovi/OpenPix. Créditos: ${pool ? "PostgreSQL" : "indisponível"}.`));
+  const server = runCredProCatalogMetadataOnce();
+app.listen(PORT, () => console.log(`Consulta Veicular 360 ativa na porta ${PORT}. Checkout PIX: Woovi/OpenPix. Créditos: ${pool ? "PostgreSQL" : "indisponível"}.`));
 // Auditoria FonteData permanece manual; nunca é executada automaticamente em deploy/startup.
 
   // Validação passiva de uso único do catálogo CredPro Sandbox.
