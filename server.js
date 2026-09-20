@@ -1901,6 +1901,54 @@ async function runCredProCatalogMetadataOnce() {
   } catch (err) { console.error("CREDPRO CATALOGO META: falha:", err.message); }
 }
 
+async function runFonteDataStoredCoverageOnce() {
+  if (String(process.env.FONTEDATA_STORED_COVERAGE_ONCE || "").trim() !== "1") return;
+  try {
+    requireDatabase();
+    await pool.query(`CREATE TABLE IF NOT EXISTS admin_one_time_actions (action_key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+    const actionKey = "fontedata-stored-coverage-v1";
+    const claimed = await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key", [actionKey]);
+    if (!claimed.rowCount) return console.log("FONTEDATA COVERAGE: inspeção já executada.");
+    const q = await pool.query(`
+      SELECT result_json FROM (
+        SELECT result_json, created_at FROM admin_provider_retry_audits WHERE provider='fontedata' AND status='success' AND result_json IS NOT NULL
+        UNION ALL
+        SELECT result_json, created_at FROM admin_provider_audits WHERE provider='fontedata' AND result_json IS NOT NULL
+      ) x ORDER BY created_at DESC LIMIT 1
+    `);
+    if (!q.rowCount) return console.log("FONTEDATA COVERAGE: nenhum resultado armazenado.");
+    const root = q.rows[0].result_json || {};
+    const keys = new Set();
+    const walk = (v, prefix="", depth=0) => {
+      if (depth > 7 || v == null) return;
+      if (Array.isArray(v)) return v.slice(0,3).forEach((x,i)=>walk(x, prefix+"[]", depth+1));
+      if (typeof v !== "object") return;
+      for (const [k,val] of Object.entries(v)) {
+        const p = prefix ? prefix+"."+k : k;
+        keys.add(p.toLowerCase());
+        walk(val,p,depth+1);
+      }
+    };
+    walk(root);
+    const terms = {
+      gravame:["gravame","financ","alienacao"],
+      leilao:["leilao","auction"],
+      sinistro:["sinistro","indenizacao","perda_total"],
+      multas:["multa","renainf","debito"],
+      recall:["recall"],
+      proprietarios:["proprietario","historico_propriet"],
+      roubo_furto:["roubo","furto"],
+      renajud:["renajud","judicial"]
+    };
+    const coverage = {};
+    for (const [name, needles] of Object.entries(terms)) {
+      const matches = [...keys].filter(k => needles.some(n => k.includes(n))).slice(0,12);
+      coverage[name] = { encontrado: matches.length > 0, caminhos: matches };
+    }
+    console.log("FONTEDATA COVERAGE:", JSON.stringify(coverage));
+  } catch (err) { console.error("FONTEDATA COVERAGE: falha:", err.message); }
+}
+
 app.post("/api/consulta-completa", async (req, res) => {
   if (!enforceSensitiveRateLimit(req, res, "consulta-completa", 30)) return;
   try {
@@ -1996,6 +2044,7 @@ if (!DATABASE_URL) console.warn("DATABASE_URL não configurado. O controle persi
 
 initDatabase().then(() => {
   const server = runCredProCatalogMetadataOnce();
+runFonteDataStoredCoverageOnce();
 app.listen(PORT, () => console.log(`Consulta Veicular 360 ativa na porta ${PORT}. Checkout PIX: Woovi/OpenPix. Créditos: ${pool ? "PostgreSQL" : "indisponível"}.`));
 // Auditoria FonteData permanece manual; nunca é executada automaticamente em deploy/startup.
 
