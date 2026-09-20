@@ -1868,7 +1868,9 @@ app.get("/api/admin/credpro-sandbox-catalogo", async (req, res) => {
     const itens = Array.isArray(data.itens) ? data.itens.map(item => ({
       codigo: item && item.codigo,
       nome: item && item.nome,
-      inclui: item && Array.isArray(item.inclui) ? item.inclui : undefined
+      inclui: item && Array.isArray(item.inclui) ? item.inclui : undefined,
+      preco: item && (item.preco ?? item.valor ?? item.preco_reais ?? item.valor_reais ?? null),
+      creditos: item && (item.creditos ?? item.custo_creditos ?? null)
     })) : [];
     return res.json({ ok: true, provider: "credpro", sandbox: data.sandbox === true, itemCount: itens.length, itens });
   } catch (err) {
