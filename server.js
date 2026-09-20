@@ -1764,6 +1764,34 @@ initDatabase().then(() => {
     }, 5000);
   }
 
+  // Exporta uma única vez apenas a estrutura sanitizada do resultado FonteData já salvo.
+  // Não chama o provedor e não consome créditos.
+  if (String(process.env.FONTEDATA_LOG_SAVED_SUMMARY_ONCE || "").trim() === "1") {
+    setTimeout(async () => {
+      try {
+        const saved = await pool.query(
+          "SELECT result_json, duration_ms, http_status FROM admin_provider_retry_audits WHERE provider=$1 AND plate=$2 AND status=$3 ORDER BY id DESC LIMIT 1",
+          ["fontedata", "DDB0A86", "success"]
+        );
+        if (!saved.rowCount) return console.log("FONTEDATA SAVED SUMMARY: nenhum resultado success encontrado.");
+        const data = sanitizeFonteDataAudit(saved.rows[0].result_json || {});
+        const summarize = (v, depth = 0) => {
+          if (depth > 5) return "[depth-limit]";
+          if (Array.isArray(v)) return { type:"array", count:v.length, sample:v.slice(0,2).map(x=>summarize(x,depth+1)) };
+          if (v && typeof v === "object") {
+            const out={}; for (const [k,val] of Object.entries(v)) out[k]=summarize(val,depth+1); return out;
+          }
+          return v;
+        };
+        console.log("FONTEDATA SAVED SUMMARY:", JSON.stringify({
+          httpStatus:saved.rows[0].http_status,
+          durationMs:saved.rows[0].duration_ms,
+          data:summarize(data)
+        }));
+      } catch (err) { console.error("FONTEDATA SAVED SUMMARY ERROR:", err.message); }
+    }, 5000);
+  }
+
   let shuttingDown = false;
   const shutdown = signal => {
     if (shuttingDown) return;
