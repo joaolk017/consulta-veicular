@@ -12,6 +12,8 @@ const PORT = Number(process.env.PORT || 3000);
 const FALCON_TOKEN = String(process.env.FALCON_TOKEN || "").trim();
 const FONTEDATA_API_KEY = String(process.env.FONTEDATA_API_KEY || "").trim();
 const FONTEDATA_TEST_TOKEN = String(process.env.FONTEDATA_TEST_TOKEN || "").trim();
+const CREDPRO_TEST_API_KEY = String(process.env.CREDPRO_TEST_API_KEY || "").trim();
+const CREDPRO_API_URL = "https://cred-pro.com";
 const VEHICLE_PROVIDER_STRATEGY = Object.freeze({
   primary: "falcon",
   complementary: "fontedata",
@@ -1765,6 +1767,36 @@ app.get("/api/admin/fontedata-auditoria-unica", async (req, res) => {
   } catch (err) {
     console.error("Erro na auditoria única FonteData:", err.message);
     return res.status(err.status || 502).json({ error: "fontedata_auditoria", mensagem: err.message || "Falha na consulta FonteData." });
+  }
+});
+
+
+// Endpoint interno temporário para validar o sandbox CredPro sem tocar no fluxo dos clientes.
+// Retorna somente o catálogo/estrutura do sandbox; não faz pesquisa veicular nem consome saldo.
+app.get("/api/admin/credpro-sandbox-catalogo", async (req, res) => {
+  if (!enforceSensitiveRateLimit(req, res, "credpro-sandbox-catalogo", 5)) return;
+  if (!requireAdminSecret(req, res)) return;
+  if (!CREDPRO_TEST_API_KEY || !CREDPRO_TEST_API_KEY.startsWith("cpk_test_")) {
+    return res.status(503).json({ error: "credpro_sandbox_nao_configurado" });
+  }
+  try {
+    const result = await requestJson(CREDPRO_API_URL + "/v1/pesquisas/itens", {
+      headers: { "Authorization": "Bearer " + CREDPRO_TEST_API_KEY },
+      timeout: 30000
+    });
+    if (result.status < 200 || result.status >= 300) {
+      return res.status(502).json({ error: "credpro_http", status: result.status });
+    }
+    const data = result.data || {};
+    const itens = Array.isArray(data.itens) ? data.itens.map(item => ({
+      codigo: item && item.codigo,
+      nome: item && item.nome,
+      inclui: item && Array.isArray(item.inclui) ? item.inclui : undefined
+    })) : [];
+    return res.json({ ok: true, provider: "credpro", sandbox: data.sandbox === true, itemCount: itens.length, itens });
+  } catch (err) {
+    console.error("CREDPRO SANDBOX CATALOGO:", err.message);
+    return res.status(502).json({ error: "credpro_sandbox", mensagem: "Falha ao consultar catálogo sandbox." });
   }
 });
 
