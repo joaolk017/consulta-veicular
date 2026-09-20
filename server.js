@@ -2338,6 +2338,65 @@ async function runStoredCoverageDryRunOnStartupOnce() {
   }
 }
 
+async function runFalconStoredCoverageDryRunOnce() {
+  try {
+    requireDatabase();
+    await pool.query(`CREATE TABLE IF NOT EXISTS admin_one_time_actions (action_key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+    const actionKey = "falcon-stored-coverage-v1-no-api";
+    const claimed = await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key", [actionKey]);
+    if (!claimed.rowCount) return;
+
+    // Procura somente retornos Falcon que já tenham sido persistidos por auditorias anteriores.
+    // Não chama falconRequest() e portanto não consome consulta/crédito.
+    const sources = [
+      { table:"admin_provider_retry_audits", sql:"SELECT result_json, created_at FROM admin_provider_retry_audits WHERE provider='falcon' AND status='success' AND result_json IS NOT NULL ORDER BY created_at DESC LIMIT 1" },
+      { table:"admin_provider_audits", sql:"SELECT result_json, created_at FROM admin_provider_audits WHERE provider='falcon' AND result_json IS NOT NULL ORDER BY created_at DESC LIMIT 1" }
+    ];
+    let row = null, table = null;
+    for (const source of sources) {
+      try {
+        const q = await pool.query(source.sql);
+        if (q.rowCount && (!row || new Date(q.rows[0].created_at) > new Date(row.created_at))) {
+          row = q.rows[0]; table = source.table;
+        }
+      } catch (err) {
+        // Tabela pode ainda não existir em instalações antigas.
+      }
+    }
+
+    if (!row) {
+      return console.log("FALCON STORED COVERAGE V1:", JSON.stringify({
+        apiCallsMade:0,
+        source:"stored_postgresql_only",
+        storedResultFound:false,
+        note:"Nenhum JSON bruto/sanitizado da Falcon foi encontrado nas tabelas de auditoria; nenhuma chamada nova foi feita."
+      }));
+    }
+
+    const detected = detectProviderCoverageFromStoredPayload(row.result_json);
+    const labelById = {
+      roubo_furto:"Roubo / furto", leilao:"Leilão", sinistro:"Sinistro",
+      gravame:"Gravame", renajud:"RENAJUD", multas:"Multas / RENAINF",
+      recall:"Recall", proprietarios:"Histórico de proprietários"
+    };
+    const ids = Object.keys(labelById);
+    const availableIds = ids.filter(id => detected[id] === true);
+    const missingIds = ids.filter(id => detected[id] !== true);
+    console.log("FALCON STORED COVERAGE V1:", JSON.stringify({
+      apiCallsMade:0,
+      source:"stored_postgresql_only",
+      storedResultFound:true,
+      storedTable:table,
+      availableIds,
+      missingIds,
+      available:availableIds.map(id => labelById[id]),
+      missing:missingIds.map(id => labelById[id])
+    }));
+  } catch (err) {
+    console.error("FALCON STORED COVERAGE V1: falha:", String(err.message || err).slice(0,300));
+  }
+}
+
 async function runFonteDataStoredCoverageOnce() {
   if (String(process.env.FONTEDATA_STORED_COVERAGE_ONCE || "").trim() !== "1") return;
   try {
@@ -2536,6 +2595,7 @@ if (!DATABASE_URL) console.warn("DATABASE_URL não configurado. O controle persi
 initDatabase().then(() => {
   const server = runCredProCatalogMetadataOnce();
 runStoredCoverageDryRunOnStartupOnce();
+runFalconStoredCoverageDryRunOnce();
 runStoredFonteDataShapeAuditOnce();
 runFonteDataStoredCoverageOnce();
 app.listen(PORT, () => console.log(`Consulta Veicular 360 ativa na porta ${PORT}. Checkout PIX: Woovi/OpenPix. Créditos: ${pool ? "PostgreSQL" : "indisponível"}.`));
