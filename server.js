@@ -2090,7 +2090,32 @@ app.post("/api/consulta-completa", async (req, res) => {
     const debit = await consumeCredit(accountId, plate);
     try {
       const vehicle = await getVehicle(plate);
-      const safeVehicle = safeVehicleDetails(vehicle, plate);
+      let safeVehicle = safeVehicleDetails(vehicle, plate);
+
+      // Aproveita um retorno FonteData já armazenado para a mesma placa, quando existir.
+      // Esta etapa é somente leitura do PostgreSQL: não chama o provedor e não consome crédito.
+      if (pool) {
+        try {
+          const fonteSaved = await pool.query(`
+            SELECT result_json FROM (
+              SELECT result_json, created_at, plate FROM admin_provider_retry_audits
+                WHERE provider='fontedata' AND status='success' AND result_json IS NOT NULL
+              UNION ALL
+              SELECT result_json, created_at, plate FROM admin_provider_audits
+                WHERE provider='fontedata' AND result_json IS NOT NULL
+            ) x
+            WHERE UPPER(plate)=UPPER($1)
+            ORDER BY created_at DESC LIMIT 1
+          `, [plate]);
+          if (fonteSaved.rowCount) {
+            const fonteVehicle = normalizeFonteDataVehicle(fonteSaved.rows[0].result_json, plate);
+            safeVehicle = mergeVehicleReports(safeVehicle, fonteVehicle);
+          }
+        } catch (mergeErr) {
+          console.warn("Relatório 360: FonteData salva não pôde ser combinada:", mergeErr.message);
+        }
+      }
+
       const report360 = buildVehicle360Report(safeVehicle);
       const deliveredVehicle = { ...safeVehicle, report360 };
       await finishCreditQuery(accountId, debit.queryId, true, deliveredVehicle);
