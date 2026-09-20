@@ -1659,7 +1659,7 @@ if (!DATABASE_URL) console.warn("DATABASE_URL não configurado. O controle persi
 
 initDatabase().then(() => {
   const server = app.listen(PORT, () => console.log(`Consulta Veicular 360 ativa na porta ${PORT}. Checkout PIX: Woovi/OpenPix. Créditos: ${pool ? "PostgreSQL" : "indisponível"}.`));
-setTimeout(() => { runFonteDataControlledAuditOnce().catch((err) => console.error("FONTEDATA AUDIT:", err.message)); }, 5000);
+// Auditoria FonteData permanece manual; nunca é executada automaticamente em deploy/startup.
 
   let shuttingDown = false;
   const shutdown = signal => {
