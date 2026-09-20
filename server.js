@@ -2090,8 +2090,11 @@ app.post("/api/consulta-completa", async (req, res) => {
     const debit = await consumeCredit(accountId, plate);
     try {
       const vehicle = await getVehicle(plate);
-      await finishCreditQuery(accountId, debit.queryId, true, safeVehicleDetails(vehicle,plate));
-      return res.json({ ok:true, paid:true, vehicle:safeVehicleDetails(vehicle,plate), creditosRestantes:debit.balance, price:CONSULTA_SALE_PRICE, currency:"BRL" });
+      const safeVehicle = safeVehicleDetails(vehicle, plate);
+      const report360 = buildVehicle360Report(safeVehicle);
+      const deliveredVehicle = { ...safeVehicle, report360 };
+      await finishCreditQuery(accountId, debit.queryId, true, deliveredVehicle);
+      return res.json({ ok:true, paid:true, vehicle:deliveredVehicle, report360, creditosRestantes:debit.balance, price:CONSULTA_SALE_PRICE, currency:"BRL" });
     } catch (err) {
       try {
         await finishCreditQuery(accountId, debit.queryId, false);
