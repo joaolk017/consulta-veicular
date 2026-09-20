@@ -1470,6 +1470,13 @@ app.all(/^\/api\/consulta-completa(?:\/.*)?$/, (req, res) => {
   return res.status(405).json({ error: "Método não permitido." });
 });
 
+// Health check mínimo para hospedagem/monitoramento.
+// Não expõe chaves, banco, fornecedor ou informações internas.
+app.get("/health", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.status(200).json({ status: "ok" });
+});
+
 app.use("/api", (req, res) => {
   res.status(404).json({ error: "Endpoint não encontrado." });
 });
