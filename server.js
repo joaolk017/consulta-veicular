@@ -1879,6 +1879,38 @@ app.get("/api/admin/credpro-sandbox-catalogo", async (req, res) => {
   }
 });
 
+
+// Demonstração interna e protegida do relatório CredPro Sandbox.
+// Somente lê uma pesquisa fictícia já existente; não cria pesquisa, não consome crédito do site e não cobra saldo CredPro.
+app.get("/api/admin/credpro-sandbox-relatorio", async (req, res) => {
+  if (!enforceSensitiveRateLimit(req, res, "credpro-sandbox-relatorio", 5)) return;
+  if (!requireAdminSecret(req, res)) return;
+  if (!CREDPRO_TEST_API_KEY || !CREDPRO_TEST_API_KEY.startsWith("cpk_test_")) {
+    return res.status(503).json({ error: "credpro_sandbox_nao_configurado" });
+  }
+  try {
+    const result = await requestJson(CREDPRO_API_URL + "/v1/pesquisas/208", {
+      headers: { "Authorization": "Bearer " + CREDPRO_TEST_API_KEY },
+      timeout: 30000
+    });
+    if (result.status < 200 || result.status >= 300 || !result.data || result.data.sandbox !== true) {
+      return res.status(502).json({ error: "credpro_sandbox_resultado_indisponivel" });
+    }
+    const vehicle = normalizeCredProResult(result.data, "ABC1D29");
+    return res.json({
+      ok: true,
+      demo: true,
+      sandbox: true,
+      chargedValue: vehicle.source?.chargedValue || 0,
+      aviso: "Demonstração com dados fictícios do sandbox CredPro. Nenhuma cobrança realizada.",
+      vehicle
+    });
+  } catch (err) {
+    console.error("CREDPRO SANDBOX RELATORIO:", String(err.message || "erro").slice(0, 300));
+    return res.status(502).json({ error: "credpro_sandbox_relatorio", mensagem: "Falha ao carregar demonstração sandbox." });
+  }
+});
+
 async function runCredProCatalogMetadataOnce() {
   if (String(process.env.CREDPRO_INSPECT_CATALOG_METADATA_ONCE || "").trim() !== "1") return;
   if (!CREDPRO_TEST_API_KEY || !CREDPRO_TEST_API_KEY.startsWith("cpk_test_")) return console.warn("CREDPRO CATALOGO META: sandbox não configurado.");
