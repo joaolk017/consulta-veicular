@@ -112,6 +112,18 @@ if (IS_BACKEND_SERVER) {
       exerciseYear: cleanText(payload.anoExercicio, 12),
       source: 'fontedata',
       sourceStatus: 'ok',
+      dataCoverage: {
+        auction: boolOrNull(indicators.leilao) !== null,
+        theft: boolOrNull(indicators.rouboFurto) !== null,
+        recall: boolOrNull(indicators.recall) !== null,
+        renajud: boolOrNull(indicators.renajud) !== null,
+        renainf: boolOrNull(indicators.renainf) !== null,
+        restrictions: Array.isArray(source.restricoes),
+        claims: boolOrNull(indicators.sinistro) !== null || boolOrNull(indicators.sinistros) !== null,
+        debts: boolOrNull(indicators.debitos) !== null || Array.isArray(source.debitos) || Array.isArray(payload.debitos),
+        fines: boolOrNull(indicators.multas) !== null || Array.isArray(source.multas) || Array.isArray(payload.multas),
+        ownersHistory: Array.isArray(source.historicoProprietarios) || Array.isArray(payload.historicoProprietarios)
+      },
       fipe: fipe ? {
         value: cleanText(fipe.valor, 60),
         numericValue: cleanNumber(fipe.valorNumerico),
