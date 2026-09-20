@@ -601,6 +601,25 @@ function safeVehicleDetails(vehicle, plate) {
   };
 }
 
+// Matriz estática de cobertura: não chama nenhum provedor e não consome créditos.
+// Serve para decidir a arquitetura antes de habilitar qualquer integração paga.
+const VEHICLE_PROVIDER_COVERAGE = Object.freeze({
+  basicVehicle:       { falcon: true,  fontedata: true,  credpro: true  },
+  technicalData:      { falcon: true,  fontedata: true,  credpro: true  },
+  fipe:               { falcon: true,  fontedata: true,  credpro: false },
+  theft:              { falcon: true,  fontedata: null,  credpro: true  },
+  lien:               { falcon: null,  fontedata: null,  credpro: true  },
+  auction:            { falcon: null,  fontedata: null,  credpro: true  },
+  auctionScore:       { falcon: false, fontedata: false, credpro: true  },
+  accidentClaim:      { falcon: null,  fontedata: null,  credpro: true  },
+  renajud:            { falcon: null,  fontedata: null,  credpro: true  },
+  renainfFines:       { falcon: null,  fontedata: null,  credpro: true  },
+  ipvaPending:        { falcon: null,  fontedata: null,  credpro: true  },
+  recall:             { falcon: null,  fontedata: null,  credpro: true  },
+  ownershipHistory:   { falcon: false, fontedata: false, credpro: true  },
+  checklist:          { falcon: false, fontedata: false, credpro: true  }
+});
+
 // Mapeamento passivo da CredPro para o modelo interno do relatório.
 // Não realiza chamadas externas e não está conectado ao fluxo dos clientes.
 function normalizeCredProResult(payload, fallbackPlate = "") {
