@@ -826,14 +826,14 @@ function analyzeVehicle360Coverage(vehicle) {
 function recommendCredProModulesFromCoverage(coverage, maxCost = 5) {
   const missing = new Set(coverage && Array.isArray(coverage.missing) ? coverage.missing : []);
   const catalog = [
-    { item:"recall", price:0.90, covers:["Recall"], priority:90 },
-    { item:"gravame", price:3.00, covers:["Gravame"], priority:100 },
-    { item:"sinistro", price:3.30, covers:["Sinistro"], priority:100 },
-    { item:"renajud", price:4.10, covers:["RENAJUD"], priority:95 },
-    { item:"renainf", price:4.15, covers:["Multas / RENAINF"], priority:90 },
-    { item:"leilao", price:5.50, covers:["Leilão"], priority:100 },
-    { item:"historico_proprietarios", price:6.00, covers:["Histórico de proprietários"], priority:70 },
-    { item:"leilao_completo", price:11.00, covers:["Leilão","Sinistro"], priority:100 }
+    { item:"recall", price:0.90, covers:["Recall"], priority:35, tier:"secondary" },
+    { item:"gravame", price:3.00, covers:["Gravame"], priority:95, tier:"essential" },
+    { item:"sinistro", price:3.30, covers:["Sinistro"], priority:100, tier:"essential" },
+    { item:"renajud", price:4.10, covers:["RENAJUD"], priority:90, tier:"essential" },
+    { item:"renainf", price:4.15, covers:["Multas / RENAINF"], priority:75, tier:"important" },
+    { item:"leilao", price:5.50, covers:["Leilão"], priority:100, tier:"essential" },
+    { item:"historico_proprietarios", price:6.00, covers:["Histórico de proprietários"], priority:45, tier:"secondary" },
+    { item:"leilao_completo", price:11.00, covers:["Leilão","Sinistro"], priority:100, tier:"essential" }
   ];
 
   const wanted = catalog.filter(x => x.covers.some(g => missing.has(g)));
@@ -859,7 +859,7 @@ function recommendCredProModulesFromCoverage(coverage, maxCost = 5) {
     apiCallsMade:0,
     maxCost:Number(maxCost.toFixed(2)),
     estimatedCost:Number(best.cost.toFixed(2)),
-    selected:best.items.map(x=>({item:x.item,price:x.price,covers:x.covers.filter(g=>missing.has(g))})),
+    selected:best.items.map(x=>({item:x.item,price:x.price,tier:x.tier,covers:x.covers.filter(g=>missing.has(g))})),
     coveredMissingGroups:[...best.covered],
     stillMissing:[...missing].filter(g=>!best.covered.has(g)),
     note:"Combinação calculada localmente com preços do catálogo CredPro Sandbox. Não executa módulos nem consome saldo."
