@@ -1886,6 +1886,22 @@ initDatabase().then(() => {
     }, 5000);
   }
 
+  // Auditoria passiva: lê uma única vez o último relatório já persistido e
+  // grava somente os nomes dos campos. Não chama Falcon/FonteData e não expõe valores.
+  setTimeout(async () => {
+    try {
+      if (!pool) return;
+      const saved = await pool.query(
+        "SELECT result_json FROM vehicle_queries WHERE result_json IS NOT NULL ORDER BY created_at DESC LIMIT 1"
+      );
+      if (!saved.rowCount) return console.log("STORED REPORT FIELDS: nenhum relatório salvo encontrado.");
+      const fields = [...new Set(storedFieldNames(saved.rows[0].result_json))].sort();
+      console.log("STORED REPORT FIELDS:", JSON.stringify({ fieldCount: fields.length, fields }));
+    } catch (err) {
+      console.error("STORED REPORT FIELDS ERROR:", err.message);
+    }
+  }, 7000);
+
   let shuttingDown = false;
   const shutdown = signal => {
     if (shuttingDown) return;
