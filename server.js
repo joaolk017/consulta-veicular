@@ -2865,6 +2865,23 @@ app.get("/preview-social.jpg", async (req, res) => {
   }
 });
 
+// Páginas privadas/operacionais não devem aparecer em mecanismos de busca.
+const PRIVATE_HTML_PATHS = new Set([
+  "/admin-funil",
+  "/admin-funil.html",
+  "/minhas-consultas",
+  "/minhas-consultas.html"
+]);
+app.use((req, res, next) => {
+  const pathname = String(req.path || "/").toLowerCase().replace(/\/+$/, "") || "/";
+  if (PRIVATE_HTML_PATHS.has(pathname)) {
+    res.set("X-Robots-Tag", "noindex, nofollow, nosnippet");
+    res.set("Cache-Control", "no-store");
+    res.set("Pragma", "no-cache");
+  }
+  next();
+});
+
 // Páginas descontinuadas: informa explicitamente aos buscadores que o conteúdo foi removido.
 // Mantemos 410 em vez de redirecionar para a home para evitar soft-404 e sinais SEO ambíguos.
 const REMOVED_PUBLIC_PATHS = new Set([
