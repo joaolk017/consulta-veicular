@@ -1518,7 +1518,9 @@ app.get("/api/minhas-consultas/:id", async (req, res) => {
     if (!q.rowCount) return res.status(404).json({ mensagem:"Consulta não encontrada." });
     const row=q.rows[0];
     if (row.status!=="completed" || !row.result_json) return res.status(409).json({ mensagem:"Relatório ainda não está disponível para esta consulta." });
-    return res.json({ ok:true, consulta:{ id:row.id,plate:row.plate,status:row.status,created_at:row.created_at,completed_at:row.completed_at }, vehicle:row.result_json });
+    const vehicle = row.result_json && typeof row.result_json === "object" ? row.result_json : {};
+    const report360 = vehicle.report360 || buildVehicle360Report(vehicle);
+    return res.json({ ok:true, consulta:{ id:row.id,plate:row.plate,status:row.status,created_at:row.created_at,completed_at:row.completed_at }, vehicle, report360 });
   } catch(err) {
     return res.status(err.status || 401).json({ error:"relatorio_consulta", mensagem:err.message });
   }
