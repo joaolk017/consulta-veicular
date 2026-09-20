@@ -888,6 +888,29 @@ function calculateSafeApiCaps(targetMarginPercent = 55) {
   };
 }
 
+function auditCredProOptimizer() {
+  const caps = calculateSafeApiCaps(55);
+  const cap = Math.min(...caps.rows.map(r => r.maxApiCostPerConsult));
+  const scenarios = [
+    ["gravame_sinistro", ["Gravame","Sinistro"]],
+    ["leilao_recall", ["Leilão","Recall"]],
+    ["restricoes", ["RENAJUD","Multas / RENAINF"]],
+    ["historico_recall", ["Histórico de proprietários","Recall"]],
+    ["todos_caros", ["Leilão","Sinistro","Gravame","RENAJUD","Multas / RENAINF","Recall","Histórico de proprietários"]]
+  ];
+  return {
+    mode:"dry_run",
+    apiCallsMade:0,
+    appliedPerConsultCap:cap,
+    scenarios:scenarios.map(([name, missing]) => ({
+      name,
+      missing,
+      result:recommendCredProModulesFromCoverage({missing}, cap)
+    })),
+    note:"Auditoria local do otimizador. Não chama CredPro, não consulta placas e não consome saldo."
+  };
+}
+
 function calculatePackageEconomics(apiCostPerConsult = 5) {
   const rows = Object.values(PACKAGES).map(p => {
     const revenue = Number(p.amount);
@@ -2249,6 +2272,7 @@ app.post("/api/consulta-completa", async (req, res) => {
       report360.credproRecommendation = recommendCredProModulesFromCoverage(coverage360, conservativeCap);
       report360.internalEconomics = calculatePackageEconomics(report360.credproRecommendation.estimatedCost);
       report360.safeApiCaps = { ...safeApiCaps, appliedPerConsultCap: conservativeCap };
+      report360.optimizerAudit = auditCredProOptimizer();
       const deliveredVehicle = { ...safeVehicle, report360 };
       await finishCreditQuery(accountId, debit.queryId, true, deliveredVehicle);
       return res.json({ ok:true, paid:true, vehicle:deliveredVehicle, report360, creditosRestantes:debit.balance, price:CONSULTA_SALE_PRICE, currency:"BRL" });
