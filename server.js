@@ -1897,6 +1897,29 @@ initDatabase().then(() => {
   const server = app.listen(PORT, () => console.log(`Consulta Veicular 360 ativa na porta ${PORT}. Checkout PIX: Woovi/OpenPix. Créditos: ${pool ? "PostgreSQL" : "indisponível"}.`));
 // Auditoria FonteData permanece manual; nunca é executada automaticamente em deploy/startup.
 
+  // Validação passiva de uso único do catálogo CredPro Sandbox.
+  // Não pesquisa placa, não consome saldo e nunca registra a chave.
+  if (String(process.env.CREDPRO_VALIDATE_CATALOG_ONCE || "").trim() === "1" && CREDPRO_TEST_API_KEY) {
+    setTimeout(async () => {
+      try {
+        if (!pool) return console.log("CREDPRO SANDBOX VALIDATION: banco indisponível; teste não executado.");
+        await pool.query(`CREATE TABLE IF NOT EXISTS admin_one_time_actions (action_key TEXT PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+        const actionKey = "credpro-sandbox-catalog-validation-v1";
+        const claimed = await pool.query("INSERT INTO admin_one_time_actions(action_key) VALUES($1) ON CONFLICT(action_key) DO NOTHING RETURNING action_key", [actionKey]);
+        if (!claimed.rowCount) return console.log("CREDPRO SANDBOX VALIDATION: validação única já executada; nenhuma chamada feita.");
+        const result = await requestJson(CREDPRO_API_URL + "/v1/pesquisas/itens", {
+          headers: { "Authorization": "Bearer " + CREDPRO_TEST_API_KEY },
+          timeout: 30000
+        });
+        const data = result.data || {};
+        const itens = Array.isArray(data.itens) ? data.itens.map(item => ({ codigo: item && item.codigo, nome: item && item.nome })) : [];
+        console.log("CREDPRO SANDBOX VALIDATION:", JSON.stringify({ httpStatus: result.status, sandbox: data.sandbox === true, itemCount: itens.length, itens }));
+      } catch (err) {
+        console.error("CREDPRO SANDBOX VALIDATION: falha sem nova tentativa automática:", String(err.message || "erro").slice(0,300));
+      }
+    }, 6000);
+  }
+
   // Segunda tentativa FonteData autorizada: dispara internamente uma única vez após o deploy.
   // A própria rota usa trava persistente, então reinícios posteriores não repetem a consulta.
   if (String(process.env.FONTEDATA_AUTHORIZED_RETRY_ONCE || "").trim() === "1" && FONTEDATA_TEST_TOKEN) {
