@@ -143,7 +143,7 @@ var Escolha360 = (function () {
       return fetch("/api/minhas-consultas/"+encodeURIComponent(id),{headers:{"X-Credit-Account":token},cache:"no-store"})
         .then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.mensagem||"Não foi possível carregar o relatório.");return d;});});
     })).then(function(data){
-      if(!el("c360CompareContent")||!el("c360CompareModal"))return;
+      loadedVehicleById=new Map(data.map(function(d){return [String(d.consulta.id),d];}));
       el("c360CompareContent").innerHTML=renderAll(data);
       el("c360CompareModal").classList.remove("hidden");
       el("c360CompareModal").scrollTop=0;
@@ -185,27 +185,5 @@ var Escolha360 = (function () {
   document.addEventListener("keydown",function(e){if(e.key==="Escape"&&el("c360CompareModal")&&!el("c360CompareModal").classList.contains("hidden"))close();});
   window.addEventListener("afterprint",function(){document.body.classList.remove("c360-print");});
   // Preenche mapa após carregar; nenhuma informação fica armazenada no navegador.
-  var compareOriginal=compare;
-  compare=function(){
-    if(chosen.length<2||chosen.length>3)return;
-    var oldFetch=window.fetch;
-    // O mapa recebe respostas reais no mesmo fluxo abaixo, sem interceptar requisições.
-    var token=accountToken();
-    if(!token){message("Recupere sua conta por e-mail antes de comparar os relatórios.",true);return;}
-    var btn=el("c360CompareBtn");btn.disabled=true;btn.textContent="CARREGANDO RELATÓRIOS...";
-    message("");
-    Promise.all(chosen.map(function(id){
-      return fetch("/api/minhas-consultas/"+encodeURIComponent(id),{headers:{"X-Credit-Account":token},cache:"no-store"})
-        .then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.mensagem||"Não foi possível carregar o relatório.");return d;});});
-    })).then(function(data){
-      loadedVehicleById=new Map(data.map(function(d){return [String(d.consulta.id),d];}));
-      el("c360CompareContent").innerHTML=renderAll(data);
-      el("c360CompareModal").classList.remove("hidden");
-      el("c360CompareModal").scrollTop=0;
-      document.body.classList.add("c360-modal-open");
-      el("c360CompareModal").querySelector(".c360-close").focus();
-    }).catch(function(err){message(err.message||"Falha ao comparar os relatórios.",true);})
-      .finally(function(){btn.textContent="COMPARAR VEÍCULOS";updateBar();});
-  };
   return {sync:sync,isChosen:isChosen,compare:compare,close:close};
 })();
