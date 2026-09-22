@@ -431,3 +431,48 @@ body.premium-account .pa-guide-navigation button:focus-visible,
 body.premium-account .pa-stage-tile:focus-visible{
  outline:3px solid #efbd50;outline-offset:3px;
 }
+
+/* CENTRAL V4 — estados de carregamento e leitura mobile. */
+body.premium-account #historyRefresh:disabled,
+body.premium-account #history .btn:disabled,
+body.premium-account #recoverySendButton:disabled,
+body.premium-account #recoveryVerifyButton:disabled{
+ cursor:wait;opacity:.63;transform:none;box-shadow:none;
+}
+body.premium-account #history .btn,
+body.premium-account #historyRefresh,
+body.premium-account #recoverySendButton,
+body.premium-account #recoveryVerifyButton{transition:opacity .16s ease,background-color .16s ease,box-shadow .16s ease}
+body.premium-account #msg .error{
+ border:1px solid #efbba9;background:#fff5f0;color:#853b28;
+ line-height:1.65;overflow-wrap:anywhere;
+}
+body.premium-account #msg .error button{margin:10px 0 0;min-height:40px}
+body.premium-account .premium-history #history .item{
+ scroll-margin-top:18px;
+}
+body.premium-account .premium-history #history .item .plate{
+ overflow-wrap:anywhere;line-height:1.35;
+}
+body.premium-account .overlay .modal{
+ overscroll-behavior:contain;scrollbar-gutter:stable;
+}
+body.premium-account #recoveryModal .recover input:focus-visible,
+body.premium-account #history .c360-pick input:focus-visible{
+ outline:3px solid #efc460;outline-offset:3px;
+}
+@media(max-width:620px){
+ body.premium-account .premium-history #history .item{
+  grid-template-columns:minmax(0,1fr);gap:14px;
+ }
+ body.premium-account .premium-history #history .c360-item-actions{width:100%;min-width:0}
+ body.premium-account .premium-history #history .btn{white-space:normal}
+ body.premium-account .pa-section-header{align-items:flex-start}
+ body.premium-account #recoveryModal .modal{max-height:94vh;padding:17px}
+}
+@media(prefers-reduced-motion:reduce){
+ body.premium-account #history .btn,
+ body.premium-account #historyRefresh,
+ body.premium-account #recoverySendButton,
+ body.premium-account #recoveryVerifyButton{transition:none!important}
+}
