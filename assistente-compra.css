@@ -620,3 +620,159 @@
    box-shadow:none!important;
  }
 }
+
+/* CONSULTAR VEICULO V6 — CARTAO BRANCO COMPLETO */
+/* A página mantém o cabeçalho e o fundo azul-escuros.
+   A versão preenchida com o relatório permanece com suas cores de leitura. */
+.hero #consultCard:not(.result-mode) {
+  background:#ffffff !important;
+  background-image:none !important;
+  color:#1b3c54 !important;
+  border:1px solid #cadfea !important;
+  border-top:3px solid #5aafd1 !important;
+  box-shadow:0 22px 60px rgba(0,9,24,.27),inset 0 1px 0 #fff !important;
+}
+.hero #consultCard:not(.result-mode) > .title {
+  color:#143650 !important;
+  font-weight:950;
+}
+.hero #consultCard:not(.result-mode) > .sub {
+  color:#5a7385 !important;
+}
+.hero #consultCard:not(.result-mode) > #plate {
+  background:#f4f9fd !important;
+  color:#123853 !important;
+  border:2px solid #a9c9da !important;
+  box-shadow:inset 0 1px 5px rgba(13,55,80,.05) !important;
+}
+.hero #consultCard:not(.result-mode) > #plate::placeholder {
+  color:#879aaa !important;
+}
+.hero #consultCard:not(.result-mode) > #plate:focus {
+  border-color:#2287bc !important;
+  outline:3px solid rgba(41,147,194,.18);
+  outline-offset:0;
+}
+.hero #consultCard:not(.result-mode) > #plateHint {
+  color:#6a8091 !important;
+}
+.hero #consultCard:not(.result-mode) > .preview-reassurance,
+.hero #consultCard:not(.result-mode) > .preview-reassurance span {
+  color:#286a5b !important;
+  font-weight:800;
+}
+.hero #consultCard:not(.result-mode) > .report-value,
+.hero #consultCard:not(.result-mode) > .report-sample {
+  background:#f5f9fc !important;
+  background-image:none !important;
+  color:#244660 !important;
+  border:1px solid #d7e6ef !important;
+  box-shadow:none !important;
+}
+.hero #consultCard:not(.result-mode) > .report-value > b,
+.hero #consultCard:not(.result-mode) > .report-sample .sample-head b {
+  color:#153c58 !important;
+}
+.hero #consultCard:not(.result-mode) > .report-value .report-chips > span {
+  background:#e8f2f9 !important;
+  background-image:none !important;
+  color:#24516d !important;
+  border:1px solid #ccdfeb !important;
+}
+.hero #consultCard:not(.result-mode) > .report-sample .sample-head > span {
+  background:#e2f1f8 !important;
+  border:1px solid #b6d5e5 !important;
+  color:#195e82 !important;
+}
+.hero #consultCard:not(.result-mode) > .report-sample .sample-intro {
+  color:#527084 !important;
+}
+.hero #consultCard:not(.result-mode) > .report-sample .sample-grid > div {
+  background:#ffffff !important;
+  background-image:none !important;
+  color:#254a64 !important;
+  border:1px solid #d6e5ec !important;
+  box-shadow:none !important;
+}
+.hero #consultCard:not(.result-mode) > .report-sample .sample-grid small {
+  color:#617d8f !important;
+}
+.hero #consultCard:not(.result-mode) > .report-sample .sample-grid strong {
+  color:#1c4661 !important;
+}
+.hero #consultCard:not(.result-mode) > .report-value small,
+.hero #consultCard:not(.result-mode) > .report-sample .sample-note {
+  color:#637e90 !important;
+}
+.hero #consultCard:not(.result-mode) > .app-account-shortcut {
+  background:#f0f7fb !important;
+  color:#1a4662 !important;
+  border:1px solid #cbdfeb !important;
+}
+.hero #consultCard:not(.result-mode) > .app-account-shortcut b {
+  color:#173e59 !important;
+}
+.hero #consultCard:not(.result-mode) > .app-account-shortcut small {
+  color:#617c8f !important;
+}
+.hero #consultCard:not(.result-mode) > .app-account-shortcut > strong {
+  color:#176d99 !important;
+}
+.hero #consultCard:not(.result-mode) > .creditbar {
+  background:#f3f8fc !important;
+  background-image:none !important;
+  border:1px solid #c9dfea !important;
+  color:#274960 !important;
+}
+.hero #consultCard:not(.result-mode) > .creditbar > span,
+.hero #consultCard:not(.result-mode) > .creditbar #creditLabel {
+  color:#315771 !important;
+}
+.hero #consultCard:not(.result-mode) > .creditbar > strong,
+.hero #consultCard:not(.result-mode) > .creditbar #creditSummary {
+  color:#183b56 !important;
+}
+.hero #consultCard:not(.result-mode) > .creditbar .creditactions .secondary,
+.hero #consultCard:not(.result-mode) > .creditbar .creditactions .creditrecover {
+  background:#1a628b !important;
+  border:1px solid #337ca1 !important;
+  color:#ffffff !important;
+}
+.hero #consultCard:not(.result-mode) > .creditbar .creditactions .secondary:hover,
+.hero #consultCard:not(.result-mode) > .creditbar .creditactions .creditrecover:hover {
+  background:#104e73 !important;
+}
+.hero #consultCard:not(.result-mode) > .creditbar .success {
+  background:#e9f7ee !important;
+  border-color:#bbdfca !important;
+  color:#275e44 !important;
+}
+/* Mensagens operacionais permanecem facilmente distinguíveis sobre o cartão claro. */
+.hero #consultCard:not(.result-mode) > #status .info,
+.hero #consultCard:not(.result-mode) > #pendingPixBanner {
+  background:#eaf4fb !important;
+  border-color:#b8d6e8 !important;
+  color:#245675 !important;
+}
+.hero #consultCard:not(.result-mode) > #status .success {
+  background:#e7f5ed !important;
+  border-color:#b6dfc7 !important;
+  color:#24593c !important;
+}
+.hero #consultCard:not(.result-mode) > #status .error {
+  background:#fff0ef !important;
+  border-color:#e6b6b5 !important;
+  color:#943b3b !important;
+}
+@media(max-width:760px) {
+  .hero #consultCard:not(.result-mode) {
+    border-radius:17px;
+    box-shadow:0 13px 36px rgba(0,9,24,.21) !important;
+  }
+}
+@media print {
+  .hero #consultCard:not(.result-mode) {
+    border-color:#d5d5d5 !important;
+    box-shadow:none !important;
+  }
+}
