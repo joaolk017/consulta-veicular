@@ -163,7 +163,8 @@ var AssistenteCompra = (function () {
     var after='<div class="ac360-note">Os requisitos e prazos de transferência dependem do estado e da situação do veículo. Confirme as regras nos órgãos competentes.</div>'+
       '<div class="ac360-task-grid">'+taskList("depois",done)+'</div>'+
       '<h4>Guarde seus documentos</h4><p>Organize comprovantes de pagamento, contrato, comprovantes de transferência, laudos e notas de serviços em local seguro.</p>'+
-      '<a class="ac360-compare" href="https://www.gov.br/pt-br/servicos/consultar-dados-de-veiculo-na-base-renavam" target="_blank" rel="noopener noreferrer">Consultar serviços oficiais do veículo ↗</a>';
+      '<div class="ac360-note" role="note"><strong>Você será direcionado ao gov.br (site externo).</strong><br>O Consulta Veicular 360 é uma plataforma privada e independente, sem vínculo com a Senatran ou outros órgãos governamentais. A página oficial será aberta em uma nova aba.</div>'+
+      '<a class="ac360-compare" href="https://www.gov.br/pt-br/servicos/consultar-dados-de-veiculo-na-base-renavam" target="_blank" rel="noopener noreferrer" aria-label="Abrir consulta oficial no gov.br, em outra aba">Abrir consulta oficial no gov.br ↗ (site externo)</a>';
     var body=panel("preparar","Prepare sua visita","Saiba o que conferir no relatório e o que perguntar antes de sair de casa.",before,true,id)+
       panel("visita","Inspecione com atenção","Siga o checklist no celular e marque o que já conferiu.",visit,false,id)+
       panel("negociar","Negocie com informações","Compare a FIPE com o anúncio e registre as condições, sem promessas sobre o valor de mercado.",negotiation,false,id)+
