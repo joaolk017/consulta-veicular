@@ -407,10 +407,126 @@
 }
 
 </style>
+<style>
+/* FUNDO PREMIUM AUTOMOTIVO - CONSULTA VEICULAR 360 */
+/* Camadas de luz, grafite e textura de pista substituem o azul plano. */
+body {
+  background-color: #07121e !important;
+  background-image:
+    radial-gradient(ellipse 62rem 30rem at 92% 17%, rgba(18,143,190,.14), transparent 70%),
+    radial-gradient(ellipse 37rem 24rem at 3% 75%, rgba(213,159,68,.075), transparent 74%),
+    linear-gradient(118deg, transparent 0 45%, rgba(91,163,203,.028) 45.1% 45.2%, transparent 45.3% 100%),
+    linear-gradient(155deg, #081624 0%, #0c1d2b 45%, #070f19 100%) !important;
+}
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 48% 68% at 93% 15%, rgba(10,157,205,.17), transparent 85%),
+    radial-gradient(ellipse 42% 50% at 6% 75%, rgba(37,104,154,.15), transparent 78%),
+    linear-gradient(117deg, #071622 0%, #0d2940 54%, #061523 100%) !important;
+  border-bottom: 1px solid rgba(109,188,219,.28);
+  box-shadow: 0 27px 65px rgba(1,7,14,.4);
+}
+/* Micrograde técnica desvanecida, sem imagem externa e sem animação. */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(122,196,228,.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(122,196,228,.08) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: linear-gradient(115deg, transparent 3%, black 42%, transparent 95%);
+  mask-image: linear-gradient(115deg, transparent 3%, black 42%, transparent 95%);
+  opacity: .43;
+}
+.hero::after {
+  content: "";
+  position: absolute;
+  width: min(75vw, 1050px);
+  height: 360px;
+  right: -15%;
+  top: -230px;
+  z-index: 0;
+  pointer-events: none;
+  transform: rotate(-18deg);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(62,205,240,.22), rgba(62,205,240,0) 70%);
+  filter: blur(24px);
+}
+.hero > .shell { position: relative; z-index: 1; }
+.hero-car-outline {
+  display: none;
+  position: absolute;
+  z-index: 0;
+  right: -110px;
+  bottom: 8%;
+  width: min(900px, 72vw);
+  height: auto;
+  opacity: .24;
+  pointer-events: none;
+  filter: drop-shadow(0 0 18px rgba(29,161,220,.22));
+}
+/* Vidro escurecido e realces discretos nos cartões. */
+.hero-card {
+  background: linear-gradient(151deg, rgba(18,54,77,.97), rgba(8,29,47,.98)) !important;
+  border: 1px solid rgba(119,201,234,.4);
+  border-top: 2px solid rgba(104,211,241,.7);
+  box-shadow: 0 22px 64px rgba(0,5,14,.53), inset 0 1px 0 rgba(204,237,253,.08) !important;
+}
+.hero-copy > .pill {
+  background: rgba(218,170,65,.11);
+  border-color: rgba(245,194,94,.47);
+  color: #ffe0a1;
+}
+.desktop-side-panel {
+  background: linear-gradient(154deg, rgba(17,56,78,.96), rgba(8,30,47,.98)) !important;
+  border-color: rgba(114,194,228,.37) !important;
+  box-shadow: 0 18px 47px rgba(0,6,17,.37), inset 0 1px 0 rgba(188,230,255,.06);
+}
+.seo-content, .faq, .use-cases, .private-info, .identity {
+  background: linear-gradient(145deg, rgba(18,42,61,.97), rgba(9,27,43,.98)) !important;
+  border-color: rgba(109,167,198,.32);
+  box-shadow: 0 14px 36px rgba(1,9,18,.19);
+}
+.use-case, .trust > div {
+  background: linear-gradient(148deg, #143149, #0d2438);
+  border-color: rgba(92,154,185,.35);
+}
+@media (min-width: 901px) {
+  body { background-attachment: fixed; }
+  .hero-car-outline { display: block; }
+}
+@media (max-width: 900px) {
+  .hero::before { opacity: .23; background-size: 49px 49px; }
+  .hero::after { width: 460px; height: 240px; right: -180px; top: -165px; }
+  .hero-card { border-top-width: 1px; }
+}
+@media print {
+  body, .hero, .hero-card, .seo-content, .faq, .use-cases, .private-info, .identity {
+    background: white !important; box-shadow: none !important;
+  }
+  .hero::before, .hero::after, .hero-car-outline { display: none !important; }
+}
+</style>
 </head>
 <body>
 <div id="appSplash" class="app-splash" aria-hidden="true"><img src="/file_00000000d76c820e88ceb6c39ce70f0d.png" alt=""></div>
 <section class="hero">
+<svg class="hero-car-outline" viewBox="0 0 980 390" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <defs><linearGradient id="heroCarLine" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#36d5ed" stop-opacity=".05"/><stop offset=".58" stop-color="#81d8f7"/><stop offset="1" stop-color="#ffce75"/></linearGradient></defs>
+  <g fill="none" stroke="url(#heroCarLine)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M64 260 Q82 245 136 240 L215 225 Q268 157 336 132 Q388 120 619 122 Q702 123 769 185 L892 220 Q926 235 937 264 L946 308 L887 308 Q875 263 822 261 Q773 261 760 308 L301 308 Q290 266 237 266 Q185 266 174 308 L83 308 Q58 304 54 280 Z"/>
+    <path d="M239 222 Q280 169 344 151 Q406 139 617 142 Q683 145 743 192 L763 219 Z"/>
+    <path d="M478 145 L481 218 M255 230 L750 230 M523 242 L570 242 M80 281 L158 279 M907 273 L930 276"/>
+    <circle cx="238" cy="311" r="49"/><circle cx="238" cy="311" r="27"/><circle cx="822" cy="311" r="49"/><circle cx="822" cy="311" r="27"/>
+    <path d="M920 250 L947 260" stroke="#ffd58c" stroke-width="6"/>
+  </g>
+</svg>
 <div class="shell">
 <header class="top"><div class="brand"><img src="/file_00000000e860820ea093698e77f0cce0.png" alt="Consulta Veicular 360" class="site-logo"></div><nav class="nav"><a href="/sobre/">Sobre nós</a><a href="/termos.html">Termos</a><a href="/privacidade.html">Privacidade</a><a href="/reembolso.html">Reembolso</a><a href="/contato.html">Suporte</a></nav></header>
 <div class="hero-grid">
