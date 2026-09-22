@@ -1,0 +1,223 @@
+/* Assistente de Compra 360 — isolado dos estilos atuais da plataforma. */
+.ac360-guide {
+  --ac-bg:#f7fbfd;
+  --ac-border:#d4e4ed;
+  --ac-ink:#18344a;
+  --ac-sub:#536f80;
+  width:100%;
+  max-width:100%;
+  margin:18px 0;
+  overflow:hidden;
+  border:1px solid #7fc3de;
+  border-radius:20px;
+  background:var(--ac-bg);
+  color:var(--ac-ink);
+  text-align:left;
+  font:400 14px/1.55 Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  box-shadow:0 18px 42px rgba(0,14,30,.16);
+}
+.ac360-guide *{box-sizing:border-box}
+.ac360-guide .ac360-heading {
+  padding:22px 24px 19px;
+  color:#ecf9ff;
+  background:
+    radial-gradient(ellipse at 100% -10%,rgba(71,194,223,.28),transparent 60%),
+    linear-gradient(125deg,#0d2e47,#113c58 55%,#0a263e);
+}
+.ac360-demo-banner{padding:10px 21px;background:#ffe9b6;color:#634515;font-size:12px;border-bottom:1px solid #e2c274}
+.ac360-eyebrow {
+  display:inline-flex;padding:6px 11px;border-radius:999px;
+  border:1px solid rgba(249,200,110,.5);
+  color:#ffe2a7;background:rgba(243,197,107,.12);
+  font-size:10px;letter-spacing:.9px;font-weight:950;
+}
+.ac360-guide h2{margin:12px 0 7px;color:#fff;font-size:clamp(23px,2.6vw,31px);line-height:1.18;letter-spacing:-.5px;}
+.ac360-guide .ac360-heading p{margin:0 0 17px;font-size:13px;max-width:720px;color:#c8e1ec;line-height:1.55}
+.ac360-guide .ac360-heading strong{color:#fff}
+.ac360-summary {
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;
+}
+.ac360-summary>div{
+  min-width:0;padding:11px 12px;
+  border:1px solid rgba(127,197,223,.33);
+  border-radius:12px;background:rgba(5,28,45,.38);
+}
+.ac360-summary span{display:block;font-size:10px;font-weight:800;color:#c2e5f4;line-height:1.4;}
+.ac360-summary strong{display:block;margin-top:3px;font-size:23px;font-weight:950;color:#fff;}
+.ac360-tabs {
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;
+  padding:12px 12px 0;
+  background:#e6f0f6;border-bottom:1px solid #d1e0e9;
+}
+.ac360-guide button[data-ac360-tab] {
+  min-width:0;width:100%;min-height:46px;margin:0;padding:10px 8px;
+  border:1px solid transparent;border-bottom:3px solid transparent;
+  border-radius:9px 9px 0 0;background:#f4f8fb;box-shadow:none;
+  color:#31566c;font-size:11px;font-weight:900;line-height:1.3;
+  transition:background .16s ease,color .16s ease;
+  cursor:pointer;
+}
+.ac360-guide button[data-ac360-tab].ac360-active {
+  background:#fff;color:#164e76;
+  border:1px solid #a6cfdf;border-bottom:3px solid #137fb4;
+}
+.ac360-guide button[data-ac360-tab]:focus-visible {outline:3px solid #ffca67;outline-offset:-3px}
+.ac360-panels{padding:19px 22px 6px;background:#fff}
+.ac360-panel[hidden]{display:none!important;}
+.ac360-panel h3{font-size:21px;line-height:1.2;margin:0 0 5px;color:#143b55;font-weight:950}
+.ac360-panel>p{margin:0 0 16px;font-size:13px;color:#5d7283;line-height:1.6}
+.ac360-panel h4{margin:19px 0 9px;font-size:15px;color:#234a63;font-weight:950}
+.ac360-panel h4:first-of-type{margin-top:10px}
+.ac360-status-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;
+  padding:0;margin:0;list-style:none;
+}
+.ac360-status{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  min-width:0;padding:9px 10px;
+  background:#f4f8fb;border:1px solid #dbe9ef;border-radius:10px;
+  font-size:11px;font-weight:750;color:#234960;
+}
+.ac360-status span{min-width:0}
+.ac360-status strong{
+  display:inline-block;flex:0 0 auto;padding:5px 7px;border-radius:8px;
+  font-size:9px;font-weight:950;line-height:1.2;text-align:center;
+}
+.ac360-status-attention strong{background:#fff0d7;color:#914a15}
+.ac360-status-no_record strong{background:#e1f5e8;color:#156143}
+.ac360-status-unknown strong{background:#e6edf2;color:#526575}
+.ac360-questions,.ac360-docs{
+  padding-left:21px;margin:0;color:#3e5d71;
+  font-size:12px;line-height:1.6;
+}
+.ac360-questions li,.ac360-docs li{padding-left:2px;margin-bottom:8px}
+.ac360-questions strong{color:#22485d}
+.ac360-task-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0 18px}
+.ac360-task{
+  display:flex;align-items:flex-start;gap:10px;
+  min-height:54px;padding:11px 12px;
+  border:1px solid #d6e4ec;border-radius:11px;
+  background:#f6fafc;color:#31556d;
+  font-size:12px;font-weight:730;line-height:1.4;cursor:pointer;
+}
+.ac360-task:has(input:checked){background:#eaf7f0;border-color:#9ed2b7;color:#29614a}
+.ac360-task input{
+  width:18px;height:18px;flex:0 0 18px;margin:0;
+  accent-color:#1d9e6c;cursor:pointer;
+}
+.ac360-task input:focus-visible{outline:3px solid #e5b64b;outline-offset:2px}
+.ac360-task:has(input:checked) span{text-decoration:line-through;text-decoration-thickness:1px;text-decoration-color:#6ca68b}
+.ac360-note{
+  padding:12px 14px;background:#fff7e9;border:1px solid #e5ca8f;
+  border-radius:12px;color:#795c26;line-height:1.55;font-size:12px;
+}
+.ac360-notes-label{
+  display:block;margin:13px 0 20px;color:#37596c;font-size:12px;font-weight:850;
+}
+.ac360-notes-label textarea{
+  display:block;width:100%;min-height:90px;resize:vertical;
+  margin:7px 0 0;padding:11px 13px;
+  border:1px solid #bad1dd;border-radius:10px;background:#fff;
+  color:#1d425b;font:400 13px/1.5 inherit; 
+}
+.ac360-price {
+  padding:17px;margin:10px 0;
+  background:#f2f9fc;border:1px solid #cbdfeb;border-radius:13px;
+}
+.ac360-fipe{
+  display:flex;justify-content:space-between;gap:15px;align-items:center;
+  padding:0 0 12px;margin-bottom:12px;border-bottom:1px solid #d7e7ed;
+  font-size:13px;color:#59768a;
+}
+.ac360-fipe strong{white-space:nowrap;font-size:22px;color:#163e5a;font-weight:950}
+.ac360-price label{display:block;margin:12px 0;font-size:12px;font-weight:850;color:#315975}
+.ac360-price input{
+  width:100%;max-width:350px;display:block;margin-top:6px;
+  padding:12px 13px;border:1px solid #91b8cb;border-radius:9px;
+  background:#fff;color:#133d57;font-size:15px;
+}
+.ac360-price input:focus{outline:3px solid rgba(75,164,204,.2);border-color:#2582ae}
+.ac360-price-result{
+  min-height:43px;padding:11px 12px;margin:14px 0 7px;
+  border-radius:10px;background:#e4f1f7;color:#1c5372;
+  font-size:12px;font-weight:850;line-height:1.5;
+}
+.ac360-price small{display:block;color:#637d8d;line-height:1.5;font-size:10px}
+.ac360-guide a.ac360-compare {
+  display:inline-flex;margin:4px 0 14px;padding:11px 14px;
+  border:1px solid #92b9ca;border-radius:10px;
+  background:#eaf6fa;color:#17567a!important;
+  text-decoration:none;font-weight:900;font-size:12px;
+}
+.ac360-guide-footer {
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;padding:15px 23px;border-top:1px solid #d6e5ed;background:#f1f8fa;
+}
+.ac360-guide-footer span{flex:1;min-width:200px;font-size:11px;line-height:1.5;color:#637b88}
+.ac360-guide button.ac360-print{
+  width:auto!important;min-height:42px;max-width:100%;
+  margin:0!important;padding:11px 14px!important;border:0;border-radius:10px;
+  background:#155b85!important;color:#fff!important;box-shadow:none;
+  font-size:11px;font-weight:950;line-height:1.4;
+}
+.ac360-guide .ac360-disclaimer {
+  margin:0;padding:12px 23px 17px;
+  color:#6c818f;background:#f1f8fa;font-size:10px;line-height:1.6;
+}
+.ac360-guide .ac360-printed-value{color:#1d4b62;padding:7px 0;font-weight:850}
+.ac360-preview {
+  margin:16px 0;padding:20px 22px;
+  border:1px solid rgba(105,194,230,.4);border-radius:18px;
+  background:linear-gradient(120deg,#123b56,#0c2a43);color:#eaf6ff;
+  box-shadow:0 16px 35px rgba(4,16,31,.19);
+}
+.ac360-preview .ac360-eyebrow{background:rgba(228,177,71,.14);color:#ffe1a0;border:1px solid rgba(228,177,71,.4)}
+.ac360-preview h2{margin:8px 0;font-size:25px;line-height:1.2;color:#fff}
+.ac360-preview p{color:#bed6e5;font-size:13px;line-height:1.6;max-width:850px;margin:0 0 14px}
+.ac360-preview-steps{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:13px}
+.ac360-preview-steps span{padding:8px 10px;background:#153e5a;border:1px solid #355c76;border-radius:9px;color:#e3f6ff;font-size:11px;font-weight:850}
+.ac360-preview a,.ac360-preview button{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:auto!important;margin:0 8px 0 0!important;padding:12px 15px!important;
+  border-radius:11px;border:1px solid rgba(140,204,232,.6)!important;
+  background:#1a6390!important;color:#fff!important;
+  font-size:12px;font-weight:950;text-decoration:none;
+  box-shadow:none;
+}
+.ac360-preview a.ac360-preview-outline {background:transparent!important}
+.ac360-preview-btns{display:flex;flex-wrap:wrap;gap:8px}
+.ac360-preview-btns a{margin:0!important}
+.ac360-account-box{margin-top:18px}
+.ac360-account-box h2{margin:9px 0;font-size:24px}
+.ac360-account-box p{font-size:13px;color:#567180;line-height:1.6}
+.ac360-account-actions{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}
+.ac360-account-actions .btn{margin:0}
+@media (max-width:760px){
+  .ac360-guide{margin:12px 0;border-radius:14px}
+  .ac360-guide .ac360-heading{padding:17px 15px}
+  .ac360-guide h2{font-size:23px}
+  .ac360-summary{gap:5px}
+  .ac360-summary>div{padding:9px 7px}
+  .ac360-summary span{font-size:9px}
+  .ac360-summary strong{font-size:19px}
+  .ac360-tabs{grid-template-columns:repeat(2,minmax(0,1fr));padding:8px;gap:6px}
+  .ac360-guide button[data-ac360-tab]{border-radius:9px;border-bottom:1px solid #a6cfdf;font-size:11px;min-height:43px}
+  .ac360-guide button[data-ac360-tab].ac360-active{border-bottom:2px solid #137fb4}
+  .ac360-panels{padding:16px 13px 4px}
+  .ac360-status-grid,.ac360-task-grid{grid-template-columns:1fr}
+  .ac360-fipe{align-items:start;flex-direction:column;gap:6px}
+  .ac360-guide-footer{padding:14px 12px}
+  .ac360-guide button.ac360-print{width:100%!important}
+  .ac360-preview{padding:17px}
+  .ac360-preview-btns{display:grid}
+  .ac360-preview-btns a{width:100%!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .ac360-guide button[data-ac360-tab]{transition:none}
+}
+@media print{
+  .ac360-guide{box-shadow:none;border-color:#888}
+  .ac360-guide button,.ac360-guide .ac360-tabs,.ac360-guide-footer{display:none!important}
+  .ac360-guide .ac360-panel[hidden]{display:block!important}
+  .ac360-task,.ac360-status{break-inside:avoid}
+}
