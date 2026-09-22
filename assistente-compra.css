@@ -1441,3 +1441,23 @@
   .hero .shell>.top>.mobile-site-menu{display:none!important}
   .hero .firstfold-followup,.hero .firstfold-sample{box-shadow:none!important}
 }
+
+/* ORDEM V13 — FORMULARIO PRIMEIRO. Apenas posição, sem alterar outros blocos. */
+@media screen and (min-width:901px){
+  /* Desktop: consulta à esquerda; textos à direita. */
+  .hero .hero-copy>.pill,
+  .hero .hero-copy>h1,
+  .hero .hero-copy>.hero-text,
+  .hero .hero-copy>.firstfold-trust{grid-column:2!important}
+  .hero .hero-copy>#consultCard:not(.result-mode){grid-column:1!important}
+  /* Mantém o relatório aberto em largura total. */
+  .hero .hero-copy>#consultCard.result-mode{grid-column:1/-1!important}
+}
+@media screen and (max-width:900px){
+  /* Mobile: campo logo depois do cabeçalho, antes do texto explicativo. */
+  .hero .hero-copy>#consultCard{order:0!important}
+  .hero .hero-copy>.pill{order:1!important}
+  .hero .hero-copy>h1{order:2!important}
+  .hero .hero-copy>.hero-text{order:3!important}
+  .hero .hero-copy>.firstfold-trust{order:4!important}
+}
