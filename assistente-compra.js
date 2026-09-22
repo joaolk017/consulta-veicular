@@ -118,8 +118,8 @@ var AssistenteCompra = (function () {
       "Comprovantes de quitação de financiamentos ou outros ônus, se houver"
     ].map(function(x){return "<li>"+esc(x)+"</li>";}).join("")+"</ul>";
   }
-  function panel(id,heading,intro,body,active){
-    return '<section class="ac360-panel" data-ac360-panel="'+id+'" role="tabpanel" aria-label="'+esc(heading)+'" '+(active?'':'hidden')+'><h3>'+esc(heading)+'</h3><p>'+esc(intro)+'</p>'+body+'</section>';
+  function panel(id,heading,intro,body,active,uid){
+    return '<section id="'+esc(uid)+"-"+esc(id)+'" class="ac360-panel" data-ac360-panel="'+id+'" role="tabpanel" aria-label="'+esc(heading)+'" '+(active?'':'hidden')+'><h3>'+esc(heading)+'</h3><p>'+esc(intro)+'</p>'+body+'</section>';
   }
   function summary(alerts){
     var count=alerts.filter(function(x){return x.status==="attention";}).length;
@@ -164,10 +164,10 @@ var AssistenteCompra = (function () {
       '<div class="ac360-task-grid">'+taskList("depois",done)+'</div>'+
       '<h4>Guarde seus documentos</h4><p>Organize comprovantes de pagamento, contrato, comprovantes de transferência, laudos e notas de serviços em local seguro.</p>'+
       '<a class="ac360-compare" href="https://www.gov.br/pt-br/servicos/consultar-dados-de-veiculo-na-base-renavam" target="_blank" rel="noopener noreferrer">Consultar serviços oficiais do veículo ↗</a>';
-    var body=panel("preparar","Prepare sua visita","Saiba o que conferir no relatório e o que perguntar antes de sair de casa.",before,true)+
-      panel("visita","Inspecione com atenção","Siga o checklist no celular e marque o que já conferiu.",visit,false)+
-      panel("negociar","Negocie com informações","Compare a FIPE com o anúncio e registre as condições, sem promessas sobre o valor de mercado.",negotiation,false)+
-      panel("depois","Organize os próximos passos","Confira documentos, transferência, seguro e manutenção após fechar negócio.",after,false);
+    var body=panel("preparar","Prepare sua visita","Saiba o que conferir no relatório e o que perguntar antes de sair de casa.",before,true,id)+
+      panel("visita","Inspecione com atenção","Siga o checklist no celular e marque o que já conferiu.",visit,false,id)+
+      panel("negociar","Negocie com informações","Compare a FIPE com o anúncio e registre as condições, sem promessas sobre o valor de mercado.",negotiation,false,id)+
+      panel("depois","Organize os próximos passos","Confira documentos, transferência, seguro e manutenção após fechar negócio.",after,false,id);
     return '<section class="ac360-guide" data-ac360-key="'+esc(key)+'" data-ac360-fipe="'+(fipe||"")+'"'+(opt.demo?' data-ac360-demo="true"':'')+' aria-label="Assistente de Compra 360">'+
       (opt.demo?'<div class="ac360-demo-banner"><strong>DEMONSTRAÇÃO</strong> · Placa, FIPE e alertas fictícios. Nenhuma consulta ou crédito utilizado.</div>':'')+
       '<div class="ac360-heading"><span class="ac360-eyebrow">ASSISTENTE DE COMPRA 360</span><h2>Da consulta à negociação, tudo em um só lugar.</h2>'+
