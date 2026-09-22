@@ -198,6 +198,6 @@ var Escolha360 = (function () {
   document.addEventListener("keydown",function(e){if(e.key==="Escape"&&el("c360CompareModal")&&!el("c360CompareModal").classList.contains("hidden"))close();});
   window.addEventListener("afterprint",function(){document.body.classList.remove("c360-print");});
   // Preenche mapa após carregar; nenhuma informação fica armazenada no navegador.
-  window.addEventListener("DOMContentLoaded",function(){if(window.location && new URLSearchParams(window.location.search).get("demo")==="1")demo();});
+  window.addEventListener("DOMContentLoaded",function(){if(window.location && /(?:^\\?|&)demo=1(?:&|$)/.test(window.location.search||""))demo();});
   return {sync:sync,isChosen:isChosen,compare:compare,demo:demo,close:close};
 })();
