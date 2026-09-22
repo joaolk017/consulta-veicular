@@ -5,6 +5,7 @@ const crypto = require("crypto");
 const sharp = require("sharp");
 const QRCode = require("qrcode");
 const { Pool } = require("pg");
+const { fetchSPDebts } = require("./infosimples-sp-debitos");
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -2787,6 +2788,12 @@ app.post("/api/consulta-completa", async (req, res) => {
           console.warn("Relatório 360: FonteData salva não pôde ser combinada:", mergeErr.message);
         }
       }
+
+      // O módulo complementar fica DESLIGADO por padrão. Token isolado não ativa cobrança.
+      // Somente veículos de SP com Renavam válido e configuração explicitamente aprovada.
+      // Falha do complemento não altera a entrega nem o crédito da consulta principal.
+      const spComplement = await fetchSPDebts(safeVehicle, requestJson);
+      if (spComplement) safeVehicle.infosimplesSP = spComplement;
 
       const report360 = buildVehicle360Report(safeVehicle);
       const coverage360 = analyzeVehicle360Coverage(safeVehicle);
