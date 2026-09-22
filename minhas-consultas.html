@@ -380,6 +380,8 @@ function abrirGuiaDemo(stage){
   if(!mount.querySelector('.ac360-guide')){
     const ok=AssistenteCompra.demo('ac360DemoMount');
     if(!ok)return;
+    const demoSaveNote=mount.querySelector('[data-ac360-save-note]');
+    if(demoSaveNote)demoSaveNote.textContent='Esta demonstração usa dados fictícios e não salva as marcações. Nos guias das suas consultas, os itens marcados ficam salvos neste dispositivo.';
     decorarGuiaPremium(mount.querySelector('.ac360-guide'));
   }
   const accepted=['preparar','visita','negociar','depois'];
