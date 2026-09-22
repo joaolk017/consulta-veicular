@@ -74,3 +74,10 @@
   body.c360-print .c360-matrix th,body.c360-print .c360-matrix td {padding:6px 4px;font-size:9px;}
   body.c360-print .c360-tag {font-size:9px;padding:3px 4px;}
 }
+
+.c360-module-actions {display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+.c360-demo-button {min-height:46px;padding:12px 17px;border:1px solid #4c94b8;border-radius:11px;background:#e2f4fa;color:#124869;font-size:13px;font-weight:900;cursor:pointer;}
+.c360-demo-button:hover {background:#cdebf6;}
+.c360-demo-banner {border:1px solid #e5bc68;background:#fff2d7;color:#6d4b18;border-radius:11px;padding:12px 14px;margin:0 0 18px;font-size:12px;line-height:1.5;}
+.c360-demo-banner strong {font-weight:950;letter-spacing:.4px;}
+@media(max-width:620px) {.c360-module-actions,.c360-demo-button {width:100%;}}
