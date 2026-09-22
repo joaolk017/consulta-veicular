@@ -4,7 +4,7 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f4f7fa;color:#142033;font-family:Arial,Helvetica,sans-serif}.top{background:#0b172a;color:#fff;padding:18px 16px}.topin,.wrap{max-width:980px;margin:auto}.brand{font-size:23px;font-weight:900}.brand span{color:#f6c445}.back{float:right;color:#fff;text-decoration:none;font-weight:700;margin-top:4px}.wrap{padding:26px 16px 50px}.hero,.card{background:#fff;border:1px solid #dce5ed;border-radius:16px;box-shadow:0 8px 28px rgba(11,23,42,.06)}.hero{padding:24px;display:flex;justify-content:space-between;gap:18px;align-items:center}.hero h1{margin:0 0 7px;font-size:27px}.muted{color:#64748b;line-height:1.5}.balance{min-width:180px;text-align:center;background:#f8fafc;border-radius:14px;padding:16px}.balance strong{display:block;font-size:34px;color:#0b172a}.actions{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.btn{border:0;border-radius:10px;padding:13px 17px;font-weight:800;cursor:pointer;text-decoration:none;font-size:14px}.primary{background:#0b172a;color:#fff}.secondary{background:#fff;color:#0b172a;border:1px solid #b9c8d6}.card{padding:20px;margin-top:18px}.card h2{margin:0 0 14px}.item{display:grid;grid-template-columns:1fr auto;gap:12px;padding:15px;margin-top:10px;border:1px solid #dce5ed;border-radius:14px;background:#fbfdff;box-shadow:0 5px 16px rgba(11,23,42,.04)}.item:first-of-type{margin-top:0}.plate{font-size:22px;font-weight:900;letter-spacing:1px}.vehicle-name{margin-top:5px;font-size:14px;font-weight:800;color:#26384d}.item-date{margin-top:6px;font-size:12px}.report-available{display:block;margin-top:5px;font-size:11px;color:#176b3a;font-weight:700}.status{display:inline-block;margin-left:8px;font-size:11px;padding:5px 8px;border-radius:20px;background:#e9f8ef;color:#176b3a;font-weight:800}.failed{background:#fff0f0;color:#a52828}.pending{background:#fff8e6;color:#785b00}.empty,.info,.error{padding:16px;border-radius:10px;background:#f8fafc}.error{background:#fff0f0;color:#8c2020}.overlay{position:fixed;inset:0;background:rgba(3,10,20,.7);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}.hidden{display:none!important}.modal{background:#fff;border-radius:16px;width:min(680px,100%);max-height:90vh;overflow:auto;padding:22px}.close{float:right;border:0;background:#eef2f6;border-radius:8px;padding:8px 11px;cursor:pointer}.row{display:flex;justify-content:space-between;gap:15px;padding:10px 0;border-bottom:1px solid #edf1f5}.row span:last-child{text-align:right;font-weight:700}.recover{margin-top:8px}.recover input{width:100%;padding:13px;border:1px solid #b9c8d6;border-radius:9px;margin:7px 0}.code{font-size:22px;letter-spacing:5px;text-align:center}@media(max-width:620px){.hero{display:block}.balance{margin-top:16px}.item{grid-template-columns:1fr}.item .btn{width:100%}.back{font-size:13px}.row{display:block}.row span{display:block}.row span:last-child{text-align:left;margin-top:4px}}
 @media print{.top,.actions,.close,.noprint{display:none!important}body{background:#fff}.modal{max-height:none;width:100%;padding:0}.overlay{position:static;background:#fff;padding:0}.card,.hero{box-shadow:none;border:0}}
-</style><link rel="stylesheet" href="/minhas-consultas-premium.css?v=2"></head><body class="premium-account">
+</style><link rel="stylesheet" href="/minhas-consultas-premium.css?v=3"></head><body class="premium-account">
 <header class="top"><div class="topin"><div class="brand"><a href="/" aria-label="Consulta Veicular 360 — página inicial"><img src="/logo%20site.png?v=7870a0d9" alt="Consulta Veicular 360" width="252" height="84"></a></div><a class="back" href="/">← Voltar ao site</a></div></header>
 <main class="wrap"><section class="hero" aria-labelledby="accountTitle"><div class="hero-copy"><span class="pa-eyebrow">✦ SUA CENTRAL 360</span><h1 id="accountTitle">Tudo sobre seus veículos em um só lugar.</h1><div class="muted">Acesse seus relatórios, utilize seus créditos e organize a próxima compra com o Assistente de Compra 360.</div><div id="accountEmail" class="muted" aria-live="polite"></div></div><div class="balance"><span class="balance-icon" aria-hidden="true">◈</span><span class="muted">CRÉDITOS DISPONÍVEIS</span><strong id="balance" aria-live="polite">—</strong><span class="muted">consultas para usar</span></div></section>
 <div class="actions pa-top-actions"><button type="button" class="btn primary" onclick="location.href='/'">＋ Nova consulta</button><button type="button" class="btn secondary" onclick="load()">↻ Atualizar meus dados</button><button type="button" class="btn secondary" onclick="openRecovery()">✉ Recuperar por e-mail</button></div>
@@ -25,10 +25,10 @@
     <div class="pa-assistant-aside" aria-label="Etapas interativas do assistente">
       <div class="pa-aside-heading"><strong>Sua jornada de compra</strong><span>4 ETAPAS</span></div>
       <div class="pa-stage-grid">
-        <a class="pa-stage-tile" href="#ac360DemoShell" onclick="abrirGuiaDemo('preparar')" aria-label="Experimentar a etapa antes da visita"><span class="pa-stage-top"><span class="pa-stage-icon" aria-hidden="true">📋</span><span class="pa-stage-no">01</span></span><strong>Antes da visita</strong><small>Perguntas e documentos</small></a>
-        <a class="pa-stage-tile" href="#ac360DemoShell" onclick="abrirGuiaDemo('visita')" aria-label="Experimentar a etapa inspeção"><span class="pa-stage-top"><span class="pa-stage-icon" aria-hidden="true">🚘</span><span class="pa-stage-no">02</span></span><strong>Inspeção</strong><small>Checklist do veículo</small></a>
-        <a class="pa-stage-tile" href="#ac360DemoShell" onclick="abrirGuiaDemo('negociar')" aria-label="Experimentar a etapa negociação"><span class="pa-stage-top"><span class="pa-stage-icon" aria-hidden="true">🤝</span><span class="pa-stage-no">03</span></span><strong>Negociação</strong><small>FIPE e condições</small></a>
-        <a class="pa-stage-tile" href="#ac360DemoShell" onclick="abrirGuiaDemo('depois')" aria-label="Experimentar a etapa depois da compra"><span class="pa-stage-top"><span class="pa-stage-icon" aria-hidden="true">🗂️</span><span class="pa-stage-no">04</span></span><strong>Pós-compra</strong><small>Documentos e próximos passos</small></a>
+        <a class="pa-stage-tile" data-pa-stage="preparar" href="#ac360DemoShell" onclick="abrirGuiaDemo('preparar')" aria-label="Experimentar a etapa antes da visita"><span class="pa-stage-top"><span class="pa-stage-icon" aria-hidden="true">📋</span><span class="pa-stage-no">01</span></span><strong>Antes da visita</strong><small>Perguntas e documentos</small></a>
+        <a class="pa-stage-tile" data-pa-stage="visita" href="#ac360DemoShell" onclick="abrirGuiaDemo('visita')" aria-label="Experimentar a etapa inspeção"><span class="pa-stage-top"><span class="pa-stage-icon" aria-hidden="true">🚘</span><span class="pa-stage-no">02</span></span><strong>Inspeção</strong><small>Checklist do veículo</small></a>
+        <a class="pa-stage-tile" data-pa-stage="negociar" href="#ac360DemoShell" onclick="abrirGuiaDemo('negociar')" aria-label="Experimentar a etapa negociação"><span class="pa-stage-top"><span class="pa-stage-icon" aria-hidden="true">🤝</span><span class="pa-stage-no">03</span></span><strong>Negociação</strong><small>FIPE e condições</small></a>
+        <a class="pa-stage-tile" data-pa-stage="depois" href="#ac360DemoShell" onclick="abrirGuiaDemo('depois')" aria-label="Experimentar a etapa depois da compra"><span class="pa-stage-top"><span class="pa-stage-icon" aria-hidden="true">🗂️</span><span class="pa-stage-no">04</span></span><strong>Pós-compra</strong><small>Documentos e próximos passos</small></a>
       </div>
     </div>
   </div>
@@ -61,7 +61,139 @@
 </div>
 <div id="reportModal" class="overlay hidden"><div class="modal"><button class="close noprint" onclick="closeReport()">✕</button><div id="report"></div></div></div>
 <div id="recoveryModal" class="overlay hidden"><div class="modal"><button class="close" onclick="closeRecovery()">✕</button><h2>Recuperar acesso</h2><p class="muted">Enviaremos um código de 6 números se o e-mail estiver cadastrado.</p><div class="info"><b>Código de recuperação dos créditos da Consulta Veicular 360</b><br>Este código serve somente para recuperar seus créditos e histórico. Não é senha bancária nem código de autenticação de outra conta.<br><br><b>Segurança:</b> nunca solicitaremos sua senha de e-mail, senha bancária ou código de autenticação de terceiros.</div><div id="stepEmail" class="recover"><label><b>E-mail</b></label><input id="email" type="email" autocomplete="email" placeholder="seuemail@exemplo.com"><button class="btn primary" onclick="sendCode()">ENVIAR CÓDIGO</button></div><div id="stepCode" class="recover hidden"><label><b>Código de recuperação</b></label><input id="code" class="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000"><button class="btn primary" onclick="verifyCode()">CONFIRMAR CÓDIGO</button></div><div id="recoveryMsg" style="margin-top:12px"></div></div></div>
-<script src="/assistente-compra.js?v=8"></script>
+<script src="/assistente-compra.js?v=9"></script>
+<script>
+/* GUIA 360 V3 — navegação autônoma: as abas respondem inclusive na prévia já renderizada. */
+(function(){
+  "use strict";
+  var stages=["preparar","visita","negociar","depois"];
+  var label={preparar:"Antes da visita",visita:"Durante a visita",negociar:"Negociação",depois:"Depois da compra"};
+  function byId(id){return document.getElementById(id)}
+  function enhance(root){
+    if(!root)return;
+    var heading=root.querySelector(".ac360-heading");
+    if(heading&&!root.querySelector(".pa-guide-progress")){
+      heading.insertAdjacentHTML("beforeend",'<div class="pa-guide-progress"><div class="pa-progress-top"><span>PROGRESSO DO CHECKLIST</span><strong data-pa-progress-label>0% concluído</strong></div><span class="pa-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Progresso do checklist"><span class="pa-progress-fill" data-pa-progress-fill></span></span></div>');
+    }
+    var panels=root.querySelector(".ac360-panels");
+    if(panels&&!root.querySelector(".pa-guide-navigation")){
+      panels.insertAdjacentHTML("beforeend",'<nav class="pa-guide-navigation" aria-label="Navegação pelas etapas"><button type="button" data-guide-prev>← Anterior</button><strong data-pa-current-stage>Etapa 1 de 4</strong><button type="button" data-guide-next>Próxima etapa →</button></nav>');
+    }
+    if(root.closest("#ac360DemoShell")){
+      var hint=byId("paDemoFallback");if(hint)hint.hidden=true;
+    }
+    updateProgress(root);
+  }
+  function updateProgress(root){
+    var boxes=Array.prototype.slice.call(root.querySelectorAll("input[data-ac360-task]"));
+    var marked=boxes.filter(function(box){return box.checked}).length;
+    var percent=boxes.length?Math.round(100*marked/boxes.length):0;
+    var counter=root.querySelector("[data-ac360-progress]");
+    if(counter)counter.textContent=marked+"/"+boxes.length;
+    var labelNode=root.querySelector("[data-pa-progress-label]");
+    if(labelNode)labelNode.textContent=marked+" de "+boxes.length+" itens · "+percent+"%";
+    var track=root.querySelector(".pa-progress-track");
+    if(track)track.setAttribute("aria-valuenow",String(percent));
+    var fill=root.querySelector("[data-pa-progress-fill]");
+    if(fill)fill.style.width=percent+"%";
+  }
+  function activate(root,stage){
+    if(!root)return false;
+    if(stages.indexOf(stage)<0)stage="preparar";
+    var tabs=Array.prototype.slice.call(root.querySelectorAll("button[data-ac360-tab]"));
+    if(!tabs.some(function(tab){return tab.dataset.ac360Tab===stage}))return false;
+    tabs.forEach(function(tab){
+      var selected=tab.dataset.ac360Tab===stage;
+      tab.classList.toggle("ac360-active",selected);
+      tab.setAttribute("aria-selected",selected?"true":"false");
+      tab.tabIndex=selected?0:-1;
+    });
+    root.querySelectorAll("[data-ac360-panel]").forEach(function(panel){
+      panel.hidden=panel.dataset.ac360Panel!==stage;
+    });
+    var idx=stages.indexOf(stage),nav=root.querySelector(".pa-guide-navigation");
+    if(nav){
+      var previous=nav.querySelector("[data-guide-prev]"),next=nav.querySelector("[data-guide-next]"),now=nav.querySelector("[data-pa-current-stage]");
+      if(previous)previous.disabled=idx===0;
+      if(next){next.disabled=idx===3;next.textContent=idx===3?"Última etapa ✓":"Próxima etapa →";}
+      if(now)now.textContent="Etapa "+(idx+1)+" de 4 · "+label[stage];
+    }
+    if(root.closest("#ac360DemoShell")){
+      document.querySelectorAll(".pa-stage-tile[data-pa-stage]").forEach(function(tile){
+        var active=tile.dataset.paStage===stage;
+        tile.classList.toggle("is-active",active);
+        if(active)tile.setAttribute("aria-current","step");else tile.removeAttribute("aria-current");
+      });
+    }
+    updateProgress(root);
+    return true;
+  }
+  function show(stage,scroll){
+    var shell=byId("ac360DemoShell"),mount=byId("ac360DemoMount");
+    if(!shell||!mount)return;
+    shell.classList.remove("hidden");shell.dataset.open="true";
+    var launch=byId("paOpenDemo");if(launch)launch.setAttribute("aria-expanded","true");
+    try{
+      if(typeof window.abrirGuiaDemo==="function")window.abrirGuiaDemo(stage);
+    }catch(error){if(window.console&&console.error)console.error("Assistente 360:",error)}
+    var root=mount.querySelector(".ac360-guide");
+    enhance(root);activate(root,stage||"preparar");
+    if(scroll)requestAnimationFrame(function(){
+      shell.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+    });
+  }
+  /* Captura antes dos listeners do guia antigo; impede dupla navegação após o clique. */
+  document.addEventListener("click",function(event){
+    var target=event.target;
+    var tile=target.closest(".pa-stage-tile[data-pa-stage]");
+    if(tile){event.preventDefault();event.stopImmediatePropagation();show(tile.dataset.paStage,true);return}
+    var opener=target.closest("#paOpenDemo");
+    if(opener){event.preventDefault();event.stopImmediatePropagation();show("preparar",true);return}
+    var tab=target.closest(".ac360-guide button[data-ac360-tab]");
+    if(tab){
+      event.preventDefault();event.stopImmediatePropagation();
+      var root=tab.closest(".ac360-guide");enhance(root);activate(root,tab.dataset.ac360Tab);
+      return;
+    }
+    var navButton=target.closest(".ac360-guide [data-guide-prev],.ac360-guide [data-guide-next]");
+    if(navButton){
+      event.preventDefault();event.stopImmediatePropagation();
+      var guide=navButton.closest(".ac360-guide");enhance(guide);
+      var active=guide.querySelector('button[data-ac360-tab][aria-selected="true"]');
+      var index=active?stages.indexOf(active.dataset.ac360Tab):0;
+      var next=index+(navButton.hasAttribute("data-guide-next")?1:-1);
+      if(next>=0&&next<stages.length){
+        activate(guide,stages[next]);
+        var tabList=guide.querySelector(".ac360-tabs");
+        if(tabList)tabList.scrollIntoView({behavior:"smooth",block:"nearest"});
+      }
+      return;
+    }
+  },true);
+  document.addEventListener("change",function(event){
+    var checkbox=event.target.closest('.ac360-guide input[data-ac360-task]');
+    if(checkbox)updateProgress(checkbox.closest(".ac360-guide"));
+  },true);
+  document.addEventListener("keydown",function(event){
+    var tab=event.target.closest(".ac360-guide button[data-ac360-tab]");
+    if(!tab||["ArrowRight","ArrowLeft"].indexOf(event.key)<0)return;
+    event.preventDefault();
+    var root=tab.closest(".ac360-guide"),index=stages.indexOf(tab.dataset.ac360Tab);
+    var next=(index+(event.key==="ArrowRight"?1:-1)+stages.length)%stages.length;
+    if(activate(root,stages[next])){
+      var selected=root.querySelector('button[data-ac360-tab][aria-selected="true"]');
+      if(selected)selected.focus();
+    }
+  },true);
+  document.addEventListener("DOMContentLoaded",function(){
+    var root=document.querySelector("#ac360DemoMount .ac360-guide");
+    if(root)enhance(root);
+    if(/[?&]guiaDemo=1(?:&|$)/.test(location.search)||location.hash==="#ac360DemoShell"){
+      show("preparar",false);
+    }
+  });
+})();
+</script>
 <script>
 "use strict";
 /* Escolha 360: compara SOMENTE relatórios já comprados e associados à conta autenticada.
