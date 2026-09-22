@@ -360,6 +360,53 @@
   }
 }
 </style>
+<style>
+
+/* Painel que preenche a coluna direita no desktop */
+.desktop-side-panel { display: none; }
+@media (min-width: 901px) {
+  .hero-copy > .desktop-side-panel {
+    display: block;
+    grid-column: 2;
+    grid-row: 5;
+    min-width: 0;
+    width: 100%;
+    margin-top: 8px;
+    padding: 22px 24px;
+    text-align: left;
+    border: 1px solid rgba(119,185,230,.36);
+    border-radius: 20px;
+    color: #eaf5ff;
+    background: linear-gradient(150deg, #153a59, #0c2942);
+    box-shadow: 0 14px 35px rgba(2, 11, 22, .25);
+  }
+  /* No desktop, mostramos os indicadores ao lado do texto, não duplicados dentro do formulário. */
+  .hero-card > .report-value { display: none; }
+  .desktop-panel-heading { display: flex; align-items: flex-start; gap: 12px; }
+  .desktop-panel-icon { font-size: 29px; line-height: 1; }
+  .desktop-panel-heading h2 { margin: 0 0 7px; font-size: 22px; line-height: 1.2; color: #fff; }
+  .desktop-panel-heading p { margin: 0; font-size: 12px; line-height: 1.55; color: #bfd5e7; }
+  .desktop-benefits-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; margin-top: 19px; }
+  .desktop-benefits-grid span {
+    display: flex; align-items: center; min-height: 46px;
+    padding: 9px 11px; border: 1px solid #376489; border-radius: 11px;
+    background: #0f304d; color: #e7f5ff; font-size: 12px; font-weight: 800;
+  }
+  .desktop-panel-disclaimer { margin: 12px 0 0; color: #abc4d6; font-size: 10px; line-height: 1.5; }
+  .desktop-steps { margin-top: 22px; padding-top: 17px; border-top: 1px solid #3b6388; }
+  .desktop-steps h3 { margin: 0 0 12px; font-size: 17px; color: #fff; }
+  .desktop-step { display: flex; gap: 12px; align-items: flex-start; margin-top: 12px; }
+  .desktop-step > b {
+    display: grid; place-items: center; flex: 0 0 28px; height: 28px;
+    border-radius: 50%; background: #2576b9; color: #fff; font-size: 12px;
+  }
+  .desktop-step span { display: block; min-width: 0; }
+  .desktop-step strong { display: block; font-size: 13px; color: #fff; line-height: 1.4; }
+  .desktop-step small { display: block; margin-top: 2px; font-size: 11px; color: #b6cbdb; line-height: 1.45; }
+  .hero-copy:has(.hero-card.result-mode) > .desktop-side-panel { display: none; }
+}
+
+</style>
 </head>
 <body>
 <div id="appSplash" class="app-splash" aria-hidden="true"><img src="/file_00000000d76c820e88ceb6c39ce70f0d.png" alt=""></div>
@@ -372,6 +419,30 @@
 <h1>Consulta veicular por placa antes de negociar.</h1>
 <p class="hero-text">Consulte dados disponíveis do veículo pela placa, veja uma prévia gratuita e, se desejar, libere a consulta completa por <strong>R$ 18,90</strong>.</p>
 <div class="hero-infos" style="margin:0 0 14px"><span>✓ Sem assinatura</span><span>✓ Pagamento único via PIX</span><span>✓ Relatório após confirmação do pagamento</span></div>
+<aside class="desktop-side-panel" aria-label="O que a consulta pode mostrar e como funciona">
+  <div class="desktop-panel-heading">
+    <span class="desktop-panel-icon" aria-hidden="true">🔎</span>
+    <div>
+      <h2>O que você pode verificar</h2>
+      <p>Indicadores disponíveis para ajudar na análise do veículo antes da negociação.</p>
+    </div>
+  </div>
+  <div class="desktop-benefits-grid">
+    <span>🛡️ Roubo e furto</span>
+    <span>🏷️ Leilão</span>
+    <span>📣 Recall</span>
+    <span>⚠️ Restrições</span>
+    <span>💰 Referência FIPE</span>
+    <span>🚘 Dados técnicos</span>
+  </div>
+  <p class="desktop-panel-disclaimer">As informações variam conforme o veículo e a disponibilidade das fontes integradas.</p>
+  <div class="desktop-steps">
+    <h3>Como funciona</h3>
+    <div class="desktop-step"><b>1</b><span><strong>Digite a placa</strong><small>Sem precisar informar CPF.</small></span></div>
+    <div class="desktop-step"><b>2</b><span><strong>Veja a prévia gratuita</strong><small>Confira as informações iniciais disponíveis.</small></span></div>
+    <div class="desktop-step"><b>3</b><span><strong>Libere o relatório, se desejar</strong><small>Pagamento único via PIX de R$ 18,90.</small></span></div>
+  </div>
+</aside>
 <main class="card hero-card" id="consultCard">
 <div class="title">Consultar veículo</div><div class="sub">Digite somente a placa. A consulta da placa não exige CPF.</div>
 <input id="plate" class="plate" maxlength="7" autocomplete="off" inputmode="text" autocapitalize="characters" spellcheck="false" placeholder="ABC1D23" aria-label="Placa do veículo">
