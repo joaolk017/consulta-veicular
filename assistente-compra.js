@@ -268,3 +268,4 @@ var AssistenteCompra = (function () {
   }
   return {renderHTML:renderHTML,mount:mount,demo:demo,parsePrice:parsePrice};
 })();
+window.AssistenteCompra=AssistenteCompra;
