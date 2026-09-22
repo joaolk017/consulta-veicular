@@ -77,6 +77,12 @@ app.use((req, res, next) => {
 
 app.use((req, res, next) => {
   const pathname = String(req.path || "/").toLowerCase();
+  // Único JavaScript público necessário ao comparador. Mantém o bloqueio
+  // dos demais .js e de arquivos internos do repositório.
+  if (pathname === "/escolha-360.js") {
+    res.set("Cache-Control", "no-cache");
+    return next();
+  }
   const blocked =
     pathname.startsWith("/.") ||
     pathname.startsWith("/node_modules/") ||
