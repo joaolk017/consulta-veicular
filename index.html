@@ -1102,6 +1102,27 @@ async function compartilharResumoPago(){
 }
 
 
+function renderSPComplement(v){
+  const d=v&&v.infosimplesSP;if(!d||d.source!=='Infosimples / DETRAN-SP')return '';
+  const money=n=>n===null||n===undefined||!Number.isFinite(Number(n))?'Não informado':Number(n).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  const items=(title,rows,fn)=>Array.isArray(rows)&&rows.length?'<h3 style="margin:16px 0 8px">'+title+'</h3>'+rows.slice(0,25).map(fn).join(''):'';
+  let h='<section class="section" id="paidSPDebts" aria-label="Consulta complementar de débitos e restrições de São Paulo">';
+  h+='<h2>🏛️ Débitos e restrições · SP</h2><p class="small">Fonte complementar: Infosimples / Detran-SP. Dados do momento da consulta; podem mudar. Ausência de informação não significa regularidade do veículo.</p>';
+  if(d.checkedAt){const checked=new Date(d.checkedAt);if(!Number.isNaN(checked.getTime()))h+='<p class="small">Consulta realizada em '+esc(checked.toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}))+'</p>';}
+  h+='<h3>Valores informados</h3>'+row('IPVA informado',money(d.ipvaInformado))+row('Licenciamento informado',money(d.licenciamentoInformado))+row('Multas informadas',money(d.multasInformadas));
+  h+='<p class="small">Valores de IPVA parcelado podem representar parcelas e alternativas de pagamento. Não somamos automaticamente as cotas nem assumimos quitação.</p>';
+  h+=items('IPVA — opções retornadas',d.ipva,r=>'<div class="info" style="margin-top:7px">'+esc([r.exercicio,r.nomeCota,r.cota?'Cota '+r.cota:''].filter(Boolean).join(' · '))+' — '+esc(money(r.valor))+(r.vencimento?' · Venc.: '+esc(r.vencimento):'')+'</div>');
+  h+=items('Licenciamento — lançamentos',d.licenciamento,r=>'<div class="info" style="margin-top:7px">'+esc(r.exercicio)+' · '+esc(money(r.valor))+(r.vencimento?' · Venc.: '+esc(r.vencimento):'')+'</div>');
+  h+=items('Multas retornadas',d.multas,r=>'<div class="info" style="margin-top:7px"><b>'+esc(r.descricao||'Multa')+'</b> · '+esc(money(r.valor))+(r.data?' · '+esc(r.data):'')+(r.municipio?' · '+esc(r.municipio):'')+(r.orgao?' · '+esc(r.orgao):'')+'</div>');
+  const names={administrativa:'Administrativa',financeira:'Financeira',judiciaria:'Judicial / Renajud',tributaria:'Tributária',guincho:'Registro de guincho'};
+  const restrictions=d.restrictions&&typeof d.restrictions==='object'?Object.entries(d.restrictions):[];
+  if(restrictions.length){h+='<h3>Restrições e observações</h3>';h+=restrictions.map(([k,val])=>row(names[k]||k,val)).join('');}
+  if(d.ultimoLicenciamento)h+=row('Último licenciamento informado',d.ultimoLicenciamento);
+  if(d.statusLicenciamento)h+=row('Situação do licenciamento',d.statusLicenciamento);
+  h+=items('Vistorias disponibilizadas',d.vistorias,r=>row('Vistoria em '+r.data,r.km||'Quilometragem não informada'));
+  h+='<p class="small">Consulte os órgãos competentes antes de transferir o veículo. A disponibilidade e atualização dos dados dependem da fonte.</p></section>';
+  return h;
+}
 function renderReport(v){
   track('upsell_pos_consulta_exibido',{product:'upsell-2',source:'pos_consulta'});
   $('consultCard').classList.add('result-mode');
@@ -1129,6 +1150,7 @@ function renderReport(v){
   h+=paidQuickRead(v);
   h+='<nav class="paid-report-jump" aria-label="Ir para uma seção do relatório"><a href="#paidSummary">Indicadores</a><a href="#paidVehicleData">Dados do veículo</a><a href="#paidReportTop">Voltar ao início ↑</a></nav>';
   h+=render360Top(v);
+  h+=renderSPComplement(v);
   const summaryIndicator=(label,value)=>`<div class="report-summary-item ${value===true?'warn':value===false?'ok':'na'}"><span>${esc(label)}</span><b>${value===true?'⚠ Conferir ocorrência':value===false?'✓ Sem indicação no retorno':'— Não informado'}</b></div>`;
   const restrictionsSummary=Array.isArray(v.restrictions)?`<div class="report-summary-item ${v.restrictions.length?'warn':'ok'}"><span>Restrições listadas</span><b>${v.restrictions.length?'⚠ Registros retornados':'✓ Nenhuma listada no retorno'}</b></div>`:summaryIndicator('Restrições listadas',undefined);
   h+=`<div class="report-summary" id="paidSummary"><div class="report-summary-title">Indicadores do relatório</div><div class="report-legend" aria-label="Legenda dos indicadores"><span class="ok">✓ Sem indicação no retorno</span><span class="warn">⚠ Conferir registro</span><span class="na">— Não informado</span></div><div class="report-summary-grid">${summaryIndicator('Roubo / Furto',inds.theft)}${summaryIndicator('Leilão',inds.auction)}${summaryIndicator('Recall',inds.recall)}${restrictionsSummary}${summaryIndicator('RENAJUD*',inds.renajud)}${summaryIndicator('RENAINF*',inds.renainf)}</div><div class="small" style="margin-top:11px;color:#648092;line-height:1.5">A indicação se refere apenas ao retorno das fontes consultadas. “Não informado” não confirma ausência de ocorrências. *Indicadores relacionados a RENAJUD e RENAINF dependem da cobertura dos provedores.</div></div>`;
