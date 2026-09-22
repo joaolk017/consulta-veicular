@@ -544,3 +544,79 @@
   .ac360-preview.ac360-home-unified .ac360-home-card{padding:17px 14px}
   .ac360-preview.ac360-home-unified .ac360-home-card-links a.ac360-buy-button{font-size:14px}
 }
+
+/* PALETA CLARA V5 — TOPICOS INFORMATIVOS DA HOME */
+/* Apenas os blocos de leitura ficam claros; hero, PIX e relatórios continuam com tema próprio. */
+.wrap > :is(.seo-content,.faq,.use-cases,.private-info,.identity) {
+  background:#fff!important;background-image:none!important;
+  color:#253f54!important;border:1px solid #d9e7ef!important;
+  border-radius:19px;box-shadow:0 12px 34px rgba(3,17,35,.16)!important;
+}
+.wrap > :is(.seo-content,.faq,.use-cases) h2,
+.wrap > .private-info .private-title b,
+.wrap > .private-info .private-title strong,
+.wrap > .identity .identity-title {
+  color:#15364e!important;
+}
+.wrap > .seo-content p,.wrap > .faq p,.wrap > .use-cases > p,
+.wrap > .private-info > p,.wrap > .identity .identity-company {
+  color:#536d80!important;
+}
+.wrap > :is(.seo-content,.faq,.use-cases) strong {
+  color:#193b54!important;
+}
+.wrap > .faq details {border-top:1px solid #e0eaf0!important;}
+.wrap > .faq summary {color:#20465f!important;}
+.wrap > .faq summary:is(:hover,:focus-visible){color:#0c6f9c!important;}
+.wrap > .use-cases .use-case,
+.wrap > .private-info .private-more .trust > div {
+  background:#f3f8fb!important;background-image:none!important;
+  border:1px solid #dbe8f0!important;box-shadow:none!important;
+  color:#25455e!important;
+}
+.wrap > .use-cases .use-case b,
+.wrap > .private-info .private-more .trust b {color:#1a3e57!important;}
+.wrap > .use-cases .use-case span,
+.wrap > .private-info .private-more .trust p {color:#587384!important;}
+.wrap > .private-info .private-row {border-bottom:1px solid #e1eaf0!important;}
+.wrap > .private-info .private-row b {color:#1b405a!important;}
+.wrap > .private-info .private-row small {color:#567183!important;}
+.wrap > .private-info .gov-alert {
+  background:#fff8e8!important;border:1px solid #e8ca8b!important;color:#815521!important;
+}
+.wrap > .private-info .gov-alert b {color:#80501a!important;}
+.wrap > .private-info .gov-alert small {color:#72572e!important;}
+.wrap > .private-info .private-more summary {color:#0b719f!important;}
+.wrap > .identity .identity-grid > span {
+  background:#f3f8fc!important;border:1px solid #dde9f0!important;
+  border-radius:11px;
+}
+.wrap > .identity .identity-grid small {color:#627b8d!important;}
+.wrap > .identity .identity-grid strong {color:#153b55!important;}
+.wrap > .identity .identity-grid a {
+  color:#116c9d!important;text-decoration:underline;text-underline-offset:3px;
+}
+.wrap > .identity .identity-grid a:hover {color:#064c74!important;}
+/* O formulário continua escuro, mas sua ação principal fica amarela. */
+.hero #consultCard #btn {
+  background:linear-gradient(125deg,#ffe285,#f5bc45)!important;
+  border:1px solid #e4ad32!important;color:#162c3e!important;
+  box-shadow:0 10px 24px rgba(201,143,35,.23)!important;
+}
+.hero #consultCard #btn:not(:disabled):hover {
+  background:linear-gradient(125deg,#ffebb0,#f9ca63)!important;
+}
+.hero #consultCard .secondary {
+  background:#19527c!important;color:#f5fbff!important;
+  border-color:#5d9dcc!important;
+}
+@media(max-width:620px){
+ .wrap > :is(.seo-content,.faq,.use-cases,.private-info,.identity){
+   border-radius:15px;box-shadow:0 8px 22px rgba(3,17,35,.12)!important;
+ }
+}
+@media print {
+ .wrap > :is(.seo-content,.faq,.use-cases,.private-info,.identity){
+   box-shadow:none!important;
+ }
+}
