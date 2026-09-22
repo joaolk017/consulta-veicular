@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 365" role="img" aria-labelledby="title desc">
+<title id="title">Consulta Veicular 360</title>
+<desc id="desc">Carro azul, lupa com confirmação e setas circulares azuis e douradas. Informação completa, mais segurança para você.</desc>
+<defs>
+ <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1ba6ff"/><stop offset=".5" stop-color="#0567cf"/><stop offset="1" stop-color="#05275f"/></linearGradient>
+ <linearGradient id="navy" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#153e80"/><stop offset="1" stop-color="#071d45"/></linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2=".35" y2="1"><stop stop-color="#ffdc57"/><stop offset=".45" stop-color="#ffbd11"/><stop offset="1" stop-color="#c17e00"/></linearGradient>
+ <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#102657"/><stop offset="1" stop-color="#068ce5"/></linearGradient>
+</defs>
+<g>
+<path d="M51 203C43 116 105 40 193 29C263 20 318 56 345 104L328 126C309 82 264 49 207 49C130 47 71 106 68 178L86 156L91 212L36 206Z" fill="url(#blue)"/>
+<path d="M340 232C315 298 247 333 178 323C117 315 78 280 58 246L76 225C94 261 128 292 184 300C244 308 292 274 311 231L286 247L299 198L361 212Z" fill="url(#gold)"/>
+<path d="M104 175L126 118C135 101 155 89 175 89H248C269 89 286 101 297 119L318 174L330 207V247C330 260 320 267 309 267H111C99 267 89 257 89 245V208Z" fill="url(#navy)"/>
+<path d="M132 145L145 117C152 105 162 102 177 102H246C263 102 271 109 280 120L292 145Z" fill="url(#glass)" stroke="#bceaff" stroke-width="5"/>
+<path d="M117 174C146 160 176 160 209 160C245 160 278 160 304 173L308 205C279 215 247 222 212 223C169 223 137 214 112 202Z" fill="url(#blue)"/>
+<path d="M110 183L155 188L174 207L122 205Z" fill="#fff" stroke="#97dfff" stroke-width="5"/>
+<path d="M307 183L265 188L246 207L296 205Z" fill="#fff" stroke="#97dfff" stroke-width="5"/>
+<path d="M166 225H257L240 237H183Z" fill="#031a3a"/>
+<path d="M145 245H277" stroke="#52bbff" stroke-width="5" stroke-linecap="round"/>
+<path d="M97 239V258C97 270 111 272 124 266H142L145 250ZM328 239V258C328 270 313 272 301 266H282L280 250Z" fill="#071a3a"/>
+<circle cx="296" cy="239" r="52" fill="#ffffff" stroke="#092b62" stroke-width="13"/>
+<path d="M274 238L289 253L318 222" fill="none" stroke="url(#gold)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M331 272L365 305" stroke="#092b62" stroke-width="19" stroke-linecap="round"/>
+<path d="M336 278L355 295" stroke="#0b82d9" stroke-width="6" stroke-linecap="round"/>
+</g>
+<g font-family="Arial,Helvetica,sans-serif" font-style="italic" font-weight="900" letter-spacing="-5">
+ <text x="385" y="149" fill="url(#navy)" font-size="127">Consulta</text>
+ <text x="389" y="258" fill="url(#blue)" font-size="121">Veicular</text>
+ <text x="867" y="246" fill="url(#gold)" font-size="195" letter-spacing="-13" stroke="#d39700" stroke-width="1.4">360</text>
+</g>
+<rect x="386" y="281" width="789" height="50" rx="24" fill="#f6f9fe" stroke="#dae7f2" stroke-width="1"/>
+<text x="410" y="314" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="21" letter-spacing="2.8" fill="#0a2854">INFORMAÇÃO COMPLETA. MAIS SEGURANÇA PARA VOCÊ.</text>
+</svg>
