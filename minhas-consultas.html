@@ -7,7 +7,7 @@
 </style><link rel="stylesheet" href="/minhas-consultas-premium.css?v=3"></head><body class="premium-account">
 <header class="top"><div class="topin"><div class="brand"><a href="/" aria-label="Consulta Veicular 360 — página inicial"><img src="/logo%20site.png?v=7870a0d9" alt="Consulta Veicular 360" width="252" height="84"></a></div><a class="back" href="/">← Voltar ao site</a></div></header>
 <main class="wrap"><section class="hero" aria-labelledby="accountTitle"><div class="hero-copy"><span class="pa-eyebrow">✦ SUA CENTRAL 360</span><h1 id="accountTitle">Tudo sobre seus veículos em um só lugar.</h1><div class="muted">Acesse seus relatórios, utilize seus créditos e organize a próxima compra com o Assistente de Compra 360.</div><div id="accountEmail" class="muted" aria-live="polite"></div></div><div class="balance"><span class="balance-icon" aria-hidden="true">◈</span><span class="muted">CRÉDITOS DISPONÍVEIS</span><strong id="balance" aria-live="polite">—</strong><span class="muted">consultas para usar</span></div></section>
-<div class="actions pa-top-actions"><button type="button" class="btn primary" onclick="location.href='/'">＋ Nova consulta</button><button type="button" class="btn secondary" onclick="load()">↻ Atualizar meus dados</button><button type="button" class="btn secondary" onclick="openRecovery()">✉ Recuperar por e-mail</button></div>
+<div class="actions pa-top-actions"><button type="button" class="btn primary" onclick="location.href='/'">＋ Nova consulta</button><button type="button" id="historyRefresh" class="btn secondary" onclick="load()">↻ Atualizar meus dados</button><button type="button" class="btn secondary" onclick="openRecovery()">✉ Recuperar por e-mail</button></div>
 <div id="msg"></div>
 
 <section class="card ac360-account-box premium-assistant" id="assistente" aria-labelledby="assistenteTitle">
@@ -60,7 +60,7 @@
   </div>
 </div>
 <div id="reportModal" class="overlay hidden"><div class="modal"><button class="close noprint" onclick="closeReport()">✕</button><div id="report"></div></div></div>
-<div id="recoveryModal" class="overlay hidden"><div class="modal"><button class="close" onclick="closeRecovery()">✕</button><h2>Recuperar acesso</h2><p class="muted">Enviaremos um código de 6 números se o e-mail estiver cadastrado.</p><div class="info"><b>Código de recuperação dos créditos da Consulta Veicular 360</b><br>Este código serve somente para recuperar seus créditos e histórico. Não é senha bancária nem código de autenticação de outra conta.<br><br><b>Segurança:</b> nunca solicitaremos sua senha de e-mail, senha bancária ou código de autenticação de terceiros.</div><div id="stepEmail" class="recover"><label><b>E-mail</b></label><input id="email" type="email" autocomplete="email" placeholder="seuemail@exemplo.com"><button class="btn primary" onclick="sendCode()">ENVIAR CÓDIGO</button></div><div id="stepCode" class="recover hidden"><label><b>Código de recuperação</b></label><input id="code" class="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000"><button class="btn primary" onclick="verifyCode()">CONFIRMAR CÓDIGO</button></div><div id="recoveryMsg" style="margin-top:12px"></div></div></div>
+<div id="recoveryModal" class="overlay hidden"><div class="modal"><button class="close" onclick="closeRecovery()">✕</button><h2>Recuperar acesso</h2><p class="muted">Enviaremos um código de 6 números se o e-mail estiver cadastrado.</p><div class="info"><b>Código de recuperação dos créditos da Consulta Veicular 360</b><br>Este código serve somente para recuperar seus créditos e histórico. Não é senha bancária nem código de autenticação de outra conta.<br><br><b>Segurança:</b> nunca solicitaremos sua senha de e-mail, senha bancária ou código de autenticação de terceiros.</div><div id="stepEmail" class="recover"><label><b>E-mail</b></label><input id="email" type="email" autocomplete="email" placeholder="seuemail@exemplo.com"><button id="recoverySendButton" class="btn primary" onclick="sendCode()">ENVIAR CÓDIGO</button></div><div id="stepCode" class="recover hidden"><label><b>Código de recuperação</b></label><input id="code" class="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000"><button id="recoveryVerifyButton" class="btn primary" onclick="verifyCode()">CONFIRMAR CÓDIGO</button></div><div id="recoveryMsg" style="margin-top:12px"></div></div></div>
 <script src="/assistente-compra.js?v=10"></script>
 <script>
 /* GUIA 360 V3 — navegação autônoma: as abas respondem inclusive na prévia já renderizada. */
@@ -403,10 +403,16 @@ window.Escolha360 = Escolha360;
 </script>
 <script>
 const key='cv_credit_account',esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));const fmt=d=>d?new Date(d).toLocaleString('pt-BR'):'—';
-function token(){return localStorage.getItem(key)||''}function badge(s){return s==='completed'?'<span class="status">CONCLUÍDA</span>':s==='failed'?'<span class="status failed">FALHOU · CRÉDITO ESTORNADO</span>':'<span class="status pending">PROCESSANDO</span>'}
+function token(){try{return localStorage.getItem(key)||''}catch{return ''}}function badge(s){return s==='completed'?'<span class="status">CONCLUÍDA</span>':s==='failed'?'<span class="status failed">FALHOU · CRÉDITO ESTORNADO</span>':'<span class="status pending">PROCESSANDO</span>'}
+let historyLoading=false;
 async function load(){
+  if(historyLoading)return;
+  historyLoading=true;
+  const refresh=document.getElementById('historyRefresh');
+  if(refresh){refresh.disabled=true;refresh.textContent='↻ ATUALIZANDO...'}
   document.getElementById('msg').innerHTML='';
   if(!token()){
+    historyLoading=false;if(refresh){refresh.disabled=false;refresh.textContent='↻ Atualizar meus dados'}
     document.getElementById('balance').textContent='0';
     document.getElementById('accountEmail').textContent='';
     Escolha360.sync([]);
@@ -430,24 +436,41 @@ async function load(){
         '<div class="muted item-date">📅 '+esc(fmt(q.created_at))+'</div>'+
         (available?'<span class="report-available">✓ Relatório disponível</span>':'')+
         '</div><div class="c360-item-actions">'+
-        (available?'<button class="btn primary" onclick="report(\''+esc(q.id)+'\')">VER RELATÓRIO</button>'+
-          '<button class="btn secondary" style="margin-left:6px" onclick="guide(\''+esc(q.id)+'\')">ABRIR GUIA DA COMPRA</button>'+
+        (available?'<button type="button" class="btn primary" data-open-report="'+esc(q.id)+'">VER RELATÓRIO</button>'+
+          '<button type="button" class="btn secondary" data-open-guide="'+esc(q.id)+'">ABRIR GUIA DA COMPRA</button>'+
           '<label class="c360-pick"><input type="checkbox" class="c360-compare-checkbox" data-compare-id="'+esc(q.id)+'"'+(selected?' checked':'')+'> Comparar este veículo</label>':'')+
         '</div></div>';
     }).join(''):'<div class="empty">Você ainda não realizou consultas nesta conta.</div>';
   }catch(e){
-    document.getElementById('msg').innerHTML='<div class="error">'+esc(e.message)+'</div>';
-  }
+    document.getElementById('msg').innerHTML='<div class="error" role="alert">Falha ao atualizar o histórico: '+esc(e.message||'Erro de conexão')+'. Relatórios anteriores preservados. <button type="button" class="btn secondary" onclick="load()">TENTAR NOVAMENTE</button></div>';
+  }finally{historyLoading=false;if(refresh){refresh.disabled=false;refresh.textContent='↻ Atualizar meus dados'}}
 }
 function row(l,v){return '<div class="row"><span>'+esc(l)+'</span><span>'+esc(v||'Não informado')+'</span></div>'}
 function ind(l,v){return row(l,v===true?'Ocorrência indicada':v===false?'Nada consta na indicação':'Não informado')}
-async function report(id){try{const r=await fetch('/api/minhas-consultas/'+encodeURIComponent(id),{headers:{'X-Credit-Account':token()},cache:'no-store'}),d=await r.json();if(!r.ok)throw new Error(d.mensagem||'Relatório indisponível.');const v=d.vehicle||{};let h='<h2>Relatório da placa '+esc(v.plate||d.consulta.plate)+'</h2><p class="muted">Consulta concluída em '+esc(fmt(d.consulta.completed_at))+'</p>'+row('Marca',v.brand)+row('Modelo',v.model)+row('Ano / Ano-modelo',v.modelYear&&v.year&&String(v.modelYear)!==String(v.year)?v.year+' / '+v.modelYear:v.modelYear||v.year)+row('Cor',v.color)+row('Município / UF',[v.city,v.state].filter(Boolean).join(' / '))+row('Combustível',v.fuel)+row('Tipo do veículo',v.type);if(v.renavam)h+=row('RENAVAM',v.renavam);if(v.chassis)h+=row('Chassi',v.chassis);if(v.status)h+=row('Situação',v.status);if(v.fipe&&(v.fipe.value||v.fipe.numericValue)){h+='<h3>Referência FIPE</h3>'+row('Valor',v.fipe.value||(Number(v.fipe.numericValue)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}));if(v.fipe.code)h+=row('Código FIPE',v.fipe.code)}if(v.indicators){const i=v.indicators;h+='<h3>Indicadores disponíveis</h3>'+ind('Roubo / furto',i.theft)+ind('Leilão',i.auction)+ind('Recall',i.recall)+ind('RENAJUD',i.renajud)+ind('Infrações',i.renainf)+ind('Remarcação de chassi',i.chassisRemarked)}if(Array.isArray(v.restrictions)){h+='<h3>Restrições retornadas</h3>'+(v.restrictions.length?v.restrictions.map((x,i)=>row('Restrição '+(i+1),x)).join(''):row('Restrições','Nenhuma restrição informada'))}h+='<p class="muted">Os campos exibidos são somente os efetivamente retornados pelas fontes integradas.</p><div class="actions noprint"><button class="btn primary" onclick="window.print()">SALVAR / IMPRIMIR PDF</button></div>';h+='<div id="ac360Saved"></div>';document.getElementById('report').innerHTML=h;
+const detailInProgress=new Set();
+function setDetailBusy(id,busy){
+  document.querySelectorAll('[data-open-report],[data-open-guide]').forEach(button=>{
+    if(button.dataset.openReport===String(id)||button.dataset.openGuide===String(id)){
+      button.disabled=busy;
+      if(busy){button.dataset.originalLabel=button.textContent;button.textContent='CARREGANDO...'}
+      else if(button.dataset.originalLabel){button.textContent=button.dataset.originalLabel;delete button.dataset.originalLabel}
+    }
+  });
+}
+document.getElementById('history').addEventListener('click',event=>{
+  const button=event.target.closest('[data-open-report],[data-open-guide]');
+  if(!button||button.disabled)return;
+  if(button.dataset.openReport)report(button.dataset.openReport);
+  else if(button.dataset.openGuide)guide(button.dataset.openGuide);
+});
+async function report(id){if(detailInProgress.has(String(id)))return;detailInProgress.add(String(id));setDetailBusy(id,true);try{const r=await fetch('/api/minhas-consultas/'+encodeURIComponent(id),{headers:{'X-Credit-Account':token()},cache:'no-store'}),d=await r.json();if(!r.ok)throw new Error(d.mensagem||'Relatório indisponível.');const v=d.vehicle||{};let h='<h2>Relatório da placa '+esc(v.plate||d.consulta.plate)+'</h2><p class="muted">Consulta concluída em '+esc(fmt(d.consulta.completed_at))+'</p>'+row('Marca',v.brand)+row('Modelo',v.model)+row('Ano / Ano-modelo',v.modelYear&&v.year&&String(v.modelYear)!==String(v.year)?v.year+' / '+v.modelYear:v.modelYear||v.year)+row('Cor',v.color)+row('Município / UF',[v.city,v.state].filter(Boolean).join(' / '))+row('Combustível',v.fuel)+row('Tipo do veículo',v.type);if(v.renavam)h+=row('RENAVAM',v.renavam);if(v.chassis)h+=row('Chassi',v.chassis);if(v.status)h+=row('Situação',v.status);if(v.fipe&&(v.fipe.value||v.fipe.numericValue)){h+='<h3>Referência FIPE</h3>'+row('Valor',v.fipe.value||(Number(v.fipe.numericValue)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}));if(v.fipe.code)h+=row('Código FIPE',v.fipe.code)}if(v.indicators){const i=v.indicators;h+='<h3>Indicadores disponíveis</h3>'+ind('Roubo / furto',i.theft)+ind('Leilão',i.auction)+ind('Recall',i.recall)+ind('RENAJUD',i.renajud)+ind('Infrações',i.renainf)+ind('Remarcação de chassi',i.chassisRemarked)}if(Array.isArray(v.restrictions)){h+='<h3>Restrições retornadas</h3>'+(v.restrictions.length?v.restrictions.map((x,i)=>row('Restrição '+(i+1),x)).join(''):row('Restrições','Nenhuma restrição informada'))}h+='<p class="muted">Os campos exibidos são somente os efetivamente retornados pelas fontes integradas.</p><div class="actions noprint"><button class="btn primary" onclick="window.print()">SALVAR / IMPRIMIR PDF</button></div>';h+='<div id="ac360Saved"></div>';document.getElementById('report').innerHTML=h;
 const wrap=document.getElementById('reportModal');
 wrap.querySelector('.modal').classList.add('ac360-expanded-modal');
 AssistenteCompra.mount('ac360Saved',{...v,report360:d.report360||v.report360,plate:v.plate||d.consulta.plate},{id:'ac360-saved',reportId:d.consulta.id});
   decorarGuiaPremium(document.getElementById('ac360Saved').querySelector('.ac360-guide'));
-wrap.classList.remove('hidden')}catch(e){document.getElementById('msg').innerHTML='<div class="error">'+esc(e.message)+'</div>'}}
+wrap.classList.remove('hidden')}catch(e){document.getElementById('msg').innerHTML='<div class="error" role="alert">'+esc(e.message)+'</div>'}finally{detailInProgress.delete(String(id));setDetailBusy(id,false)}}
 async function guide(id) {
+  if(detailInProgress.has(String(id)))return;detailInProgress.add(String(id));setDetailBusy(id,true);
   try {
     const r=await fetch('/api/minhas-consultas/'+encodeURIComponent(id),{headers:{'X-Credit-Account':token()},cache:'no-store'});
     const d=await r.json();
@@ -461,8 +484,8 @@ async function guide(id) {
     decorarGuiaPremium(document.getElementById('ac360Saved').querySelector('.ac360-guide'));
     overlay.querySelector('.close').focus();
   } catch(e) {
-    document.getElementById('msg').innerHTML='<div class="error">'+esc(e.message)+'</div>';
-  }
+    document.getElementById('msg').innerHTML='<div class="error" role="alert">'+esc(e.message)+'</div>';
+  }finally{detailInProgress.delete(String(id));setDetailBusy(id,false)}
 }
 
 /* A demonstração agora vive na própria central; os guias pagos continuam associados à conta. */
@@ -543,8 +566,39 @@ function fecharGuiaDemo(){
   document.getElementById('assistente').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function closeReport(){document.getElementById('reportModal').classList.add('hidden')}function openRecovery(){document.getElementById('recoveryModal').classList.remove('hidden');document.getElementById('stepEmail').classList.remove('hidden');document.getElementById('stepCode').classList.add('hidden');document.getElementById('recoveryMsg').innerHTML=''}function closeRecovery(){document.getElementById('recoveryModal').classList.add('hidden')}
-async function sendCode(){const email=document.getElementById('email').value.trim();if(!email.includes('@'))return document.getElementById('recoveryMsg').innerHTML='<div class="error">Informe um e-mail válido.</div>';try{const r=await fetch('/api/creditos/recuperar/solicitar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})}),d=await r.json();if(!r.ok)throw new Error(d.mensagem||'Falha ao enviar código.');document.getElementById('stepEmail').classList.add('hidden');document.getElementById('stepCode').classList.remove('hidden');document.getElementById('recoveryMsg').innerHTML='<div class="info">Digite o código enviado ao seu e-mail.</div>';document.getElementById('code').focus()}catch(e){document.getElementById('recoveryMsg').innerHTML='<div class="error">'+esc(e.message)+'</div>'}}
-async function verifyCode(){const email=document.getElementById('email').value.trim(),codigo=document.getElementById('code').value.replace(/\D/g,'').slice(0,6);try{const r=await fetch('/api/creditos/recuperar/confirmar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,codigo})}),d=await r.json();if(!r.ok)throw new Error(d.mensagem||'Código inválido.');localStorage.setItem(key,d.accountToken);closeRecovery();await load();document.getElementById('msg').innerHTML='<div class="info">Acesso recuperado com segurança neste aparelho.</div>'}catch(e){document.getElementById('recoveryMsg').innerHTML='<div class="error">'+esc(e.message)+'</div>'}}
+let recoveryBusy=false;
+async function sendCode(){
+  if(recoveryBusy)return;
+  const emailInput=document.getElementById('email'),email=emailInput.value.trim(),message=document.getElementById('recoveryMsg'),button=document.getElementById('recoverySendButton');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){message.innerHTML='<div class="error" role="alert">Informe um e-mail válido.</div>';emailInput.focus();return}
+  recoveryBusy=true;if(button){button.disabled=true;button.textContent='ENVIANDO...'}
+  message.innerHTML='<div class="info" role="status">Enviando instruções...</div>';
+  try{
+    const response=await fetch('/api/creditos/recuperar/solicitar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email}),cache:'no-store'});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data.mensagem||'Não foi possível enviar o código.');
+    document.getElementById('stepEmail').classList.add('hidden');
+    document.getElementById('stepCode').classList.remove('hidden');
+    message.innerHTML='<div class="info">Se o e-mail estiver cadastrado, digite o código enviado.</div>';
+    document.getElementById('code').focus();
+  }catch(error){message.innerHTML='<div class="error" role="alert">'+esc(error.message||'Falha de conexão')+'</div>'}
+  finally{recoveryBusy=false;if(button){button.disabled=false;button.textContent='ENVIAR CÓDIGO'}}
+}
+async function verifyCode(){
+  if(recoveryBusy)return;
+  const email=document.getElementById('email').value.trim(),input=document.getElementById('code'),codigo=input.value.replace(/\D/g,'').slice(0,6),message=document.getElementById('recoveryMsg'),button=document.getElementById('recoveryVerifyButton');
+  if(codigo.length!==6){message.innerHTML='<div class="error" role="alert">Digite os seis números do código.</div>';input.focus();return}
+  recoveryBusy=true;if(button){button.disabled=true;button.textContent='VALIDANDO...'}
+  message.innerHTML='<div class="info" role="status">Validando seu código...</div>';
+  try{
+    const response=await fetch('/api/creditos/recuperar/confirmar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,codigo}),cache:'no-store'});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok||!data.accountToken)throw new Error(data.mensagem||'Não foi possível recuperar sua conta.');
+    localStorage.setItem(key,data.accountToken);closeRecovery();await load();
+    document.getElementById('msg').innerHTML='<div class="info">Acesso recuperado com segurança neste aparelho.</div>';
+  }catch(error){message.innerHTML='<div class="error" role="alert">'+esc(error.message||'Falha ao recuperar sua conta.')+'</div>'}
+  finally{recoveryBusy=false;if(button){button.disabled=false;button.textContent='CONFIRMAR CÓDIGO'}}
+}
 document.getElementById('code').addEventListener('input',e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,6));load();
 window.addEventListener('DOMContentLoaded',function(){
   const openBtn=document.getElementById('paOpenDemo');
