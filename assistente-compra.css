@@ -776,3 +776,44 @@
     box-shadow:none !important;
   }
 }
+
+/* O QUE VOCE PODE VERIFICAR V7 — CARTAO BRANCO DESKTOP */
+/* Alinha o painel lateral à identidade clara do formulário de consulta,
+   sem modificar resultados pagos, PIX ou ocultação responsiva existente. */
+.hero .hero-copy > .desktop-side-panel {
+  background:#fff !important;
+  background-image:none !important;
+  border:1px solid #cfdfeb !important;
+  border-top:3px solid #61afd3 !important;
+  box-shadow:0 20px 50px rgba(2,14,31,.24),inset 0 1px 0 #fff !important;
+  color:#23445e !important;
+}
+.hero .hero-copy > .desktop-side-panel .desktop-panel-heading h2,
+.hero .hero-copy > .desktop-side-panel .desktop-steps h3 {
+  color:#153c56 !important;
+}
+.hero .hero-copy > .desktop-side-panel .desktop-panel-heading p,
+.hero .hero-copy > .desktop-side-panel .desktop-panel-disclaimer,
+.hero .hero-copy > .desktop-side-panel .desktop-step small {
+  color:#5b7486 !important;
+}
+.hero .hero-copy > .desktop-side-panel .desktop-benefits-grid > span {
+  background:#f2f8fc !important;
+  background-image:none !important;
+  border:1px solid #d6e5ee !important;
+  color:#244b66 !important;
+  box-shadow:none !important;
+}
+.hero .hero-copy > .desktop-side-panel .desktop-steps {
+  border-top:1px solid #dae8ef !important;
+}
+.hero .hero-copy > .desktop-side-panel .desktop-step strong {
+  color:#20445e !important;
+}
+.hero .hero-copy > .desktop-side-panel .desktop-step > b {
+  background:#1b719e !important;
+  color:#fff !important;
+}
+@media print {
+  .hero .hero-copy > .desktop-side-panel {box-shadow:none !important;}
+}
