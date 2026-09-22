@@ -513,6 +513,39 @@ body {
   .hero::before, .hero::after, .hero-car-outline { display: none !important; }
 }
 </style>
+<style>
+/* NAV DESKTOP MAIS LEGIVEL E AFASTADA DA BORDA */
+@media (min-width: 901px) {
+  .top {
+    padding: 16px 22px 12px 0 !important;
+  }
+  .nav {
+    gap: 10px;
+    margin-right: 10px;
+    align-items: center;
+  }
+  .nav a {
+    font-size: 14px !important;
+    line-height: 1;
+    min-height: 38px;
+    padding: 11px 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(120, 188, 223, .22);
+    border-radius: 10px;
+    background: rgba(9, 30, 48, .38);
+    color: #e2eef7 !important;
+    font-weight: 800;
+    transition: background .18s ease, border-color .18s ease, transform .18s ease;
+  }
+  .nav a:hover {
+    background: rgba(24, 70, 103, .72);
+    border-color: rgba(122, 201, 237, .46);
+    transform: translateY(-1px);
+  }
+}
+</style>
 </head>
 <body>
 <div id="appSplash" class="app-splash" aria-hidden="true"><img src="/file_00000000d76c820e88ceb6c39ce70f0d.png" alt=""></div>
