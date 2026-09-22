@@ -256,6 +256,110 @@
 .report-safe-note{margin-top:14px;padding:12px 14px;border:1px solid #2d7753;border-radius:13px;background:#12392f;color:#c9ead8}.report-safe-note b{display:block;color:#fff;margin-bottom:4px}.report-safe-note span{font-size:10px;line-height:1.45}.report-actions{margin-top:9px}@media(max-width:520px){.report-actions{display:grid;grid-template-columns:1fr;gap:7px}.report-actions button{margin:0;min-height:46px}.report-safe-note{padding:11px 12px}.report-safe-note span{font-size:9.5px}}
 .app-account-shortcut{display:none;max-width:490px;margin:8px auto 0;padding:11px 13px;border:1px solid #456b90;border-radius:14px;background:#102b46;color:#fff;text-decoration:none;align-items:center;gap:10px}.app-account-shortcut .app-account-icon{font-size:20px}.app-account-shortcut span:nth-child(2){flex:1}.app-account-shortcut b,.app-account-shortcut small{display:block}.app-account-shortcut small{margin-top:2px;color:#a9bfd0;font-size:9px}.app-account-shortcut>strong{font-size:24px;color:#70d0ff}@media(display-mode:standalone){.app-account-shortcut{display:flex}}
 </style>
+<style>
+/* NOVO LAYOUT DESKTOP - CONSULTA VEICULAR 360 */
+@media (min-width: 901px) {
+  body { background: #0b1e32; }
+  .hero { background: linear-gradient(125deg, #071a30, #102d4b); }
+  .shell { width: min(1320px, calc(100% - 64px)); }
+  .top { padding: 12px 0; }
+  .site-logo { width: min(650px, 48vw); max-height: 170px; }
+  .hero-grid { padding: 35px 0 50px; }
+
+  /* Formulário à esquerda, apresentação à direita */
+  .hero-copy {
+    display: grid;
+    width: 100%;
+    max-width: none;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    grid-template-rows: auto auto auto auto 1fr;
+    column-gap: 44px;
+    row-gap: 14px;
+    align-items: start;
+    text-align: left;
+  }
+  .hero-copy > .pill {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: start;
+    margin-top: 35px;
+  }
+  .hero-copy > h1 {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: clamp(38px, 3.6vw, 54px);
+    line-height: 1.12;
+    margin: 0;
+    letter-spacing: -1.3px;
+  }
+  .hero-copy > .hero-text {
+    grid-column: 2;
+    grid-row: 3;
+    max-width: 490px;
+    font-size: 17px;
+    line-height: 1.7;
+    margin: 0;
+  }
+  .hero-copy > .hero-infos {
+    grid-column: 2;
+    grid-row: 4;
+    justify-content: flex-start !important;
+    margin: 8px 0 !important;
+    font-size: 12px;
+  }
+  .hero-card {
+    grid-column: 1;
+    grid-row: 1 / 6;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 26px;
+    text-align: left;
+    border-radius: 22px;
+    background: #123250;
+    box-shadow: 0 20px 55px #020b1680;
+    align-self: start;
+  }
+  .hero-card > .title { font-size: 27px; }
+  .hero-card > .plate { min-height: 75px; font-size: 34px; }
+  .hero-card > #btn { min-height: 58px; font-size: 15px; }
+  .hero-card .report-value .report-chips {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .hero-card .sample-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .hero-card > .creditbar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: none;
+    gap: 10px;
+  }
+  .hero-card > .creditbar > .creditactions {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .wrap {
+    width: min(1220px, calc(100% - 64px));
+    padding: 25px 0 45px;
+  }
+  .seo-content, .faq, .use-cases {
+    padding: 25px 30px;
+    border-radius: 18px;
+    background: #102a44;
+  }
+  .use-cases-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+</style>
 </head>
 <body>
 <div id="appSplash" class="app-splash" aria-hidden="true"><img src="/file_00000000d76c820e88ceb6c39ce70f0d.png" alt=""></div>
