@@ -469,3 +469,78 @@
   .ac360-preview.ac360-home-unified .ac360-home-card-links a{transition:none;}
   .ac360-preview.ac360-home-unified .ac360-home-card-links a:hover{transform:none;}
 }
+
+/* HOME DESTAQUE CLARO V4 — imediatamente sob o formulário na seção hero */
+.hero .hero-grid{padding-bottom:20px!important}
+.hero .shell>.ac360-preview.ac360-home-unified{
+  width:min(1180px,100%);margin:0 auto 35px;
+}
+.ac360-preview.ac360-home-unified {
+  background:linear-gradient(130deg,#f9fcff 0%,#eaf5fb 55%,#f5f9fc 100%);
+  border:2px solid rgba(110,192,227,.9);
+  box-shadow:0 24px 70px rgba(0,8,24,.4),inset 0 1px 0 #fff;
+  color:#142f45;
+}
+.ac360-preview.ac360-home-unified .ac360-eyebrow{
+  color:#155f82;background:#e4f2f9;border-color:#a9cfdf;
+}
+.ac360-preview.ac360-home-unified h2{color:#122f48;max-width:850px}
+.ac360-preview.ac360-home-unified .ac360-home-lead{
+  color:#365970;font-size:16px;max-width:810px;
+}
+.ac360-preview.ac360-home-unified .ac360-home-choice{
+  color:#356481;margin:4px 0 13px;font-size:12px;
+}
+.ac360-preview.ac360-home-unified .ac360-home-cards{gap:18px}
+.ac360-preview.ac360-home-unified .ac360-home-card {
+  border:1px solid #c4dbe7;
+  background:#fff;
+  box-shadow:0 8px 26px rgba(26,65,96,.1);
+}
+.ac360-preview.ac360-home-unified .ac360-home-card--compare{background:#f8fbfd}
+.ac360-preview.ac360-home-unified .ac360-home-card-icon{
+  background:#e6f3fa;border-color:#c4e0ee;color:#125b85;
+}
+.ac360-preview.ac360-home-unified .ac360-home-card-label{color:#29678d}
+.ac360-preview.ac360-home-unified .ac360-home-card h3{color:#153852}
+.ac360-preview.ac360-home-unified .ac360-home-card p{
+  min-height:0;color:#496779;font-size:13px;line-height:1.55;
+}
+.ac360-preview.ac360-home-unified .ac360-home-benefits{gap:9px;margin-bottom:21px}
+.ac360-preview.ac360-home-unified .ac360-home-benefits li{
+  color:#23465d;font-size:12px;font-weight:700;
+}
+.ac360-preview.ac360-home-unified .ac360-home-benefits li:before{
+  color:#137c56;background:#ddf4e8;
+}
+.ac360-preview.ac360-home-unified .ac360-home-card-links a.ac360-buy-button{
+  border:1px solid #d7a332!important;
+  background:linear-gradient(125deg,#ffdf78,#f4b942)!important;
+  color:#122738!important;
+  font-size:15px;font-weight:950;min-height:54px;
+  box-shadow:0 9px 20px rgba(191,137,32,.21);
+}
+.ac360-preview.ac360-home-unified .ac360-home-card-links a.ac360-compare-button{
+  border:1px solid #126997!important;
+  background:linear-gradient(120deg,#1f779f,#115481)!important;
+  color:#fff!important;font-size:14px;
+  min-height:54px;box-shadow:0 8px 22px rgba(28,91,126,.18);
+}
+.ac360-preview.ac360-home-unified .ac360-home-card-links a.ac360-secondary-link{
+  border:1px solid #c8dfe9!important;
+  background:#eef6fa!important;color:#285e7d!important;
+}
+.ac360-preview.ac360-home-unified .ac360-home-note{
+  color:#617e91;border-top:1px solid #d1e3ec;
+}
+@media(max-width:760px){
+  .hero .hero-grid{padding-bottom:15px!important}
+  .hero .shell>.ac360-preview.ac360-home-unified{
+    width:100%;margin:0 auto 24px;
+    padding:19px 14px;border-radius:17px;
+  }
+  .ac360-preview.ac360-home-unified .ac360-home-lead{font-size:13px}
+  .ac360-preview.ac360-home-unified .ac360-home-cards{gap:11px}
+  .ac360-preview.ac360-home-unified .ac360-home-card{padding:17px 14px}
+  .ac360-preview.ac360-home-unified .ac360-home-card-links a.ac360-buy-button{font-size:14px}
+}
