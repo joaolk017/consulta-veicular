@@ -125,8 +125,8 @@ var Escolha360 = (function () {
       checks.map(function(f){return '<tr><th scope="row">'+esc(f.label)+'</th>'+data.map(function(d){return '<td>'+statusTag(getStatus(d,f))+'</td>';}).join("")+'</tr>';}).join("")+
       '</tbody></table></div>';
   }
-  function renderAll(data){
-    return '<div class="c360-result-head"><span class="c360-eyebrow">COMPARADOR DE PRÉ-COMPRA</span><h2 id="c360CompareTitle">Escolha 360</h2>'+
+  function renderAll(data,isDemo){
+    return (isDemo ? '<div class="c360-demo-banner"><strong>DEMONSTRAÇÃO ILUSTRATIVA</strong> · Veículos, valores e indicadores fictícios. Não representa consultas reais e não utiliza créditos.</div>' : "") + '<div class="c360-result-head"<span class="c360-eyebrow">COMPARADOR DE PRÉ-COMPRA</span><h2 id="c360CompareTitle">Escolha 360</h2>'+
       '<p>Compare relatórios que você já liberou. Indicador não informado <strong>não</strong> significa ausência de ocorrência. As informações refletem as datas de cada consulta.</p>'+
       '<div class="c360-result-actions"><button type="button" class="btn primary c360-print-btn">IMPRIMIR / SALVAR PDF</button></div></div>'+
       '<h3>Comparativo dos dados retornados</h3>'+renderMatrix(data)+
@@ -151,6 +151,19 @@ var Escolha360 = (function () {
       el("c360CompareModal").querySelector(".c360-close").focus();
     }).catch(function(err){message(err.message||"Falha ao comparar os relatórios.",true);})
       .finally(function(){btn.textContent="COMPARAR VEÍCULOS";updateBar();});
+  }
+  function demo(){
+    var data=[
+      {consulta:{id:"exemplo-a",plate:"CARRO A",completed_at:"2026-01-01T12:00:00Z"},vehicle:{plate:"CARRO A",brand:"Modelo fictício",model:"A",modelYear:2021,fipe:{numericValue:52000}},report360:{alerts:[{id:"roubo_furto",status:"sem_ocorrencia_retornada"},{id:"leilao",status:"sem_ocorrencia_retornada"},{id:"recall",status:"atencao"}]}},
+      {consulta:{id:"exemplo-b",plate:"CARRO B",completed_at:"2026-01-01T12:00:00Z"},vehicle:{plate:"CARRO B",brand:"Modelo fictício",model:"B",modelYear:2022,fipe:{numericValue:59000}},report360:{alerts:[{id:"roubo_furto",status:"sem_ocorrencia_retornada"},{id:"leilao",status:"atencao"},{id:"recall",status:"nao_informado"}]}},
+      {consulta:{id:"exemplo-c",plate:"CARRO C",completed_at:"2026-01-01T12:00:00Z"},vehicle:{plate:"CARRO C",brand:"Modelo fictício",model:"C",modelYear:2020,fipe:{numericValue:47000}},report360:{alerts:[{id:"roubo_furto",status:"nao_informado"},{id:"leilao",status:"sem_ocorrencia_retornada"},{id:"recall",status:"sem_ocorrencia_retornada"}]}}
+    ];
+    loadedVehicleById=new Map(data.map(function(d){return [d.consulta.id,d];}));
+    el("c360CompareContent").innerHTML=renderAll(data,true);
+    el("c360CompareModal").classList.remove("hidden");
+    el("c360CompareModal").scrollTop=0;
+    document.body.classList.add("c360-modal-open");
+    el("c360CompareModal").querySelector(".c360-close").focus();
   }
   function updatePrice(input){
     var root=input.closest(".c360-vehicle-card");
@@ -185,5 +198,6 @@ var Escolha360 = (function () {
   document.addEventListener("keydown",function(e){if(e.key==="Escape"&&el("c360CompareModal")&&!el("c360CompareModal").classList.contains("hidden"))close();});
   window.addEventListener("afterprint",function(){document.body.classList.remove("c360-print");});
   // Preenche mapa após carregar; nenhuma informação fica armazenada no navegador.
-  return {sync:sync,isChosen:isChosen,compare:compare,close:close};
+  window.addEventListener("DOMContentLoaded",function(){if(window.location && new URLSearchParams(window.location.search).get("demo")==="1")demo();});
+  return {sync:sync,isChosen:isChosen,compare:compare,demo:demo,close:close};
 })();
