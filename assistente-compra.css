@@ -1461,3 +1461,61 @@
   .hero .hero-copy>.hero-text{order:3!important}
   .hero .hero-copy>.firstfold-trust{order:4!important}
 }
+
+/* NOVA PLACA V14 — acesso evidente depois da prévia ou relatório. */
+.hero #consultCard > .plate-other-btn{
+  display:none!important;
+}
+.hero #consultCard.result-mode > .plate-other-btn{
+  display:flex!important;
+  align-items:center;justify-content:center;
+  width:100%;min-height:45px;margin:9px 0 5px;padding:10px 14px;
+  border:1px solid #bcd8e8!important;border-radius:11px;
+  background:#eaf5fb!important;color:#155d82!important;
+  font-size:12px;font-weight:950;letter-spacing:.025em;
+  cursor:pointer;transition:background .15s ease,border-color .15s ease;
+}
+.hero #consultCard.result-mode > .plate-other-btn:hover,
+.hero #consultCard.result-mode > .plate-other-btn:focus-visible{
+  background:#d5ebf8!important;border-color:#85bcd8!important;
+  outline-offset:2px;
+}
+.hero #result > .plate-switch-top{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  margin:0 0 15px;padding:14px 16px;
+  border:1px solid #c6dfec;border-left:4px solid #e4ab32;
+  border-radius:12px;background:#f2f9fd;color:#204b66;
+  text-align:left;
+}
+.hero #result > .plate-switch-top > div{min-width:0;flex:1}
+.hero #result > .plate-switch-top b{
+  display:block;color:#153e5a;font-size:14px;line-height:1.35;
+}
+.hero #result > .plate-switch-top small{
+  display:block;margin-top:3px;color:#59768a;font-size:11px;line-height:1.45;
+}
+.hero #result > .plate-switch-top button{
+  display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 auto;min-height:44px;padding:11px 15px;
+  border:1px solid #1c719a;border-radius:10px;
+  background:#15638d;color:#fff;
+  font-size:12px;font-weight:900;cursor:pointer;white-space:normal;
+}
+.hero #result > .plate-switch-top button:hover,
+.hero #result > .plate-switch-top button:focus-visible{
+  background:#0f4f75;outline-offset:2px;
+}
+@media screen and (max-width:640px){
+  .hero #result > .plate-switch-top{
+    align-items:stretch;flex-direction:column;gap:11px;padding:13px 12px;
+  }
+  .hero #result > .plate-switch-top button{width:100%;min-height:49px}
+  .hero #consultCard.result-mode > .plate-other-btn{min-height:47px}
+}
+@media(prefers-reduced-motion:reduce){
+  .hero #consultCard > .plate-other-btn{transition:none}
+}
+@media print{
+  .hero #result > .plate-switch-top,
+  .hero #consultCard > .plate-other-btn{display:none!important}
+}
