@@ -2066,3 +2066,58 @@
   .hero #result.paid-report .report-summary,
   .hero #result.paid-report>.section{break-inside:auto}
 }
+
+/* FUNIL V18 — resposta visual de ações sem alterar a lógica de pagamentos. */
+.hero #consultCard #btn,
+.hero #result button,
+.hero .overlay button,
+#pixFlow button,#recoveryFlow button{
+ transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease;
+}
+.hero #consultCard #btn:disabled,
+.hero #result button:disabled,
+#pixFlow button:disabled,
+#recoveryFlow button:disabled{
+ cursor:wait!important;opacity:.66!important;transform:none!important;
+ box-shadow:none!important;
+}
+.hero #consultCard #btn[aria-busy="true"],
+#pixFlow #pixCreate[aria-busy="true"]{
+ position:relative;padding-right:43px!important;
+}
+.hero #consultCard #btn[aria-busy="true"]:after,
+#pixFlow #pixCreate[aria-busy="true"]:after{
+ content:"";position:absolute;right:16px;top:calc(50% - 8px);
+ width:15px;height:15px;border:2px solid currentColor;border-right-color:transparent;
+ border-radius:50%;animation:cv360spin .65s linear infinite;
+}
+@keyframes cv360spin{to{transform:rotate(360deg)}}
+.hero #consultCard #status .info,
+.hero #consultCard #status .error,
+.hero #consultCard #status .success{
+ line-height:1.55;overflow-wrap:anywhere;
+}
+.hero #consultCard #status .error{border-left:3px solid #e49d78}
+.hero #result .preview-buy-button:focus-visible,
+.hero #consultCard #btn:focus-visible,
+#pixFlow button:focus-visible,
+#recoveryFlow button:focus-visible{
+ outline:3px solid #edbf54!important;outline-offset:3px!important;
+}
+#pixFlow #pixStatus,#pixFlow #pixError,
+#recoveryFlow .status{overflow-wrap:anywhere;line-height:1.55}
+#pixFlow #pixCode{max-width:100%;overflow-wrap:anywhere}
+#pixFlow .modal,#recoveryFlow .modal{scrollbar-gutter:stable}
+@media(max-width:640px){
+ .hero #consultCard #btn[aria-busy="true"],
+ #pixFlow #pixCreate[aria-busy="true"]{padding-right:36px!important}
+ .hero #consultCard #btn[aria-busy="true"]:after,
+ #pixFlow #pixCreate[aria-busy="true"]:after{right:10px}
+ #pixFlow .modal,#recoveryFlow .modal{max-height:min(94vh,920px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .hero #consultCard #btn,#pixFlow button,#recoveryFlow button,
+ .hero #result button{transition:none!important}
+ .hero #consultCard #btn[aria-busy="true"]:after,
+ #pixFlow #pixCreate[aria-busy="true"]:after{animation:none!important;border-right-color:currentColor}
+}
