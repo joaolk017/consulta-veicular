@@ -683,7 +683,7 @@ body {
 }
 @media print {.choice360-feature{display:none!important;}}
 </style>
-<link rel="stylesheet" href="/assistente-compra.css?v=11">
+<link rel="stylesheet" href="/assistente-compra.css?v=12">
 <style>
 /* AJUSTE DE RELATORIO COM GUIA DE COMPRA */
 @media(min-width:901px){
@@ -719,19 +719,36 @@ body {
   </g>
 </svg>
 <div class="shell">
-<header class="top"><div class="brand"><img src="/logo%20site.png?v=7870a0d9" alt="Consulta Veicular 360" class="site-logo" width="2172" height="724" loading="eager" decoding="async" fetchpriority="high"></div><nav class="nav"><a href="/sobre/">Sobre nós</a><a href="/termos.html">Termos</a><a href="/privacidade.html">Privacidade</a><a href="/reembolso.html">Reembolso</a><a href="/contato.html">Suporte</a></nav></header>
+<header class="top"><div class="brand"><img src="/logo%20site.png?v=7870a0d9" alt="Consulta Veicular 360" class="site-logo" width="2172" height="724" loading="eager" decoding="async" fetchpriority="high"></div><nav class="nav"><a href="/sobre/">Sobre nós</a><a href="/termos.html">Termos</a><a href="/privacidade.html">Privacidade</a><a href="/reembolso.html">Reembolso</a><a href="/contato.html">Suporte</a></nav><details class="mobile-site-menu"><summary aria-label="Abrir menu de navegação"><span aria-hidden="true">☰</span> Menu</summary><nav aria-label="Menu do celular"><a href="/sobre/">Sobre nós</a><a href="/termos.html">Termos</a><a href="/privacidade.html">Privacidade</a><a href="/reembolso.html">Reembolso</a><a href="/contato.html">Suporte</a></nav></details></header>
 <div class="hero-grid">
 <div class="hero-copy">
-<span class="pill">SERVIÇO PRIVADO E INDEPENDENTE</span>
-<h1>Consulta veicular por placa antes de negociar.</h1>
-<p class="hero-text">Consulte dados disponíveis do veículo pela placa, veja uma prévia gratuita e, se desejar, libere a consulta completa por <strong>R$ 18,90</strong>.</p>
-<div class="hero-infos" style="margin:0 0 14px"><span>✓ Sem assinatura</span><span>✓ Pagamento único via PIX</span><span>✓ Relatório após confirmação do pagamento</span></div>
-<aside class="desktop-side-panel" aria-label="O que a consulta pode mostrar e como funciona">
+<span class="pill">PRÉVIA GRATUITA POR PLACA</span>
+<h1>Consulte a placa antes de comprar um carro usado.</h1>
+<p class="hero-text">Veja uma prévia gratuita e, se quiser, libere o relatório completo por <strong>R$ 18,90</strong>. Informações para apoiar sua negociação.</p>
+<div class="hero-infos firstfold-trust" aria-label="Vantagens da consulta"><span>✓ Prévia gratuita</span><span>✓ Sem assinatura</span><span>✓ PIX só se optar pelo relatório</span></div>
+
+<main class="card hero-card" id="consultCard">
+<div class="title">Comece pela placa</div><div class="sub">Digite a placa para consultar gratuitamente. Não é necessário CPF.</div>
+<label class="plate-field-label" for="plate">PLACA DO VEÍCULO</label>
+<input id="plate" class="plate" maxlength="7" autocomplete="off" inputmode="text" autocapitalize="characters" spellcheck="false" placeholder="ABC1D23" aria-label="Placa do veículo">
+<div id="plateHint" class="small" style="margin:7px 0 0;text-align:center">Digite os 7 caracteres da placa. Ex.: ABC1D23</div>
+<button id="btn" onclick="consultar()">🔎 VER PRÉVIA GRATUITA</button>
+<div class="hero-infos preview-reassurance"><span>✓ Consulte a placa gratuitamente primeiro. Você só paga se quiser liberar o relatório completo.</span></div>
+<a href="/minhas-consultas.html" class="app-account-shortcut" rel="nofollow"><span class="app-account-icon">📋</span><span><b>Minhas Consultas</b><small id="appCreditShortcut">Veja seus relatórios e créditos disponíveis</small></span><strong>›</strong></a>
+<div id="pendingPixBanner" class="info hidden" style="margin:12px 0;text-align:left"><b>💠 Seu PIX ainda está disponível</b><div id="pendingPixText" class="small" style="margin-top:5px"></div><div class="small" style="margin-top:5px">Se você saiu da tela antes de pagar, pode retomar a mesma cobrança enquanto ela estiver válida. Não é necessário gerar outro PIX.</div><button class="pay" style="margin-top:10px" onclick="continuarPixPendente()">RETOMAR PIX PENDENTE</button></div><div id="creditBar" class="creditbar hiddencredit"><span id="creditLabel">Seus créditos</span><strong id="creditSummary"><span id="creditBalance">0</span> consulta(s) disponível(is)</strong><div id="creditResume" class="success hidden" style="margin-top:10px">Você possui consultas disponíveis. Digite uma placa e use seu crédito.</div><div class="creditactions"><button id="creditUseNow" class="pay hiddencredit" onclick="focarConsultaCredito()">USAR CONSULTA AGORA</button><button class="secondary" onclick="abrirRecuperacao()">RECUPERAR CRÉDITOS</button><a href="/minhas-consultas.html" class="secondary creditrecover" rel="nofollow">MINHAS CONSULTAS</a></div></div>
+<div id="status" class="status"></div><div id="result" class="result hidden"></div>
+</main>
+</div>
+</div>
+
+<div class="firstfold-followup" id="informacoes-da-consulta">
+  <div class="firstfold-followup-head"><span>VEJA O QUE ESTÁ INCLUÍDO</span><h2>Informações para comprar com mais segurança</h2><p>Evite surpresas antes de fechar negócio. Consulte a placa primeiro e veja os indicadores disponíveis para o veículo.</p></div>
+  <aside class="desktop-side-panel" aria-label="O que a consulta pode mostrar e como funciona">
   <div class="desktop-panel-heading">
     <span class="desktop-panel-icon" aria-hidden="true">🔎</span>
     <div>
-      <h2>O que você pode verificar</h2>
-      <p>Indicadores disponíveis para ajudar na análise do veículo antes da negociação.</p>
+      <h2>O que a consulta pode ajudar você a identificar</h2>
+      <p>Confira os indicadores disponíveis e saiba o que merece atenção antes da negociação.</p>
     </div>
   </div>
   <div class="desktop-benefits-grid">
@@ -750,19 +767,11 @@ body {
     <div class="desktop-step"><b>3</b><span><strong>Libere o relatório, se desejar</strong><small>Pagamento único via PIX de R$ 18,90.</small></span></div>
   </div>
 </aside>
-<main class="card hero-card" id="consultCard">
-<div class="title">Consultar veículo</div><div class="sub">Digite somente a placa. A consulta da placa não exige CPF.</div>
-<input id="plate" class="plate" maxlength="7" autocomplete="off" inputmode="text" autocapitalize="characters" spellcheck="false" placeholder="ABC1D23" aria-label="Placa do veículo">
-<div id="plateHint" class="small" style="margin:7px 0 0;text-align:center">Digite os 7 caracteres da placa. Ex.: ABC1D23</div>
-<button id="btn" onclick="consultar()">🔎 VER PRÉVIA GRATUITA</button>
-<div class="hero-infos preview-reassurance"><span>✓ Consulte a placa gratuitamente primeiro. Você só paga se quiser liberar o relatório completo.</span></div>
-<div class="report-value"><b>🔎 O que a consulta completa pode verificar</b><div class="report-chips"><span data-icon="🛡️">Roubo/Furto</span><span data-icon="🏷️">Leilão</span><span data-icon="📣">Recall</span><span data-icon="⚖️">Restrições relacionadas a RENAJUD*</span><span data-icon="📋">Registros relacionados a RENAINF*</span><span data-icon="⚠️">Outras restrições</span><span data-icon="💰">FIPE</span><span data-icon="🚘">Dados técnicos</span></div><small>*Quando esses indicadores estiverem disponíveis no retorno dos provedores integrados. A Consulta Veicular 360 não é órgão governamental e não afirma acesso oficial direto aos sistemas RENAJUD ou RENAINF.</small></div>
-<div class="report-sample"><div class="sample-head"><b>📋 Exemplo do relatório</b><span>DEMONSTRAÇÃO</span></div><p class="sample-intro">Veja como as informações podem aparecer no relatório completo:</p><div class="sample-grid sample-premium"><div><small>🚘 Veículo</small><strong>Marca / modelo / ano</strong></div><div><small>💰 Referência FIPE</small><strong>Valor quando disponível</strong></div><div><small>🔎 Roubo/Furto</small><strong>Status retornado pela fonte</strong></div><div><small>🏷️ Leilão</small><strong>Indicador quando disponível</strong></div><div><small>⚠️ Restrições</small><strong>Registros retornados</strong></div><div><small>📋 Dados técnicos</small><strong>Informações do veículo</strong></div></div><small class="sample-note">Demonstração ilustrativa — não representa uma consulta real. Os campos e resultados exibidos variam conforme o veículo e a disponibilidade das fontes integradas.</small></div>
-<a href="/minhas-consultas.html" class="app-account-shortcut" rel="nofollow"><span class="app-account-icon">📋</span><span><b>Minhas Consultas</b><small id="appCreditShortcut">Veja seus relatórios e créditos disponíveis</small></span><strong>›</strong></a>
-<div id="pendingPixBanner" class="info hidden" style="margin:12px 0;text-align:left"><b>💠 Seu PIX ainda está disponível</b><div id="pendingPixText" class="small" style="margin-top:5px"></div><div class="small" style="margin-top:5px">Se você saiu da tela antes de pagar, pode retomar a mesma cobrança enquanto ela estiver válida. Não é necessário gerar outro PIX.</div><button class="pay" style="margin-top:10px" onclick="continuarPixPendente()">RETOMAR PIX PENDENTE</button></div><div id="creditBar" class="creditbar hiddencredit"><span id="creditLabel">Seus créditos</span><strong id="creditSummary"><span id="creditBalance">0</span> consulta(s) disponível(is)</strong><div id="creditResume" class="success hidden" style="margin-top:10px">Você possui consultas disponíveis. Digite uma placa e use seu crédito.</div><div class="creditactions"><button id="creditUseNow" class="pay hiddencredit" onclick="focarConsultaCredito()">USAR CONSULTA AGORA</button><button class="secondary" onclick="abrirRecuperacao()">RECUPERAR CRÉDITOS</button><a href="/minhas-consultas.html" class="secondary creditrecover" rel="nofollow">MINHAS CONSULTAS</a></div></div>
-<div id="status" class="status"></div><div id="result" class="result hidden"></div>
-</main>
-</div>
+  <details class="firstfold-indicators"><summary>Ver todos os indicadores e limites da consulta <span aria-hidden="true">⌄</span></summary><div class="report-value"><b>🔎 O que a consulta completa pode verificar</b><div class="report-chips"><span data-icon="🛡️">Roubo/Furto</span><span data-icon="🏷️">Leilão</span><span data-icon="📣">Recall</span><span data-icon="⚖️">Restrições relacionadas a RENAJUD*</span><span data-icon="📋">Registros relacionados a RENAINF*</span><span data-icon="⚠️">Outras restrições</span><span data-icon="💰">FIPE</span><span data-icon="🚘">Dados técnicos</span></div><small>*Quando esses indicadores estiverem disponíveis no retorno dos provedores integrados. A Consulta Veicular 360 não é órgão governamental e não afirma acesso oficial direto aos sistemas RENAJUD ou RENAINF.</small></div></details>
+  <section class="firstfold-sample" aria-label="Exemplo demonstrativo do relatório">
+    <div class="report-sample"><div class="sample-head"><b>📋 Exemplo do relatório</b><span>DEMONSTRAÇÃO</span></div><p class="sample-intro">Veja como as informações podem aparecer no relatório completo:</p><div class="sample-grid sample-premium"><div><small>🚘 Veículo</small><strong>Marca / modelo / ano</strong></div><div><small>💰 Referência FIPE</small><strong>Valor quando disponível</strong></div><div><small>🔎 Roubo/Furto</small><strong>Status retornado pela fonte</strong></div><div><small>🏷️ Leilão</small><strong>Indicador quando disponível</strong></div><div><small>⚠️ Restrições</small><strong>Registros retornados</strong></div><div><small>📋 Dados técnicos</small><strong>Informações do veículo</strong></div></div><small class="sample-note">Demonstração ilustrativa — não representa uma consulta real. Os campos e resultados exibidos variam conforme o veículo e a disponibilidade das fontes integradas.</small></div>
+    <div class="firstfold-sample-cta"><a href="#consultCard">CONSULTAR UMA PLACA →</a><span>A prévia é gratuita. A consulta completa é opcional.</span></div>
+  </section>
 </div>
 <section class="ac360-preview ac360-home-unified" id="guia-compra" aria-labelledby="ac360HomeTitle">
   <span class="ac360-eyebrow">SEU ASSISTENTE PARA COMPRAR UM USADO</span>
