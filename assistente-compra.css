@@ -1579,3 +1579,225 @@
 @media print {
   .hero #result > .plate-switch-top {display:none!important}
 }
+
+/* PREVIA DE CONSULTA V16 — RESUMO, CTA E PACOTES SECUNDARIOS */
+/* Escopo restrito à prévia gratuita; não altera relatórios pagos ou PIX. */
+.hero #result > .preview-vehicle-card {
+  position:relative;
+  padding:23px 24px 21px;
+  border:1px solid #cfe1eb;
+  border-radius:18px;
+  background:linear-gradient(140deg,#fff 20%,#eef7fc 100%);
+  box-shadow:0 12px 35px rgba(3,19,39,.18);
+  color:#183b54;
+}
+.hero #result .preview-status {
+  display:inline-flex;align-items:center;gap:8px;
+  margin-bottom:15px;padding:7px 11px;
+  border:1px solid #b5dfc9;border-radius:100px;
+  background:#eaf8f0;color:#23704b;
+  font-size:12px;font-weight:900;
+}
+.hero #result .preview-status .preview-check{
+  display:grid;place-items:center;
+  width:20px;height:20px;border-radius:50%;
+  background:#24865a;color:#fff;font-size:13px;line-height:1;
+}
+.hero #result .preview-vehicle-label {
+  display:block;margin:0 0 5px;color:#51778d;
+  font-size:10px;font-weight:900;letter-spacing:.13em;
+}
+.hero #result .preview-vehicle-plate {
+  display:block;margin:0 0 3px;color:#103a55;
+  font-size:clamp(33px,5vw,44px);font-weight:950;
+  line-height:1.15;letter-spacing:.075em;overflow-wrap:anywhere;
+}
+.hero #result .preview-vehicle-name {
+  display:block;margin:0;color:#234e68;
+  font-size:clamp(15px,2vw,19px);font-weight:800;line-height:1.35;
+}
+.hero #result .preview-vehicle-facts {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;margin-top:17px;
+}
+.hero #result .preview-fact {
+  display:flex;flex-direction:column;gap:3px;
+  min-width:0;padding:11px 12px;
+  border:1px solid #dbe8ef;border-radius:11px;background:#fff;
+}
+.hero #result .preview-fact span{
+  color:#698597;font-size:10px;font-weight:800;
+}
+.hero #result .preview-fact strong{
+  color:#1b4661;font-size:13px;font-weight:900;
+  line-height:1.35;overflow-wrap:anywhere;
+}
+.hero #result .preview-vehicle-note {
+  margin:13px 0 0;color:#698192;font-size:11px;line-height:1.5;
+}
+.hero #result > .preview-checkout {
+  margin:14px 0 0;padding:23px 24px 20px;
+  border:1px solid #d5e3eb;border-top:4px solid #eabb49;
+  border-radius:18px;background:#fff;
+  box-shadow:0 13px 36px rgba(5,20,37,.19);
+  color:#173c56;text-align:center;
+}
+.hero #result .preview-checkout-eyebrow{
+  display:block;margin-bottom:7px;
+  color:#98701f;font-size:10px;font-weight:950;
+  letter-spacing:.13em;
+}
+.hero #result .preview-checkout h2{
+  margin:0 auto 7px;max-width:650px;color:#143c58;
+  font-size:clamp(21px,3.3vw,29px);font-weight:950;line-height:1.19;
+}
+.hero #result .preview-checkout-desc{
+  margin:0 auto;max-width:580px;color:#587487;
+  font-size:13px;line-height:1.53;
+}
+.hero #result .preview-price{
+  display:flex;justify-content:center;align-items:baseline;
+  gap:9px;flex-wrap:wrap;margin:15px 0 14px;
+}
+.hero #result .preview-price strong{
+  color:#143e58;font-size:clamp(35px,5vw,43px);
+  font-weight:950;letter-spacing:-.035em;line-height:1;
+}
+.hero #result .preview-price span{
+  color:#6c8391;font-size:12px;font-weight:750;
+}
+.hero #result .preview-buy-button{
+  display:flex!important;align-items:center;justify-content:center;
+  width:100%;min-height:61px;margin:0!important;padding:15px 18px!important;
+  border:1px solid #e1a828!important;border-radius:12px!important;
+  background:linear-gradient(125deg,#ffdf75,#f6b936)!important;
+  color:#172f40!important;box-shadow:0 12px 25px rgba(189,126,22,.22)!important;
+  font-size:clamp(13px,2vw,16px)!important;font-weight:950!important;
+  line-height:1.35!important;letter-spacing:.005em;
+  text-align:center;cursor:pointer;
+}
+.hero #result .preview-buy-button:is(:hover,:focus-visible){
+  background:linear-gradient(125deg,#ffebb2,#ffd05b)!important;
+  outline-offset:3px;
+}
+.hero #result .preview-checkout-assurance{
+  margin:12px 0 0;color:#496f80;font-size:11px;line-height:1.5;
+}
+.hero #result .preview-checkout .usecredit{
+  width:100%;margin:13px 0 0;
+  min-height:46px;
+}
+.hero #result > .plate-switch-top {
+  margin-top:14px;margin-bottom:0;
+}
+.hero #result > .preview-basic-data{
+  margin-top:19px;padding:18px 21px;
+  border:1px solid #d5e4ed;border-radius:16px;
+  background:#f8fbfe;box-shadow:0 6px 20px rgba(1,15,32,.08);
+  color:#214761;
+}
+.hero #result .preview-basic-data h3{
+  margin:0 0 6px;color:#1b445e;
+  font-size:18px;font-weight:950;line-height:1.3;
+}
+.hero #result .preview-basic-data>p{
+  margin:0 0 10px;color:#60798a;font-size:11px;line-height:1.5;
+}
+.hero #result .preview-basic-data .row{
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:10px;padding:10px 0;border-bottom:1px solid #deebf2;
+}
+.hero #result .preview-basic-data .row:last-child{border-bottom:0}
+.hero #result .preview-basic-data .row span:first-child{
+  color:#597789;font-size:12px;
+}
+.hero #result .preview-basic-data .row span:last-child{
+  color:#214a64;font-size:12px;font-weight:850;text-align:right;
+  overflow-wrap:anywhere;
+}
+.hero #result > .preview-unlock-details,
+.hero #result > .preview-packages-details {
+  margin-top:13px;border:1px solid #d7e6ef;
+  border-radius:15px;background:#fff;
+  color:#244b64;overflow:hidden;
+}
+.hero #result > .preview-unlock-details>summary,
+.hero #result > .preview-packages-details>summary{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:17px 18px;cursor:pointer;
+  color:#1d506d;font-size:13px;font-weight:950;line-height:1.4;
+  list-style:none;
+}
+.hero #result > .preview-unlock-details>summary::-webkit-details-marker,
+.hero #result > .preview-packages-details>summary::-webkit-details-marker{display:none}
+.hero #result > .preview-unlock-details>summary .preview-detail-icon,
+.hero #result > .preview-packages-details>summary .preview-detail-icon{
+  flex:0 0 auto;color:#2277a0;font-size:20px;font-weight:800;
+  transition:transform .18s ease;
+}
+.hero #result > details[open]>summary .preview-detail-icon{transform:rotate(180deg)}
+.hero #result .preview-detail-content{
+  padding:0 18px 18px;border-top:1px solid #e1ecf1;
+}
+.hero #result .preview-detail-content>p{
+  color:#577587;font-size:12px;line-height:1.55;
+}
+.hero #result .preview-detail-content .locked-preview{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;margin:12px 0;
+}
+.hero #result .preview-detail-content .locked-item{
+  min-width:0;padding:10px;border:1px solid #dbe8f0;
+  border-radius:10px;background:#f5f9fc;color:#305a73;
+  font-size:11px;line-height:1.35;
+}
+.hero #result .preview-detail-content .locked-wide{grid-column:1/-1}
+.hero #result .preview-detail-content .preview-disclaimer{
+  display:block;color:#658294;font-size:11px;line-height:1.55;
+}
+.hero #result .preview-packages-details .package-compare{
+  display:flex;flex-wrap:wrap;gap:8px;margin:13px 0;
+}
+.hero #result .preview-packages-details .packages{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;
+  margin-top:12px;
+}
+.hero #result .preview-packages-details .pkg{
+  display:flex;flex-direction:column;min-width:0;
+}
+.hero #result .preview-packages-details .pkg button{
+  width:100%;margin-top:auto;min-height:44px;
+}
+.hero #result .preview-package-note{
+  margin-top:12px;color:#647e8d;font-size:11px;line-height:1.6;
+}
+@media(max-width:900px){
+  .hero #result .preview-packages-details .packages{
+    grid-template-columns:1fr;gap:11px;
+  }
+}
+@media(max-width:640px){
+  .hero #result > .preview-vehicle-card{padding:18px 16px}
+  .hero #result .preview-vehicle-facts{gap:7px}
+  .hero #result .preview-fact{padding:10px}
+  .hero #result > .preview-checkout{padding:19px 15px 17px}
+  .hero #result .preview-checkout h2{font-size:23px}
+  .hero #result .preview-price{gap:5px;margin:15px 0 13px}
+  .hero #result .preview-price span{width:100%}
+  .hero #result .preview-buy-button{min-height:58px;padding:13px!important}
+  .hero #result > .preview-basic-data{padding:16px 14px}
+  .hero #result .preview-detail-content{padding:0 13px 16px}
+  .hero #result > .preview-unlock-details>summary,
+  .hero #result > .preview-packages-details>summary{padding:16px 13px}
+}
+@media(max-width:375px){
+  .hero #result .preview-vehicle-facts{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  .hero #result > details[open]>summary .preview-detail-icon{transition:none}
+}
+@media print{
+  .hero #result > .preview-checkout,
+  .hero #result > .preview-unlock-details,
+  .hero #result > .preview-packages-details{display:none!important}
+}
