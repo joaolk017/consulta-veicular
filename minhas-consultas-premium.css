@@ -393,3 +393,20 @@ body.premium-account .pa-account-footer a{color:#2a6b8e}
  }
  body.premium-account .guide-demo-workspace{box-shadow:none!important;border:0!important;padding:0!important}
 }
+
+/* CORRECAO DEMO V2 — abertura por link mesmo se JS falhar */
+body.premium-account #ac360DemoShell.guide-demo-workspace.hidden:target,
+body.premium-account #ac360DemoShell.guide-demo-workspace.hidden[data-open="true"] {
+ display:block!important;
+}
+body.premium-account .pa-demo-actions a#paOpenDemo{
+ display:inline-flex;align-items:center;justify-content:center;text-decoration:none;
+}
+body.premium-account #ac360DemoShell .pa-demo-fallback{
+ margin:0 0 12px;padding:12px 15px;border:1px solid #d3e5ef;
+ border-radius:12px;background:#eaf7fd;color:#285d7c;font-size:12px;line-height:1.55;
+}
+body.premium-account #ac360DemoShell .pa-demo-fallback[hidden]{display:none!important}
+@media(max-width:720px){
+ body.premium-account .pa-demo-actions a#paOpenDemo{min-height:50px;width:100%}
+}
