@@ -1047,3 +1047,43 @@
   .hero .desktop-side-panel .desktop-benefits-grid>span{padding:8px 7px;font-size:11px}
   .hero .hero-copy>#consultCard{padding:17px 12px!important}
 }
+
+/* LOGO EXATA EM DESTAQUE V11 — arquivo original logo site.png enviado pelo proprietário */
+@media screen and (min-width:901px){
+  .hero .shell>.top {
+    display:flex!important;flex-direction:column!important;align-items:center!important;
+    justify-content:center!important;gap:10px!important;
+    margin:12px 0 20px!important;padding:19px 28px 17px!important;
+    background:linear-gradient(180deg,#fff,#f7fbff)!important;
+    border:1px solid #d3e4ee!important;border-top:4px solid #efbc43!important;
+    border-radius:23px!important;
+    box-shadow:0 18px 45px rgba(0,11,29,.25)!important;
+  }
+  .hero .shell>.top .brand{
+    display:flex!important;align-items:center!important;justify-content:center!important;
+    width:100%!important;max-width:1150px!important;min-width:0!important;
+    flex:0 1 auto!important;margin:0!important;
+  }
+  .hero .shell>.top .site-logo{
+    display:block!important;width:min(100%,1040px)!important;
+    max-height:300px!important;height:auto!important;
+    margin:0 auto!important;object-fit:contain!important;object-position:center!important;
+    filter:none!important;
+  }
+  .hero .shell>.top .nav{
+    display:flex!important;flex-wrap:wrap!important;justify-content:center!important;
+    align-items:center!important;gap:9px!important;max-width:100%!important;
+    margin:0!important;
+  }
+  .hero .shell>.top .nav a{min-height:42px!important;}
+}
+@media screen and (max-width:900px){
+  .hero .shell>.top{
+    border-top:3px solid #efbc43!important;
+    background:#fff!important;
+  }
+  .hero .shell>.top .site-logo{
+    filter:none!important;
+    object-fit:contain!important;
+  }
+}
