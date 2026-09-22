@@ -1,35 +1,58 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Minhas Consultas | Consulta Veicular 360</title><meta name="robots" content="noindex,nofollow"><link rel="stylesheet" href="/escolha-360.css"><link rel="stylesheet" href="/assistente-compra.css?v=1">
+<title>Central do Comprador | Consulta Veicular 360</title><meta name="robots" content="noindex,nofollow"><link rel="stylesheet" href="/escolha-360.css"><link rel="stylesheet" href="/assistente-compra.css?v=1">
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f4f7fa;color:#142033;font-family:Arial,Helvetica,sans-serif}.top{background:#0b172a;color:#fff;padding:18px 16px}.topin,.wrap{max-width:980px;margin:auto}.brand{font-size:23px;font-weight:900}.brand span{color:#f6c445}.back{float:right;color:#fff;text-decoration:none;font-weight:700;margin-top:4px}.wrap{padding:26px 16px 50px}.hero,.card{background:#fff;border:1px solid #dce5ed;border-radius:16px;box-shadow:0 8px 28px rgba(11,23,42,.06)}.hero{padding:24px;display:flex;justify-content:space-between;gap:18px;align-items:center}.hero h1{margin:0 0 7px;font-size:27px}.muted{color:#64748b;line-height:1.5}.balance{min-width:180px;text-align:center;background:#f8fafc;border-radius:14px;padding:16px}.balance strong{display:block;font-size:34px;color:#0b172a}.actions{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.btn{border:0;border-radius:10px;padding:13px 17px;font-weight:800;cursor:pointer;text-decoration:none;font-size:14px}.primary{background:#0b172a;color:#fff}.secondary{background:#fff;color:#0b172a;border:1px solid #b9c8d6}.card{padding:20px;margin-top:18px}.card h2{margin:0 0 14px}.item{display:grid;grid-template-columns:1fr auto;gap:12px;padding:15px;margin-top:10px;border:1px solid #dce5ed;border-radius:14px;background:#fbfdff;box-shadow:0 5px 16px rgba(11,23,42,.04)}.item:first-of-type{margin-top:0}.plate{font-size:22px;font-weight:900;letter-spacing:1px}.vehicle-name{margin-top:5px;font-size:14px;font-weight:800;color:#26384d}.item-date{margin-top:6px;font-size:12px}.report-available{display:block;margin-top:5px;font-size:11px;color:#176b3a;font-weight:700}.status{display:inline-block;margin-left:8px;font-size:11px;padding:5px 8px;border-radius:20px;background:#e9f8ef;color:#176b3a;font-weight:800}.failed{background:#fff0f0;color:#a52828}.pending{background:#fff8e6;color:#785b00}.empty,.info,.error{padding:16px;border-radius:10px;background:#f8fafc}.error{background:#fff0f0;color:#8c2020}.overlay{position:fixed;inset:0;background:rgba(3,10,20,.7);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}.hidden{display:none!important}.modal{background:#fff;border-radius:16px;width:min(680px,100%);max-height:90vh;overflow:auto;padding:22px}.close{float:right;border:0;background:#eef2f6;border-radius:8px;padding:8px 11px;cursor:pointer}.row{display:flex;justify-content:space-between;gap:15px;padding:10px 0;border-bottom:1px solid #edf1f5}.row span:last-child{text-align:right;font-weight:700}.recover{margin-top:8px}.recover input{width:100%;padding:13px;border:1px solid #b9c8d6;border-radius:9px;margin:7px 0}.code{font-size:22px;letter-spacing:5px;text-align:center}@media(max-width:620px){.hero{display:block}.balance{margin-top:16px}.item{grid-template-columns:1fr}.item .btn{width:100%}.back{font-size:13px}.row{display:block}.row span{display:block}.row span:last-child{text-align:left;margin-top:4px}}
 @media print{.top,.actions,.close,.noprint{display:none!important}body{background:#fff}.modal{max-height:none;width:100%;padding:0}.overlay{position:static;background:#fff;padding:0}.card,.hero{box-shadow:none;border:0}}
-</style></head><body>
-<header class="top"><div class="topin"><a class="back" href="/">← Voltar ao site</a><div class="brand">Consulta Veicular <span>360</span></div></div></header>
-<main class="wrap"><section class="hero"><div><h1>Minhas Consultas</h1><div class="muted">Acompanhe seus créditos e reabra os relatórios das consultas realizadas nesta conta.</div><div id="accountEmail" class="muted" style="margin-top:5px"></div></div><div class="balance"><span class="muted">Créditos disponíveis</span><strong id="balance">—</strong><span class="muted">consultas</span></div></section>
-<div class="actions"><button class="btn primary" onclick="location.href='/'">+ NOVA CONSULTA</button><button class="btn secondary" onclick="load()">↻ ATUALIZAR</button><button class="btn secondary" onclick="openRecovery()">RECUPERAR POR E-MAIL</button></div>
+</style><link rel="stylesheet" href="/minhas-consultas-premium.css?v=1"></head><body class="premium-account">
+<header class="top"><div class="topin"><div class="brand"><a href="/" aria-label="Consulta Veicular 360 — página inicial"><img src="/logo%20site.png?v=7870a0d9" alt="Consulta Veicular 360" width="252" height="84"></a></div><a class="back" href="/">← Voltar ao site</a></div></header>
+<main class="wrap"><section class="hero" aria-labelledby="accountTitle"><div class="hero-copy"><span class="pa-eyebrow">✦ SUA CENTRAL 360</span><h1 id="accountTitle">Tudo sobre seus veículos em um só lugar.</h1><div class="muted">Acesse seus relatórios, utilize seus créditos e organize a próxima compra com o Assistente de Compra 360.</div><div id="accountEmail" class="muted" aria-live="polite"></div></div><div class="balance"><span class="balance-icon" aria-hidden="true">◈</span><span class="muted">CRÉDITOS DISPONÍVEIS</span><strong id="balance" aria-live="polite">—</strong><span class="muted">consultas para usar</span></div></section>
+<div class="actions pa-top-actions"><button type="button" class="btn primary" onclick="location.href='/'">＋ Nova consulta</button><button type="button" class="btn secondary" onclick="load()">↻ Atualizar meus dados</button><button type="button" class="btn secondary" onclick="openRecovery()">✉ Recuperar por e-mail</button></div>
 <div id="msg"></div>
-<section class="card ac360-account-box" id="assistente" aria-labelledby="assistenteTitle">
-  <span class="c360-eyebrow">SEU GUIA DE PRÉ-COMPRA</span>
-  <h2 id="assistenteTitle">Assistente de Compra 360</h2>
-  <p>Da primeira conversa com o vendedor à transferência: perguntas baseadas no relatório, lista de documentos, inspeção com checklist, comparação com a FIPE e orientações após a compra. Abra o guia de uma consulta já liberada ou experimente um exemplo fictício.</p>
-  <div class="ac360-account-actions"><button type="button" class="btn primary" onclick="abrirGuiaDemo()">VER EXEMPLO GRÁTIS</button><a href="#historico" class="btn secondary">ESCOLHER MINHA CONSULTA</a></div>
-  <p class="muted" style="font-size:11px">Os passos marcados ficam salvos somente neste dispositivo. Dados não disponíveis são identificados como tais.</p>
-</section>
-<section class="card c360-module" id="comparar" aria-labelledby="c360Title">
-  <span class="c360-eyebrow">NOVO · ASSISTENTE PRÉ-COMPRA</span>
-  <h2 id="c360Title">Escolha 360 — compare antes de negociar</h2>
-  <p>Selecione duas ou três consultas já liberadas para comparar os indicadores, conferir os pontos de atenção e preparar perguntas para cada vendedor. Você não precisa pagar novamente para comparar esses relatórios.</p>
-  <div id="c360Message" aria-live="polite"></div>
-  <div class="c360-module-bottom">
-    <div class="c360-module-meta">
-      <strong id="c360Selected">0 de 3 veículos selecionados</strong>
-      <span id="c360Hint">Marque os relatórios disponíveis no seu histórico.</span>
+
+<section class="card ac360-account-box premium-assistant" id="assistente" aria-labelledby="assistenteTitle">
+  <div class="pa-assistant-main">
+    <div class="pa-assistant-copy">
+      <span class="pa-eyebrow">✦ SUA FERRAMENTA DE PRÉ-COMPRA</span>
+      <h2 id="assistenteTitle">Assistente de <span>Compra 360</span></h2>
+      <p class="pa-assistant-intro">Muito além de consultar a placa. Transforme seu relatório em um plano de compra: prepare a visita, faça uma inspeção orientada, compare preços e organize os próximos passos.</p>
+      <div class="pa-feature-chips"><span>✓ Checklist interativo</span><span>✓ Indicadores do veículo</span><span>✓ Referência FIPE, se disponível</span><span>✓ Guia para o celular</span></div>
+      <div class="pa-demo-actions ac360-account-actions">
+        <button type="button" id="paOpenDemo" class="btn primary" onclick="abrirGuiaDemo()" aria-controls="ac360DemoShell" aria-expanded="false">▶ EXPLORAR DEMONSTRAÇÃO</button>
+        <a href="#historico" class="btn secondary">Abrir guia do meu veículo →</a>
+      </div>
     </div>
-    <div class="c360-module-actions"><button type="button" class="c360-demo-button" onclick="Escolha360.demo()">VER EXEMPLO</button><button type="button" id="c360CompareBtn" class="c360-primary" onclick="Escolha360.compare()" disabled>COMPARAR VEÍCULOS</button></div>
+    <div class="pa-assistant-aside" aria-label="Etapas interativas do assistente">
+      <div class="pa-aside-heading"><strong>Sua jornada de compra</strong><span>4 ETAPAS</span></div>
+      <div class="pa-stage-grid">
+        <button type="button" class="pa-stage-tile" onclick="abrirGuiaDemo('preparar')" aria-label="Experimentar a etapa antes da visita"><span class="pa-stage-top"><span class="pa-stage-icon" aria-hidden="true">📋</span><span class="pa-stage-no">01</span></span><strong>Antes da visita</strong><small>Perguntas e documentos</small></button>
+        <button type="button" class="pa-stage-tile" onclick="abrirGuiaDemo('visita')" aria-label="Experimentar a etapa inspeção"><span class="pa-stage-top"><span class="pa-stage-icon" aria-hidden="true">🚘</span><span class="pa-stage-no">02</span></span><strong>Inspeção</strong><small>Checklist do veículo</small></button>
+        <button type="button" class="pa-stage-tile" onclick="abrirGuiaDemo('negociar')" aria-label="Experimentar a etapa negociação"><span class="pa-stage-top"><span class="pa-stage-icon" aria-hidden="true">🤝</span><span class="pa-stage-no">03</span></span><strong>Negociação</strong><small>FIPE e condições</small></button>
+        <button type="button" class="pa-stage-tile" onclick="abrirGuiaDemo('depois')" aria-label="Experimentar a etapa depois da compra"><span class="pa-stage-top"><span class="pa-stage-icon" aria-hidden="true">🗂️</span><span class="pa-stage-no">04</span></span><strong>Pós-compra</strong><small>Documentos e próximos passos</small></button>
+      </div>
+    </div>
   </div>
+  <div class="pa-assistant-bottom"><span class="pa-security">◈ O guia organiza os dados disponíveis e não substitui vistoria ou consultas oficiais atualizadas.</span><span class="pa-demo-chip">EXPERIMENTE SEM CONSUMIR CRÉDITOS</span></div>
 </section>
-<section class="card" id="historico"><h2>Histórico</h2><p class="muted" style="font-size:12px">Para cada consulta concluída, você pode abrir o relatório, usar o guia da compra e comparar veículos.</p><div id="history"><div class="empty">Carregando suas consultas...</div></div></section></main>
+<section id="ac360DemoShell" class="guide-demo-workspace hidden" aria-labelledby="paDemoTitle">
+  <div class="pa-workspace-header"><div><span>DEMONSTRAÇÃO GRATUITA</span><h2 id="paDemoTitle">Experimente o Assistente de Compra 360</h2></div><button type="button" class="pa-close-demo" onclick="fecharGuiaDemo()">✕ Fechar exemplo</button></div>
+  <div id="ac360DemoMount"></div>
+</section>
+
+<section class="card c360-module premium-compare" id="comparar" aria-labelledby="c360Title">
+  <div class="pa-compare-copy">
+    <span class="c360-eyebrow">COMPARADOR DE VEÍCULOS</span>
+    <h2 id="c360Title">Escolha 360 — compare seus próximos veículos lado a lado.</h2>
+    <p>Selecione dois ou três relatórios que já foram liberados, confira os indicadores disponíveis e prepare perguntas para cada vendedor. Comparar esses relatórios não consome novos créditos.</p>
+    <div id="c360Message" aria-live="polite"></div>
+    <div class="c360-module-bottom">
+      <div class="c360-module-meta"><strong id="c360Selected">0 de 3 veículos selecionados</strong><span id="c360Hint">Marque os relatórios disponíveis no histórico abaixo.</span></div>
+      <div class="c360-module-actions"><button type="button" class="c360-demo-button" onclick="Escolha360.demo()">Ver exemplo</button><button type="button" id="c360CompareBtn" class="c360-primary" onclick="Escolha360.compare()" disabled>COMPARAR VEÍCULOS →</button></div>
+    </div>
+  </div>
+  <div class="pa-compare-showcase" aria-hidden="true"><span>ESCOLHA COM MAIS INFORMAÇÃO</span><div class="pa-mini-vehicles"><i>🚘</i><b>×</b><i>🚙</i></div><strong>Dois veículos, uma análise.</strong><small>Indicadores, FIPE retornada e pontos de atenção em uma visualização.</small></div>
+</section>
+<section class="card premium-history" id="historico" aria-labelledby="historyTitle"><div class="pa-section-header"><div><span class="pa-label">SEUS RELATÓRIOS</span><h2 id="historyTitle">Histórico de consultas</h2><p>Reabra seus relatórios liberados, siga o guia de cada veículo ou marque dois ou três para comparar.</p></div><span class="pa-history-tip" aria-hidden="true">📑</span></div><div id="history"><div class="empty">Carregando suas consultas...</div></div></section><footer class="pa-account-footer"><span>© Consulta Veicular 360 · Dados retornados conforme as fontes integradas.</span><span><a href="/privacidade.html">Privacidade</a> · <a href="/contato.html">Suporte</a></span></footer></main>
 <div id="c360CompareModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="c360CompareTitle">
   <div class="modal c360-modal">
     <button type="button" class="close c360-close noprint" onclick="Escolha360.close()" aria-label="Fechar comparador">✕</button>
@@ -290,6 +313,7 @@ async function report(id){try{const r=await fetch('/api/minhas-consultas/'+encod
 const wrap=document.getElementById('reportModal');
 wrap.querySelector('.modal').classList.add('ac360-expanded-modal');
 AssistenteCompra.mount('ac360Saved',{...v,report360:d.report360||v.report360,plate:v.plate||d.consulta.plate},{id:'ac360-saved',reportId:d.consulta.id});
+  decorarGuiaPremium(document.getElementById('ac360Saved').querySelector('.ac360-guide'));
 wrap.classList.remove('hidden')}catch(e){document.getElementById('msg').innerHTML='<div class="error">'+esc(e.message)+'</div>'}}
 async function guide(id) {
   try {
@@ -302,18 +326,74 @@ async function guide(id) {
     overlay.querySelector('.modal').classList.add('ac360-expanded-modal');
     overlay.classList.remove('hidden');
     AssistenteCompra.mount('ac360Saved',vehicle,{id:'ac360-saved',reportId:d.consulta.id});
+    decorarGuiaPremium(document.getElementById('ac360Saved').querySelector('.ac360-guide'));
     overlay.querySelector('.close').focus();
   } catch(e) {
     document.getElementById('msg').innerHTML='<div class="error">'+esc(e.message)+'</div>';
   }
 }
-function abrirGuiaDemo() {
-  document.getElementById('report').innerHTML='<div id="ac360Saved"></div>';
-  const overlay=document.getElementById('reportModal');
-  overlay.querySelector('.modal').classList.add('ac360-expanded-modal');
-  overlay.classList.remove('hidden');
-  AssistenteCompra.demo('ac360Saved');
-  overlay.querySelector('.close').focus();
+
+/* A demonstração agora vive na própria central; os guias pagos continuam associados à conta. */
+function decorarGuiaPremium(root){
+  if(!root||root.dataset.paDecorated==='1')return;
+  root.dataset.paDecorated='1';
+  const heading=root.querySelector('.ac360-heading');
+  const panels=root.querySelector('.ac360-panels');
+  if(!heading||!panels)return;
+  heading.insertAdjacentHTML('beforeend','<div class="pa-guide-progress"><div class="pa-progress-top"><span>PROGRESSO DO CHECKLIST</span><strong data-pa-progress-label>0% concluído</strong></div><span class="pa-progress-track" role="progressbar" aria-label="Etapas concluídas no checklist" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="pa-progress-fill" data-pa-progress-fill></span></span></div>');
+  panels.insertAdjacentHTML('beforeend','<nav class="pa-guide-navigation" aria-label="Navegar pelas etapas"><button type="button" data-guide-prev>← Anterior</button><strong data-pa-current-stage>Etapa 1 de 4</strong><button type="button" data-guide-next>Próxima etapa →</button></nav>');
+  const stages=['preparar','visita','negociar','depois'];
+  const sync=()=>{
+    const inputs=Array.from(root.querySelectorAll('input[data-ac360-task]'));
+    const checked=inputs.filter(input=>input.checked).length;
+    const pct=inputs.length?Math.round(checked/inputs.length*100):0;
+    const track=root.querySelector('.pa-progress-track'),fill=root.querySelector('[data-pa-progress-fill]'),label=root.querySelector('[data-pa-progress-label]');
+    if(track)track.setAttribute('aria-valuenow',String(pct));
+    if(fill)fill.style.width=pct+'%';
+    if(label)label.textContent=checked+' de '+inputs.length+' itens · '+pct+'%';
+    const active=root.querySelector('button[data-ac360-tab].ac360-active');
+    const idx=Math.max(0,stages.indexOf(active&&active.dataset.ac360Tab));
+    const prev=root.querySelector('[data-guide-prev]'),next=root.querySelector('[data-guide-next]'),current=root.querySelector('[data-pa-current-stage]');
+    if(prev)prev.disabled=idx===0;
+    if(next){next.disabled=idx===stages.length-1;next.textContent=idx===stages.length-1?'Última etapa ✓':'Próxima etapa →';}
+    if(current)current.textContent='Etapa '+(idx+1)+' de '+stages.length;
+  };
+  root.addEventListener('click',event=>{
+    const previous=event.target.closest('[data-guide-prev]'),next=event.target.closest('[data-guide-next]');
+    if(previous||next){
+      const active=root.querySelector('button[data-ac360-tab].ac360-active');
+      const idx=Math.max(0,stages.indexOf(active&&active.dataset.ac360Tab));
+      const target=stages[idx+(next?1:-1)];
+      if(target){const tab=root.querySelector('[data-ac360-tab="'+target+'"]');if(tab){tab.click();root.querySelector('.ac360-tabs').scrollIntoView({behavior:'smooth',block:'nearest'});}}
+    }
+    if(event.target.closest('[data-ac360-tab]')||previous||next)sync();
+  });
+  root.addEventListener('change',event=>{if(event.target.matches('input[data-ac360-task]'))sync();});
+  sync();
+}
+function abrirGuiaDemo(stage){
+  const shell=document.getElementById('ac360DemoShell'),mount=document.getElementById('ac360DemoMount');
+  if(!shell||!mount||!window.AssistenteCompra)return;
+  shell.classList.remove('hidden');
+  const openBtn=document.getElementById('paOpenDemo');
+  if(openBtn)openBtn.setAttribute('aria-expanded','true');
+  if(!mount.querySelector('.ac360-guide')){
+    const ok=AssistenteCompra.demo('ac360DemoMount');
+    if(!ok)return;
+    decorarGuiaPremium(mount.querySelector('.ac360-guide'));
+  }
+  const accepted=['preparar','visita','negociar','depois'];
+  if(accepted.includes(stage)){
+    const tab=mount.querySelector('[data-ac360-tab="'+stage+'"]');
+    if(tab)tab.click();
+  }
+  requestAnimationFrame(()=>shell.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}));
+}
+function fecharGuiaDemo(){
+  const shell=document.getElementById('ac360DemoShell');
+  if(shell)shell.classList.add('hidden');
+  const openBtn=document.getElementById('paOpenDemo');if(openBtn)openBtn.setAttribute('aria-expanded','false');
+  document.getElementById('assistente').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function closeReport(){document.getElementById('reportModal').classList.add('hidden')}function openRecovery(){document.getElementById('recoveryModal').classList.remove('hidden');document.getElementById('stepEmail').classList.remove('hidden');document.getElementById('stepCode').classList.add('hidden');document.getElementById('recoveryMsg').innerHTML=''}function closeRecovery(){document.getElementById('recoveryModal').classList.add('hidden')}
 async function sendCode(){const email=document.getElementById('email').value.trim();if(!email.includes('@'))return document.getElementById('recoveryMsg').innerHTML='<div class="error">Informe um e-mail válido.</div>';try{const r=await fetch('/api/creditos/recuperar/solicitar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})}),d=await r.json();if(!r.ok)throw new Error(d.mensagem||'Falha ao enviar código.');document.getElementById('stepEmail').classList.add('hidden');document.getElementById('stepCode').classList.remove('hidden');document.getElementById('recoveryMsg').innerHTML='<div class="info">Digite o código enviado ao seu e-mail.</div>';document.getElementById('code').focus()}catch(e){document.getElementById('recoveryMsg').innerHTML='<div class="error">'+esc(e.message)+'</div>'}}
