@@ -221,3 +221,15 @@
   .ac360-guide .ac360-panel[hidden]{display:block!important}
   .ac360-task,.ac360-status{break-inside:avoid}
 }
+
+/* Amplia apenas o modal que contém o assistente e organiza as ações do histórico. */
+.modal.ac360-expanded-modal {width:min(1120px,100%);max-height:94vh;padding:18px;overflow:auto;}
+.c360-item-actions {display:grid;gap:7px;justify-items:stretch;min-width:175px;}
+.c360-item-actions .btn {margin:0!important;width:100%;white-space:normal;text-align:center;}
+.c360-item-actions .btn.secondary {border-color:#7caec6;color:#145b80;background:#eaf6fb;}
+.c360-item-actions .btn.secondary:hover {background:#d2ebf6;}
+@media(max-width:620px){
+  .modal.ac360-expanded-modal{padding:10px;max-height:96vh;}
+  .c360-item-actions{width:100%;min-width:0;}
+  .c360-item-actions .btn{width:100%;}
+}
