@@ -894,3 +894,10 @@
     border-color:#dbe5ed !important;
   }
 }
+
+/* LOGO CLARA V9 — usa versão vetorial já existente, sem fundo azul */
+.hero .shell > .top .site-logo {
+  filter:none !important;
+  mix-blend-mode:normal;
+  background:transparent !important;
+}
