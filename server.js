@@ -79,7 +79,7 @@ app.use((req, res, next) => {
   const pathname = String(req.path || "/").toLowerCase();
   // Único JavaScript público necessário ao comparador. Mantém o bloqueio
   // dos demais .js e de arquivos internos do repositório.
-  if (pathname === "/escolha-360.js") {
+  if (pathname === "/escolha-360.js" || pathname === "/assistente-compra.js") {
     res.set("Cache-Control", "no-cache");
     return next();
   }
