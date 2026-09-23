@@ -559,6 +559,38 @@ function safeVehicleDetails(vehicle, plate) {
     fipe = { value: fipeRaw, numericValue: null, code: null };
   }
 
+  // Aproveita somente detalhes já retornados pelo provedor atual.
+  // Não dispara nenhuma consulta adicional e não expõe o JSON bruto.
+  const auctionRaw = firstDefined(vehicle, ["auction","leilao","leilão"]);
+  const accidentRaw = firstDefined(vehicle, ["accidentClaim","sinistro","indicioSinistro","indicio_sinistro"]);
+  const lienRaw = firstDefined(vehicle, ["lien","gravame"]);
+  const debtsRaw = firstDefined(vehicle, ["debts","debitos","débitos"]);
+  const recallsRaw = firstDefined(vehicle, ["recalls","recallDetails","recallsPendentes"]);
+  const safeNumber = value => {
+    if (value === null || value === undefined || value === "") return null;
+    const normalized = typeof value === "string"
+      ? value.replace(/[^\d,.-]/g, "").replace(/\.(?=\d{3}(?:\D|$))/g, "").replace(",", ".")
+      : value;
+    const n = Number(normalized);
+    return Number.isFinite(n) ? n : null;
+  };
+  const safeCount = value => {
+    const n = safeNumber(value);
+    return n !== null && n >= 0 ? Math.floor(n) : null;
+  };
+  const safeDescriptions = raw => {
+    const list = Array.isArray(raw) ? raw : [];
+    return list.map(x => typeof x === "string" ? x : firstDefined(x, ["description","descricao","descrição","tipo"]))
+      .filter(Boolean).map(x => String(x).slice(0,240)).slice(0,20);
+  };
+  const safeRecalls = Array.isArray(recallsRaw)
+    ? recallsRaw.slice(0,20).map(x => x && typeof x === "object" ? ({
+        campaign: firstDefined(x, ["campaign","campanha","descricao","descrição","titulo","título"]),
+        startDate: firstDefined(x, ["startDate","data_inicio","dataInicio","data"]),
+        status: firstDefined(x, ["status","situacao","situação"])
+      }) : null).filter(Boolean)
+    : [];
+
   return {
     plate,
     brand: firstDefined(vehicle, ["brand","marca"]),
@@ -577,9 +609,12 @@ function safeVehicleDetails(vehicle, plate) {
     indicators: {
       theft: boolIndicator(vehicle, ["theft","rouboFurto","roubo_furto"]),
       auction: boolIndicator(vehicle, ["auction","leilao","leilão"]),
+      accidentClaim: boolIndicator(vehicle, ["accidentClaim","sinistro","indicioSinistro","indicio_sinistro"]),
+      lien: boolIndicator(vehicle, ["lien","gravame"]),
       recall: boolIndicator(vehicle, ["recall"]),
       renajud: boolIndicator(vehicle, ["renajud","RENAJUD"]),
       renainf: boolIndicator(vehicle, ["renainf","RENAINF"]),
+      ipvaPending: boolIndicator(vehicle, ["ipvaPending","ipvaPendente","ipva_pendente"]),
       saleCommunication: boolIndicator(vehicle, ["saleCommunication","comunicacaoVenda","comunicacao_venda"]),
       documentationPending: boolIndicator(vehicle, ["documentationPending","pendenciaDocumental","pendencia_documental"]),
       rfb: boolIndicator(vehicle, ["rfb","restricaoRfb","restricao_rfb"]),
@@ -588,6 +623,31 @@ function safeVehicleDetails(vehicle, plate) {
       chassisRemarked: boolIndicator(vehicle, ["chassisRemarked","chassiRemarcado","remarcacaoChassi"])
     },
     restrictions,
+    auction: auctionRaw && typeof auctionRaw === "object" ? {
+      count: safeCount(firstDefined(auctionRaw, ["count","quantidade","qtd","total"])),
+      score: firstDefined(auctionRaw, ["score","pontuacao","pontuação"]),
+      damage: firstDefined(auctionRaw, ["damage","danos","classificacao","classificação"]),
+      acceptance: firstDefined(auctionRaw, ["acceptance","aceitacao","aceitação"])
+    } : null,
+    accidentClaim: accidentRaw && typeof accidentRaw === "object" ? {
+      count: safeCount(firstDefined(accidentRaw, ["count","quantidade","qtd","total"])),
+      descriptions: safeDescriptions(firstDefined(accidentRaw, ["descriptions","descricoes","descrições","ocorrencias","ocorrências"]))
+    } : null,
+    lien: lienRaw && typeof lienRaw === "object" ? {
+      active: typeof firstDefined(lienRaw, ["active","ativo"]) === "boolean"
+        ? firstDefined(lienRaw, ["active","ativo"])
+        : boolIndicator(lienRaw, ["active","ativo","status","situacao","situação"]),
+      count: safeCount(firstDefined(lienRaw, ["count","quantidade","qtd","total"]))
+    } : null,
+    debts: debtsRaw && typeof debtsRaw === "object" ? {
+      ipvaPending: typeof firstDefined(debtsRaw, ["ipvaPending","ipvaPendente","ipva_pendente"]) === "boolean"
+        ? firstDefined(debtsRaw, ["ipvaPending","ipvaPendente","ipva_pendente"])
+        : boolIndicator(debtsRaw, ["ipvaPending","ipvaPendente","ipva_pendente"]),
+      ipvaValue: firstDefined(debtsRaw, ["ipvaValue","valorIpva","valor_ipva","valorPendenciaIpva"]),
+      finesCount: safeCount(firstDefined(debtsRaw, ["finesCount","multasQuantidade","quantidadeMultas","qtdMultas"])),
+      finesTotal: safeNumber(firstDefined(debtsRaw, ["finesTotal","multasTotal","valorMultas","totalMultas"]))
+    } : null,
+    recalls: safeRecalls,
     technical: {
       engine: firstDefined(technicalRaw, ["engine","motor"]),
       transmission: firstDefined(technicalRaw, ["transmission","cambio","câmbio"]),
