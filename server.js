@@ -61,6 +61,20 @@ app.disable("x-powered-by");
 app.set("trust proxy", 1);
 app.use(express.json({ limit: "20kb" }));
 
+// URLs canônicas para o Google: uma única etapa de redirecionamento.
+// Respeita X-Forwarded-Proto do proxy confiável do Render para evitar loops.
+app.use((req, res, next) => {
+  if (req.method !== "GET" && req.method !== "HEAD") return next();
+  const host = String(req.hostname || "").toLowerCase();
+  if (host !== "consultaveicular360.com.br" && host !== "www.consultaveicular360.com.br") return next();
+  const pathname = req.path;
+  const canonicalPath = pathname === "/sobre" ? "/sobre/" : pathname;
+  if (!req.secure || host !== "consultaveicular360.com.br" || canonicalPath !== pathname) {
+    return res.redirect(301, "https://consultaveicular360.com.br" + canonicalPath + (req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : ""));
+  }
+  next();
+});
+
 app.use((req, res, next) => {
   res.set("X-Content-Type-Options", "nosniff");
   res.set("X-Frame-Options", "DENY");
