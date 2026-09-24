@@ -7,7 +7,7 @@ const QRCode = require("qrcode");
 const { Pool } = require("pg");
 const { fetchSPDebts } = require("./infosimples-sp-debitos");
 const { mergeReport: mergeApiFullReport } = require("./apifull-integration");
-const { buildFonteDataRequest, isFonteDataPaidApproved } = require("./vehicle-provider-plan");
+const { buildFonteDataRequest, isFonteDataPaidApproved, assertFonteDataSuccess } = require("./vehicle-provider-plan");
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -2833,12 +2833,14 @@ async function buildPaidVehicleReport(plate){
     if (!FONTEDATA_API_KEY) throw new Error("FonteData principal habilitada sem chave configurada.");
     const prepared = buildFonteDataRequest(plate, FONTEDATA_API_KEY);
     const result = await requestJson(prepared.url, { headers:prepared.headers, timeout:prepared.timeout });
-    if (result.status < 200 || result.status >= 300 || !result.data || typeof result.data !== "object") {
-      const error = new Error("FonteData indisponível ou retorno inválido; nenhuma consulta adicional foi iniciada.");
+    let providerData;
+    try { providerData = assertFonteDataSuccess(result); }
+    catch {
+      const error = new Error("FonteData retornou falha; nenhuma consulta adicional será iniciada.");
       error.status = 502;
       throw error;
     }
-    const sanitized = sanitizeFonteDataAudit(result.data);
+    const sanitized = sanitizeFonteDataAudit(providerData);
     safeVehicle = normalizeFonteDataVehicle(sanitized, plate);
     safeVehicle._storedProviderCoverage = detectProviderCoverageFromStoredPayload(sanitized);
   } else {
