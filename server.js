@@ -3066,13 +3066,13 @@ async function telegramCancelOrder(chatId,index){
   const order=await telegramOrderByIndex(chatId,index);
   if(!order||order.status!=="pending"){await telegramBot.sendTelegramMessage(chatId,"Esse pedido não está mais disponível para cancelamento.");return;}
   const claim=await pool.query("UPDATE telegram_orders SET status='cancelling',updated_at=NOW() WHERE correlation_id=$1 AND chat_id=$2 AND status='pending' RETURNING correlation_id",[order.correlation_id,String(chatId)]);
-  if(!claim.rowCount){await telegramBot.sendTelegramMessage(chatId,"O status deste pedido mudou. Consulte Meus pedidos.");return;}
+  if(!claim.rowCount){await telegramBot.sendTelegramMessage(chatId,"O status deste pedido mudou. Consulte Meus pedidos.");return false;}
   try{
     const charge=await getOpenPixCharge(order.correlation_id);
     const status=String(charge.status||"").toUpperCase();
     if(status==="COMPLETED"){
       await pool.query("UPDATE telegram_orders SET status='pending',updated_at=NOW() WHERE correlation_id=$1 AND status='cancelling'",[order.correlation_id]);
-      await telegramBot.sendTelegramMessage(chatId,"Este PIX já foi pago. Não é possível cancelar; o relatório será processado.");return;
+      await telegramBot.sendTelegramMessage(chatId,"Este PIX já foi pago. Não é possível cancelar; o relatório será processado.");return false;
     }
     if(status!=="ACTIVE"&&status!=="EXPIRED")throw new Error("Status da cobrança não permite cancelamento.");
     if(status==="ACTIVE"){
@@ -3082,11 +3082,13 @@ async function telegramCancelOrder(chatId,index){
       if(response.status<200||response.status>=300)throw new Error("A Woovi não confirmou o cancelamento (HTTP "+response.status+").");
     }
     await pool.query("UPDATE telegram_orders SET status='cancelled',updated_at=NOW() WHERE correlation_id=$1 AND status='cancelling'",[order.correlation_id]);
-    await telegramBot.sendTelegramMessage(chatId,"🚫 Pedido da placa "+order.plate+" cancelado. Não utilize o PIX antigo.");
+    await telegramBot.sendTelegramMessage(chatId,"🚫 Pedido da placa "+order.plate+" cancelado. Não utilize o PIX antigo.",{inline_keyboard:[[{text:"🔄 Nova consulta",callback_data:"placa"}],[{text:"🏠 Menu principal",callback_data:"menu"}]]});
+    return true;
   }catch(err){
     await pool.query("UPDATE telegram_orders SET status='pending',updated_at=NOW() WHERE correlation_id=$1 AND status='cancelling'",[order.correlation_id]);
     console.error("Telegram cancelamento:",err.message);
     await telegramBot.sendTelegramMessage(chatId,"Não foi possível confirmar o cancelamento na Woovi. O pedido permanece em verificação; não pague o PIX até conferir o status.");
+    return false;
   }
 }
 async function sendTelegramPix(chatId,plate,product,pix){
