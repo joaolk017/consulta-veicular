@@ -40,8 +40,10 @@ test("bloqueia cobrança FonteData sem duas confirmações independentes", () =>
 });
 
 test("rejeita erros FonteData mesmo com HTTP 200", () => {
-  assert.deepEqual(assertFonteDataSuccess({status:200,data:{placa:"ABC1D23"}}),{placa:"ABC1D23"});
+  assert.deepEqual(assertFonteDataSuccess({status:200,data:{veiculo:{placa:"ABC1D23",marca:"Marca teste"}}}),{veiculo:{placa:"ABC1D23",marca:"Marca teste"}});
   assert.throws(() => assertFonteDataSuccess({status:200,data:{status:"error",message:"Falha"}}), /falha/);
   assert.throws(() => assertFonteDataSuccess({status:200,data:{success:false}}), /falha/);
   assert.throws(() => assertFonteDataSuccess({status:503,data:{}}), /inválida/);
+  assert.throws(() => assertFonteDataSuccess({status:200,data:{}}), /dados suficientes/);
+  assert.throws(() => assertFonteDataSuccess({status:200,data:{placa:"ABC1D23"}}), /dados suficientes/);
 });
