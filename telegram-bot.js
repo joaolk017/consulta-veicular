@@ -31,7 +31,8 @@ function send(chatId,text,reply_markup){
 async function sendWelcome(chatId){
   const caption="🚘 CONSULTA VEICULAR 360\n\n🔎 Envie sua placa ou toque em Consultar placa.\n💳 Pagamento por PIX e entrega do relatório aqui no Telegram.";
   const artworkInAssets=path.join(__dirname,"assets","telegram-welcome.png");
-  const artwork=fs.existsSync(artworkInAssets)?artworkInAssets:path.join(__dirname,"telegram-welcome.png");
+  const artworkNew=path.join(__dirname,"telegram-welcome-new.png");
+  const artwork=fs.existsSync(artworkNew)?artworkNew:fs.existsSync(artworkInAssets)?artworkInAssets:path.join(__dirname,"telegram-welcome.png");
   if(fs.existsSync(artwork)){
     try{
       const image=fs.readFileSync(artwork);
