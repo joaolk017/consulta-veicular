@@ -2827,7 +2827,8 @@ async function runFonteDataStoredCoverageOnce() {
 async function buildPaidVehicleReport(plate){
   // Migração opt-in: por padrão preserva o fluxo atual, sem nova cobrança.
   // Ativar somente após validação comercial e autorização explícita.
-  const fonteDataPrimary = String(process.env.FONTEDATA_PAID_PRIMARY_ENABLED || "").trim() === "true";
+  const fonteDataPrimary = String(process.env.FONTEDATA_PAID_PRIMARY_ENABLED || "").trim() === "true"
+    && String(process.env.FONTEDATA_PAID_PRIMARY_APPROVED || "").trim() === "confirmed";
   let safeVehicle;
   if (fonteDataPrimary) {
     if (!FONTEDATA_API_KEY) throw new Error("FonteData principal habilitada sem chave configurada.");
