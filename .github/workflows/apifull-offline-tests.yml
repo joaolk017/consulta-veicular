@@ -2,7 +2,8 @@ name: API Full offline tests
 on:
   push:
     paths:
-      - 'apifull-integration.js'
+      - 'apifull-*.js'
+      - 'unified-vehicle-report.js'
       - 'test/apifull-integration.test.js'
       - 'vehicle-provider-plan.js'
       - 'server.js'
@@ -23,4 +24,4 @@ jobs:
       - name: Validate API Full mapping without network or token
         run: |
           node --check server.js
-          node --test test/apifull-integration.test.js test/vehicle-provider-plan.test.js
+          node --test test/apifull-integration.test.js test/vehicle-provider-plan.test.js apifull-integration.test.js apifull-paid-client.test.js
