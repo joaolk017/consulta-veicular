@@ -988,6 +988,69 @@ html{scroll-behavior:smooth}
 }
 </style>
 <script>function cvOpenConsult(){var card=document.getElementById('consultCard');if(card){card.classList.add('cv-form-open');var b=card.querySelector('.cv-mobile-expand');if(b)b.setAttribute('aria-expanded','true')}}function cvToggleConsult(){var card=document.getElementById('consultCard');if(!card)return;var opened=card.classList.toggle('cv-form-open');var b=card.querySelector('.cv-mobile-expand');if(b){b.setAttribute('aria-expanded',String(opened));b.innerHTML=opened?'Ocultar formulário <span aria-hidden="true">↑</span>':'Consultar agora <span aria-hidden="true">→</span>'}if(opened){var p=document.getElementById('plate');if(p)p.focus()}}window.addEventListener('hashchange',function(){if(location.hash==='#consultCard')cvOpenConsult()});document.addEventListener('DOMContentLoaded',function(){if(location.hash==='#consultCard')cvOpenConsult()});</script>
+<style id="cv-preview-finish-20260923">
+/* Acabamento inspirado na prévia: fotografia, luzes, navegação e cartões mobile. */
+.hero{position:relative;overflow:hidden;background:#071a30!important}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 75% 18%,#1266ad55,transparent 45%),repeating-linear-gradient(90deg,transparent 0 68px,#0e36551c 69px 70px);pointer-events:none}
+.hero-grid{position:relative;min-height:315px!important;display:flex!important;align-items:center!important;padding:35px 20px 25px!important}
+.cv-photo-hero{position:absolute;z-index:0;inset:0 0 0 46%;background-image:linear-gradient(90deg,#071a30 0%,#071a3000 38%),linear-gradient(0deg,#071a30 0%,#071a3000 40%),url("https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=1400&q=85");background-size:cover;background-position:center 48%;filter:saturate(1.25) contrast(1.12);pointer-events:none}
+.cv-photo-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 64% 57%,#0b7efb4d,transparent 55%);mix-blend-mode:screen}
+.cv-photo-badge{position:absolute;right:18%;top:14%;transform:rotate(-9deg);display:flex;align-items:center;gap:9px;padding:12px 15px;border:1px solid #45b5ff;border-radius:12px;background:#082a57d9;color:white;box-shadow:0 0 22px #008cffb3;font-size:14px;line-height:1.1}
+.cv-photo-badge span{font-size:27px}
+.hero-copy{position:relative;z-index:1;max-width:58%!important}
+.hero-car-outline{display:none!important}
+.hero-copy>h1{font-weight:950!important;text-shadow:0 2px 16px #020d1caa}
+.hero-copy>.firstfold-trust span{border:0!important;background:#081e36ad!important}
+.cv-products{position:relative;z-index:2}
+.cv-product--consult #consultCard{border-top:1px solid #315a91!important}
+.cv-product--consult .cv-consult-heading>span,.cv-product-icon{display:grid!important;place-items:center;width:49px;height:49px;flex:none;background:linear-gradient(145deg,#167cff,#0b376d);border-radius:12px;box-shadow:0 5px 20px #007bff55;font-size:25px!important}
+.cv-product:nth-child(2) .cv-product-icon{background:linear-gradient(145deg,#ffd949,#a8790d)}
+.cv-product--gravame .cv-product-icon{background:linear-gradient(145deg,#ffcf25,#9c7214)}
+.cv-product--consult .cv-consult-heading .title{font-size:23px!important}
+.cv-product--consult .cv-consult-heading .sub{font-size:12px!important}
+.cv-product--consult .cv-consult-benefits>div{grid-template-columns:1fr 1fr}
+.cv-product--consult .cv-consult-benefits>div span{font-size:12px}
+.cv-product--consult .cv-consult-benefits>div span::first-letter{color:#20d889}
+.cv-product--consult #btn{background:#ffdc20!important;color:#071b32!important}
+.cv-product--consult .creditbar.zero{background:#112f4b!important}
+@media(min-width:901px){
+ .hero .top{background:#06162bdc!important;border-bottom:1px solid #24557a!important}
+ .hero-copy>.hero-text{max-width:550px!important}
+ .cv-product--consult .cv-mobile-expand{display:none!important}
+ .cv-product--consult .cv-consult-form{display:block!important}
+}
+@media(max-width:900px){
+ .hero .shell{width:min(100% - 20px,600px)!important}
+ .hero .top{background:#06162b!important;border-radius:0!important}
+ .hero-grid{min-height:320px!important;align-items:flex-start!important;padding:24px 8px 15px!important}
+ .cv-photo-hero{inset:5% -25% 18% 35%;opacity:.7;background-position:center;background-size:cover}
+ .cv-photo-badge{top:5%;right:27%;padding:7px;font-size:9px}
+ .cv-photo-badge span{font-size:17px}
+ .hero-copy{max-width:100%!important}
+ .hero-copy>h1{max-width:80%!important;font-size:clamp(31px,8.5vw,47px)!important}
+ .hero-copy>.hero-text{max-width:66%!important;font-size:12px!important;text-shadow:0 2px 7px #06162b}
+ .hero-copy>.firstfold-trust{margin-top:28px!important;position:relative;z-index:2}
+ .cv-product--consult #consultCard{background:#f9fcff!important;color:#0b2440!important;border:1px solid #bcd2e4!important;padding:13px!important}
+ .cv-product--consult .cv-consult-heading .title{color:#0c243e!important;font-size:17px!important}
+ .cv-product--consult .cv-consult-heading .sub{color:#38506a!important;font-size:11px!important}
+ .cv-product--consult .cv-consult-badges{display:none!important}
+ .cv-product--consult .cv-mobile-expand{background:#0f73e7!important;margin:10px 0 0!important}
+ .cv-product--consult .cv-consult-form{background:#0b2440!important;color:white!important;border-radius:12px;padding:13px;margin-top:12px}
+ .cv-product--consult .cv-consult-benefits{color:white!important}
+ .cv-product--consult .cv-consult-benefits>b{color:white!important}
+ .cv-product--consult .cv-consult-benefits>div{color:#d2eadf!important}
+ .cv-product:not(.cv-product--consult){background:#f9fcff!important;color:#0b2440!important;border:1px solid #c9dcec!important}
+ .cv-product:not(.cv-product--consult) h2{color:#0b2440!important}
+ .cv-product:not(.cv-product--consult) p{color:#405875!important}
+ .cv-product:not(.cv-product--consult) .cv-product-price{color:#203b56!important}
+ .cv-product:not(.cv-product--consult) .cv-product-price strong{color:#0b2440!important}
+ .cv-product:not(.cv-product--consult) .cv-package{color:#203b56!important;border-color:#cad9e6!important}
+ .cv-product:not(.cv-product--consult) .cv-package b{color:#0b2440!important}
+ .cv-product--gravame .cv-product-badge{top:-10px}
+ .cv-product--consult .cv-consult-heading>span,.cv-product-icon{width:42px;height:42px;font-size:22px!important}
+ .cv-product:not(.cv-product--consult) .cv-product-action{min-height:42px;padding:10px}
+}
+</style>
 </head>
 <body>
 <div id="appSplash" class="app-splash" aria-hidden="true"><img src="/file_00000000d76c820e88ceb6c39ce70f0d.png" alt=""></div>
@@ -1005,6 +1068,7 @@ html{scroll-behavior:smooth}
 <div class="shell">
 <header class="top"><div class="brand"><img src="/logo%20site.png?v=7870a0d9" alt="Consulta Veicular 360" class="site-logo" width="2172" height="724" loading="eager" decoding="async" fetchpriority="high"></div><nav class="nav"><a href="/sobre/">Sobre nós</a><a href="/termos.html">Termos</a><a href="/privacidade.html">Privacidade</a><a href="/reembolso.html">Reembolso</a><a href="/contato.html">Suporte</a></nav><details class="mobile-site-menu"><summary aria-label="Abrir menu de navegação"><span aria-hidden="true">☰</span> Menu</summary><nav aria-label="Menu do celular"><a href="/sobre/">Sobre nós</a><a href="/termos.html">Termos</a><a href="/privacidade.html">Privacidade</a><a href="/reembolso.html">Reembolso</a><a href="/contato.html">Suporte</a></nav></details></header>
 <div class="hero-grid">
+<div class="cv-photo-hero" aria-hidden="true"><div class="cv-photo-glow"></div><div class="cv-photo-badge"><span>🛡️</span><b>CONSULTA<br>SEGURA</b></div></div>
 <div class="hero-copy">
 <span class="pill">PRÉVIA GRATUITA POR PLACA</span>
 <h1>Vai comprar<br>um <em>carro usado?</em></h1>
