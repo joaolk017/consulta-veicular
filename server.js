@@ -2141,10 +2141,12 @@ app.post("/api/pagamento/pix/criar", async (req, res) => {
   try {
     const charge = await createOpenPixCharge({ correlationID, plate, product });
     const copyPaste = charge.brCode || (charge.pix && charge.pix.brCode) || null;
-    let qrcodeUrl = charge.qrCodeImage || null;
-    if (!qrcodeUrl && copyPaste) {
-      try { qrcodeUrl = await QRCode.toDataURL(copyPaste, { width: 420, margin: 2 }); } catch {}
+    let qrcodeUrl = null;
+    if (copyPaste) {
+      try { qrcodeUrl = await QRCode.toDataURL(copyPaste, { width: 420, margin: 2 }); }
+      catch (qrError) { console.warn("Falha ao gerar QR PIX localmente:", qrError.message); }
     }
+    if (!qrcodeUrl && typeof charge.qrCodeImage === "string" && /^https:\/\//i.test(charge.qrCodeImage)) qrcodeUrl = charge.qrCodeImage;
     await pool.query("INSERT INTO payments(correlation_id,account_id,product,cents,credits,funnel_session_id) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(correlation_id) DO NOTHING", [correlationID, account.id, product.id, product.cents, product.credits, validFunnelSessionId]);
     const paymentToken = signPaymentToken({
       v: 3,
