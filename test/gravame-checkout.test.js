@@ -8,6 +8,7 @@ function fixture() {
   process.env.GRAVAME_DETALHADO_ENABLED = "1";
   const routes = {};
   let status = "pending";
+  let paidValue = 2990;
   let report = null;
   let providerError = false;
   let apiCalls = 0;
@@ -38,7 +39,7 @@ function fixture() {
     pool,requireDatabase(){},
     ensureAccount:async()=>({id:"account-test",token:"account-token"}),
     createOpenPixCharge:async()=>{pixCalls++;return {status:"ACTIVE",brCode:"PIX_SIMULADO"};},
-    getOpenPixCharge:async()=>({status,value:2990}),
+    getOpenPixCharge:async()=>({status,value:paidValue}),
     signPaymentToken:()=> "token-simulado",
     verifyPaymentToken:()=>({v:3,provider:"openpix",product:"gravame-detalhado",cents:2990,accountId:"account-test",plate:"ABC1D23",correlationID:"cv-gravame-simulado"}),
     checkPaymentRateLimit:()=>({allowed:true}),
@@ -50,7 +51,7 @@ function fixture() {
     await routes[path](req,res);
     return {code,body:output};
   }
-  return {call,purchase,setStatus(v){status=v;},setReport(v){report=v;},setProviderError(v){providerError=v;},get apiCalls(){return apiCalls;},get pixCalls(){return pixCalls;},restore(){if(previous===undefined)delete process.env.GRAVAME_DETALHADO_ENABLED;else process.env.GRAVAME_DETALHADO_ENABLED=previous;}};
+  return {call,purchase,setStatus(v){status=v;},setPaidValue(v){paidValue=v;},setReport(v){report=v;},setProviderError(v){providerError=v;},get apiCalls(){return apiCalls;},get pixCalls(){return pixCalls;},restore(){if(previous===undefined)delete process.env.GRAVAME_DETALHADO_ENABLED;else process.env.GRAVAME_DETALHADO_ENABLED=previous;}};
 }
 
 test("PIX simulado: cobrança separada de R$ 29,90 sem API real",async()=>{
@@ -103,5 +104,20 @@ test("falha da API entra em revisão sem nova cobrança automática",async()=>{
     assert.equal(second.code,202);
     assert.equal(second.body.status,"review");
     assert.equal(f.apiCalls,1);
+  } finally {f.restore();}
+});
+
+
+test("valor de PIX incorreto não libera consulta nem altera compra",async()=>{
+  const f=fixture();
+  try {
+    f.setStatus("COMPLETED");
+    f.setPaidValue(1890);
+    const check=await f.call("/api/gravame/status");
+    assert.equal(check.body.pago,false);
+    const report=await f.call("/api/gravame/relatorio");
+    assert.equal(report.code,402);
+    assert.equal(f.apiCalls,0);
+    assert.equal(f.purchase.status,"pending");
   } finally {f.restore();}
 });
