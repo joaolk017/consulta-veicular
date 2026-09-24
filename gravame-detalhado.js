@@ -16,21 +16,25 @@ function normalizePlate(value) {
 function summarizeGravame(payload) {
   const root = payload && typeof payload === "object" && !Array.isArray(payload) ? payload : {};
   const data = root.data && typeof root.data === "object" && !Array.isArray(root.data) ? root.data : root;
-  const record = data.gravame && typeof data.gravame === "object" && !Array.isArray(data.gravame) ? data.gravame : data;
-  const pick = (...keys) => {
-    for (const key of keys) {
-      const value = record[key];
-      if (typeof value === "string" && value.trim()) return value.trim().slice(0, 250);
-      if (typeof value === "boolean") return value;
-    }
-    return null;
-  };
+  // Schema oficial FonteData: temGravame, situacao, situacaoDescricao,
+  // agenteFinanceiro, restricao, contrato e veiculo.
+  const text = value => typeof value === "string" && value.trim() ? value.trim().slice(0, 250) : null;
+  const obj = value => value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const credor = obj(data.agenteFinanceiro);
+  const contrato = obj(data.contrato);
+  const restricao = obj(data.restricao);
+  const veiculo = obj(data.veiculo);
+  const statuses = new Set(["ATIVO", "BAIXADO", "SEM_GRAVAME", "INDETERMINADO"]);
+  const situacao = statuses.has(data.situacao) ? data.situacao : "INDETERMINADO";
   return {
-    situacao: pick("situacao", "situacaoGravame", "status"),
-    instituicao: pick("instituicaoFinanceira", "financeira", "credor"),
-    tipo: pick("tipoGravame", "tipoRestricao", "tipo"),
-    numeroContrato: pick("numeroContrato", "contrato"),
-    observacao: "Campos dependem da disponibilidade do provedor. Ausência de dados não significa ausência de gravame."
+    temGravame: typeof data.temGravame === "boolean" ? data.temGravame : null,
+    situacao,
+    situacaoDescricao: text(data.situacaoDescricao),
+    agenteFinanceiro: { nome: text(credor.nome), codigo: text(credor.codigo) },
+    restricao: { numero: text(restricao.numero), data: text(restricao.data), uf: text(restricao.uf) },
+    contrato: { numero: text(contrato.numero), data: text(contrato.data), uf: text(contrato.uf) },
+    veiculo: { placa: text(veiculo.placa), marcaModelo: text(veiculo.marcaModelo) },
+    observacao: "Dados fornecidos pelo provedor. Campos ausentes não comprovam ausência de gravame."
   };
 }
 
