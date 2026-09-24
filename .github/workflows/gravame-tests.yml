@@ -50,7 +50,7 @@ jobs:
           const showcase=html.slice(start,end);
           if(/consulta por cpf|consultar por cpf/i.test(showcase)) throw Error('Serviço CPF indevido');
           if(/DDB0A86|9BGTT08C01B151499/.test(showcase)) throw Error('Identificadores reais na vitrine');
-          if(/href="\\/gravame/.test(showcase)) throw Error('Checkout desativado não deve receber tráfego');
+          if(showcase.includes('href="/gravame')) throw Error('Checkout desativado não deve receber tráfego');
           NODE
       - name: Validar ordem das rotas
         run: |
