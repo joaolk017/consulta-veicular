@@ -1,0 +1,96 @@
+name: Testes Gravame Detalhado
+on:
+  push:
+    branches: [feature/gravame-detalhado]
+  pull_request:
+    paths:
+      - gravame-detalhado.js
+      - gravame-checkout.js
+      - gravame.html
+      - index.html
+      - test/visual-home.cjs
+      - test/gravame-detalhado.test.js
+      - test/gravame-checkout.test.js
+      - .github/workflows/gravame-tests.yml
+jobs:
+  gravame:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar sintaxe
+        run: |
+          node --check gravame-detalhado.js
+          node --check gravame-checkout.js
+          node --check server.js
+      - name: Validar JavaScript e recuperação da página de pagamento
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const vm = require('node:vm');
+          const html = fs.readFileSync('gravame.html', 'utf8');
+          const scripts = html.split('<script>')[1]?.split('</script>')[0];
+          if (!scripts) throw new Error('Script da página gravame não encontrado');
+          new vm.Script(scripts, {filename:'gravame.html'});
+          for (const marker of ['cv360-gravame-pagamento','cv_credit_account','d.status==="completed"','d.status==="review"']) {
+            if (!html.includes(marker)) throw new Error('Recuperação ausente: '+marker);
+          }
+          NODE
+      - name: Validar vitrine responsiva sem serviços fictícios
+        run: |
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const html=fs.readFileSync('index.html','utf8');
+          const required=['class="cv-products"','class="cv-demo"','class="cv-demo-grid"','@media(max-width:900px)','EM PREPARAÇÃO','inteiramente fictícios','R$ 18,90','R$ 32,90','R$ 44,90','R$ 29,90'];
+          for(const item of required) if(!html.includes(item)) throw Error('Elemento ausente: '+item);
+          const start=html.indexOf('<section class="cv-showcase"');
+          const end=html.indexOf('<div class="firstfold-followup"',start);
+          if(start<0||end<start) throw Error('Vitrine fora do local esperado');
+          const showcase=html.slice(start,end);
+          if(/consulta por cpf|consultar por cpf/i.test(showcase)) throw Error('Serviço CPF indevido');
+          if(/DDB0A86|9BGTT08C01B151499/.test(showcase)) throw Error('Identificadores reais na vitrine');
+          if(showcase.includes('href="/gravame')) throw Error('Checkout desativado não deve receber tráfego');
+          NODE
+      - name: Validar ordem das rotas
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const source = fs.readFileSync('server.js', 'utf8');
+          const checkout = source.indexOf('installGravameCheckout({');
+          const fallback = source.indexOf('const notFound = path.join(__dirname, "404.html")');
+          const gatedRoutes = source.includes('app.get(["/gravame", "/gravame.html", "/gravame/"]');
+          if (checkout < 0 || fallback < 0 || checkout > fallback || !gatedRoutes) {
+            throw new Error('Rotas de gravame devem ser registradas antes do middleware 404');
+          }
+          NODE
+      - name: Testes sem chamadas externas
+        env:
+          GRAVAME_DETALHADO_ENABLED: '0'
+        run: node --test test/gravame-detalhado.test.js test/gravame-checkout.test.js
+
+  visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar navegador para screenshots
+        run: |
+          npm install --no-save --ignore-scripts playwright
+          npx playwright install --with-deps chromium
+      - name: Capturar desktop e celulares sem pagamentos
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/cv-visual-server.log 2>&1 &
+          node test/visual-home.cjs
+      - name: Disponibilizar capturas para revisão
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-consulta360-desktop-mobile
+          path: visual-tests/*.png
+          if-no-files-found: warn
