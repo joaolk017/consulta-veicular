@@ -7,6 +7,8 @@ on:
       - gravame-detalhado.js
       - gravame-checkout.js
       - gravame.html
+      - index.html
+      - test/visual-home.cjs
       - test/gravame-detalhado.test.js
       - test/gravame-checkout.test.js
       - .github/workflows/gravame-tests.yml
@@ -68,3 +70,27 @@ jobs:
         env:
           GRAVAME_DETALHADO_ENABLED: '0'
         run: node --test test/gravame-detalhado.test.js test/gravame-checkout.test.js
+
+  visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar navegador para screenshots
+        run: |
+          npm install --no-save --ignore-scripts playwright
+          npx playwright install --with-deps chromium
+      - name: Capturar desktop e celulares sem pagamentos
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/cv-visual-server.log 2>&1 &
+          node test/visual-home.cjs
+      - name: Disponibilizar capturas para revisão
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-consulta360-desktop-mobile
+          path: visual-tests/*.png
+          if-no-files-found: warn
