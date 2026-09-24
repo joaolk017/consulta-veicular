@@ -33,4 +33,4 @@ jobs:
           node --check apifull-integration-plan.js
           node --check unified-report.js
           node --check apifull-presentation.js
-          node --test apifull-adapter.test.js apifull-auth-config.test.js apifull-integration-plan.test.js unified-report.test.js apifull-presentation.test.js apifull-site.test.js
+          node --test apifull-adapter.test.js apifull-auth-config.test.js apifull-integration-plan.test.js unified-report.test.js apifull-presentation.test.js apifull-site.test.js apifull-flow.test.js
