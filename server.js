@@ -7,6 +7,7 @@ const QRCode = require("qrcode");
 const { Pool } = require("pg");
 const { fetchSPDebts } = require("./infosimples-sp-debitos");
 const { mergeReport: mergeApiFullReport } = require("./apifull-integration");
+const { buildFonteDataRequest } = require("./vehicle-provider-plan");
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -2824,12 +2825,30 @@ async function runFonteDataStoredCoverageOnce() {
 
 
 async function buildPaidVehicleReport(plate){
-  const vehicle = await getVehicle(plate);
-  let safeVehicle = safeVehicleDetails(vehicle, plate);
+  // Migração opt-in: por padrão preserva o fluxo atual, sem nova cobrança.
+  // Ativar somente após validação comercial e autorização explícita.
+  const fonteDataPrimary = String(process.env.FONTEDATA_PAID_PRIMARY_ENABLED || "").trim() === "true";
+  let safeVehicle;
+  if (fonteDataPrimary) {
+    if (!FONTEDATA_API_KEY) throw new Error("FonteData principal habilitada sem chave configurada.");
+    const prepared = buildFonteDataRequest(plate, FONTEDATA_API_KEY);
+    const result = await requestJson(prepared.url, { headers:prepared.headers, timeout:prepared.timeout });
+    if (result.status < 200 || result.status >= 300 || !result.data || typeof result.data !== "object") {
+      const error = new Error("FonteData indisponível ou retorno inválido; nenhuma consulta adicional foi iniciada.");
+      error.status = 502;
+      throw error;
+    }
+    const sanitized = sanitizeFonteDataAudit(result.data);
+    safeVehicle = normalizeFonteDataVehicle(sanitized, plate);
+    safeVehicle._storedProviderCoverage = detectProviderCoverageFromStoredPayload(sanitized);
+  } else {
+    const vehicle = await getVehicle(plate);
+    safeVehicle = safeVehicleDetails(vehicle, plate);
+  }
 
   // Aproveita um retorno FonteData já armazenado para a mesma placa, quando existir.
   // Esta etapa é somente leitura do PostgreSQL: não chama o provedor e não consome crédito.
-  if (pool) {
+  if (!fonteDataPrimary && pool) {
     try {
       const fonteSaved = await pool.query(`
         SELECT result_json FROM (
