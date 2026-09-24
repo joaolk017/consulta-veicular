@@ -12,7 +12,7 @@ const site = "https://consultaveicular360.com.br";
 const keyboard = {inline_keyboard:[
   [{text:"🚗 Digitar placa aqui",callback_data:"placa"}],
   [{text:"🌐 Consultar no site",url:site}],
-  [{text:"💳 Comprar consultas",url:site}],
+  [{text:"💳 Ver pacotes e preços",callback_data:"pacotes"}],
   [{text:"📋 Sobre os relatórios",callback_data:"sobre"}]
 ]};
 function send(chatId,text,reply_markup){
@@ -48,7 +48,9 @@ function installTelegramBot(app){
     const chatId=message?.chat?.id||callback?.message?.chat?.id;
     if(!chatId)return res.json({ok:true});
     try{
-      if(callback?.data==="placa"){
+      if(callback?.data==="pacotes"){
+        await send(chatId,"💳 Pacotes Consulta Veicular 360:\n\n1 consulta: R$ 18,90\n2 consultas: R$ 32,90\n3 consultas: R$ 44,90\n\nOs créditos podem ser usados em placas diferentes. O pagamento é processado com segurança pelo site oficial.",{inline_keyboard:[[{text:"1 consulta · R$ 18,90",url:site}],[{text:"2 consultas · R$ 32,90",url:site}],[{text:"3 consultas · R$ 44,90",url:site}],[{text:"🚗 Digitar placa",callback_data:"placa"}]]});
+      }else if(callback?.data==="placa"){
         await send(chatId,"🚗 Envie a placa do veículo (exemplo: ABC1D23 ou ABC1234). A validação é gratuita; nenhuma consulta paga será feita sem sua confirmação.");
       }else if(callback?.data==="sobre"){
         await send(chatId,"O Consulta Veicular 360 disponibiliza relatórios conforme a cobertura das fontes contratadas. Dados indisponíveis não são garantidos. Consulte condições e preços no site.",keyboard);
