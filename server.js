@@ -2260,8 +2260,24 @@ app.post("/api/pagamento/pix/qr", async (req, res) => {
   if (!enforceSensitiveRateLimit(req, res, "pix-qr", 30)) return;
   try {
     const token = verifyPaymentToken(req.body && req.body.paymentToken);
-    const charge = await getOpenPixCharge(token.correlationID);
-    const code = charge.brCode || (charge.pix && charge.pix.brCode);
+    // O código PIX já foi emitido para o checkout; não depender de uma segunda consulta à Woovi.
+    const suppliedCode = typeof req.body?.copyPaste === "string" ? req.body.copyPaste.trim() : "";
+    let code = "";
+    if (suppliedCode) {
+      // Validar CRC16 do payload EMV antes de transformar o código em imagem.
+      const match = suppliedCode.match(/6304([0-9A-Fa-f]{4})$/);
+      if (!match || suppliedCode.length < 30 || suppliedCode.length > 4096) return res.status(422).json({ mensagem: "Código PIX inválido." });
+      let crc = 0xFFFF;
+      for (const ch of suppliedCode.slice(0, -4)) {
+        crc ^= ch.charCodeAt(0) << 8;
+        for (let bit = 0; bit < 8; bit++) crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF;
+      }
+      if (crc.toString(16).toUpperCase().padStart(4, "0") !== match[1].toUpperCase()) return res.status(422).json({ mensagem: "CRC do PIX inválido." });
+      code = suppliedCode;
+    } else {
+      const charge = await getOpenPixCharge(token.correlationID);
+      code = charge.brCode || (charge.pix && charge.pix.brCode);
+    }
     if (typeof code !== "string" || code.length < 30 || code.length > 4096) {
       return res.status(422).json({ mensagem: "Código PIX indisponível para esta cobrança." });
     }
