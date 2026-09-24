@@ -24,6 +24,20 @@ function isFonteDataPaidApproved(env = {}) {
   return String(env.FONTEDATA_PAID_PRIMARY_ENABLED || "").trim() === "true"
     && String(env.FONTEDATA_PAID_PRIMARY_APPROVED || "").trim() === "confirmed";
 }
+function assertFonteDataSuccess(response) {
+  const httpStatus = Number(response && response.status);
+  const data = response && response.data;
+  if (!Number.isInteger(httpStatus) || httpStatus < 200 || httpStatus >= 300
+      || !data || typeof data !== "object" || Array.isArray(data)) {
+    throw new Error("Resposta FonteData inválida ou indisponível.");
+  }
+  const bodyStatus = String(data.status || "").toLowerCase();
+  if (data.error || data.errors || data.success === false
+      || ["error", "erro", "failed", "failure", "unauthorized"].includes(bodyStatus)) {
+    throw new Error("FonteData informou falha no corpo da resposta.");
+  }
+  return data;
+}
 function planVehicleProviders({ plate, chassis, paid = false, fonteDataContractVerified = false } = {}) {
   if (!paid) return { preview:"falcon", paidBase:null, complements:[] };
   if (!fonteDataContractVerified) return {
@@ -36,4 +50,4 @@ function planVehicleProviders({ plate, chassis, paid = false, fonteDataContractV
     migrationStatus:"planned_only_no_network"
   };
 }
-module.exports = { planVehicleProviders, validatePaidPlate, buildFonteDataRequest, isFonteDataPaidApproved };
+module.exports = { planVehicleProviders, validatePaidPlate, buildFonteDataRequest, isFonteDataPaidApproved, assertFonteDataSuccess };
