@@ -30,7 +30,8 @@ jobs:
           const source = fs.readFileSync('server.js', 'utf8');
           const checkout = source.indexOf('installGravameCheckout({');
           const fallback = source.indexOf('const notFound = path.join(__dirname, "404.html")');
-          if (checkout < 0 || fallback < 0 || checkout > fallback) {
+          const gatedRoutes = source.includes('app.get(["/gravame", "/gravame.html", "/gravame/"]');
+          if (checkout < 0 || fallback < 0 || checkout > fallback || !gatedRoutes) {
             throw new Error('Rotas de gravame devem ser registradas antes do middleware 404');
           }
           NODE
