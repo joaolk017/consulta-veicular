@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { planVehicleProviders, validatePaidPlate, buildFonteDataRequest, isFonteDataPaidApproved } = require("../vehicle-provider-plan");
+const { planVehicleProviders, validatePaidPlate, buildFonteDataRequest, isFonteDataPaidApproved, assertFonteDataSuccess } = require("../vehicle-provider-plan");
 test("Falcon fica restrita à prévia gratuita no plano", () => {
   assert.deepEqual(planVehicleProviders({plate:"ABC1D23"}), {preview:"falcon",paidBase:null,complements:[]});
 });
@@ -37,4 +37,11 @@ test("bloqueia cobrança FonteData sem duas confirmações independentes", () =>
   assert.equal(isFonteDataPaidApproved({FONTEDATA_PAID_PRIMARY_ENABLED:"true"}), false);
   assert.equal(isFonteDataPaidApproved({FONTEDATA_PAID_PRIMARY_APPROVED:"confirmed"}), false);
   assert.equal(isFonteDataPaidApproved({FONTEDATA_PAID_PRIMARY_ENABLED:"true",FONTEDATA_PAID_PRIMARY_APPROVED:"confirmed"}), true);
+});
+
+test("rejeita erros FonteData mesmo com HTTP 200", () => {
+  assert.deepEqual(assertFonteDataSuccess({status:200,data:{placa:"ABC1D23"}}),{placa:"ABC1D23"});
+  assert.throws(() => assertFonteDataSuccess({status:200,data:{status:"error",message:"Falha"}}), /falha/);
+  assert.throws(() => assertFonteDataSuccess({status:200,data:{success:false}}), /falha/);
+  assert.throws(() => assertFonteDataSuccess({status:503,data:{}}), /inválida/);
 });
