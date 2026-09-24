@@ -51,3 +51,18 @@ test("API Full accepts ordinary tokens but rejects raw CRLF", () => {
   assert.equal(request.headers.Authorization, "Bearer token-normal");
   assert.throws(() => api.buildAuthorizedRequest("leilao", { placa: "ABC1D23" }, "token\r\nInjected: yes"), /inválido/);
 });
+
+const { buildUnifiedReport } = require("../unified-vehicle-report");
+test("Unified report separates confirmed API Full data from unqueried services", () => {
+  const base = { placa:"ABC1D23", marca:"Exemplo" };
+  const report = buildUnifiedReport(base, {
+    leilao:{ok:true,data:{registro:"FICTICIO"}},
+    debitos:{ok:false,data:{valor:0}}
+  });
+  assert.equal(report.provider, "FonteData");
+  assert.equal(report.sections.find(x => x.id === "leilao").status, "consultado");
+  assert.equal(report.sections.find(x => x.id === "debitos").status, "nao_consultado");
+  assert.equal(report.sections.find(x => x.id === "debitos").data, null);
+  assert.equal(report.combined.complementosApiFull.leilao.source, "API Full");
+  assert.deepEqual(base, { placa:"ABC1D23", marca:"Exemplo" });
+});
