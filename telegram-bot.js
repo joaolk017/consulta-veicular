@@ -10,7 +10,8 @@ const secret = String(process.env.TELEGRAM_WEBHOOK_SECRET || "").trim();
 const telegramHeaderSecret = secret ? crypto.createHash("sha256").update(secret).digest("hex") : "";
 const site = "https://consultaveicular360.com.br";
 const keyboard = {inline_keyboard:[
-  [{text:"🚗 Consultar placa no site",url:site}],
+  [{text:"🚗 Digitar placa aqui",callback_data:"placa"}],
+  [{text:"🌐 Consultar no site",url:site}],
   [{text:"💳 Comprar consultas",url:site}],
   [{text:"📋 Sobre os relatórios",callback_data:"sobre"}]
 ]};
@@ -47,12 +48,19 @@ function installTelegramBot(app){
     const chatId=message?.chat?.id||callback?.message?.chat?.id;
     if(!chatId)return res.json({ok:true});
     try{
-      if(callback?.data==="sobre"){
+      if(callback?.data==="placa"){
+        await send(chatId,"🚗 Envie a placa do veículo (exemplo: ABC1D23 ou ABC1234). A validação é gratuita; nenhuma consulta paga será feita sem sua confirmação.");
+      }else if(callback?.data==="sobre"){
         await send(chatId,"O Consulta Veicular 360 disponibiliza relatórios conforme a cobertura das fontes contratadas. Dados indisponíveis não são garantidos. Consulte condições e preços no site.",keyboard);
       }else if(message?.text?.trim().startsWith("/start")||message?.text?.trim().startsWith("/menu")){
         await send(chatId,"🚗 Bem-vindo ao Consulta Veicular 360!\n\nEscolha uma opção para conhecer nossos relatórios e comprar consultas com segurança.",keyboard);
       }else if(message?.text){
-        await send(chatId,"Para consultar uma placa, use o site oficial. Em breve, a consulta poderá ser feita diretamente por aqui.",keyboard);
+        const plate=message.text.trim().toUpperCase().replace(/[ -]/g,"");
+        if(/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(plate) && (/[0-9]/.test(plate[4]) || /^[A-Z]{3}[0-9][A-Z][0-9]{2}$/.test(plate))){
+          await send(chatId,"🚗 Placa recebida: "+plate+"\n\nA consulta completa exige pagamento confirmado ou crédito disponível. Por enquanto, conclua a consulta pelo site; não envie senhas nem códigos de recuperação por aqui.",{inline_keyboard:[[{text:"💳 Consultar no site",url:site}],[{text:"🔄 Outra placa",callback_data:"placa"}]]});
+        }else{
+          await send(chatId,"Não reconheci uma placa válida. Envie no formato ABC1234 ou ABC1D23. Nenhuma consulta foi cobrada.",keyboard);
+        }
       }
       res.json({ok:true});
     }catch(e){console.error("Falha no envio Telegram:",e.message);res.sendStatus(503);}
