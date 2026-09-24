@@ -1607,7 +1607,7 @@ function setStep(s){$('pixForm').classList.toggle('hidden',s!=='form');$('pixPay
 async function carregarQrPixLocal(x){
   if(!x || !x.paymentToken || !x.copyPaste)return;
   try{
-    const response=await fetch('/api/pagamento/pix/qr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentToken:x.paymentToken}),cache:'no-store'});
+    const response=await fetch('/api/pagamento/pix/qr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentToken:x.paymentToken,copyPaste:x.copyPaste}),cache:'no-store'});
     if(!response.ok || !String(response.headers.get('content-type')||'').includes('image/png'))return;
     const blob=await response.blob();
     if(payment!==x || !blob.size)return;
