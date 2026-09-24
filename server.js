@@ -3045,7 +3045,7 @@ async function startTelegramPurchase(chatId,plate,productId){
     if(order.status==='pending'){
       const charge=await getOpenPixCharge(order.correlation_id);
       const pix=charge.brCode||charge.pix?.brCode;
-      if(pix){await telegramBot.sendTelegramMessage(chatId,"💠 PIX pendente para "+plate+"\\nValor: R$ "+product.amount.toFixed(2).replace(".",",")+"\\n\\nPIX Copia e Cola (toque para copiar):\\n"+pix+"\\n\\nApós pagar, a confirmação e a entrega são automáticas.");return;}
+      if(pix){await telegramBot.sendTelegramMessage(chatId,"💠 PIX pendente para "+plate+"\nValor: R$ "+product.amount.toFixed(2).replace(".",",")+"\n\nPIX Copia e Cola (toque para copiar):\n"+pix+"\n\nApós pagar, a confirmação e a entrega são automáticas.");return;}
     }
     await telegramBot.sendTelegramMessage(chatId,"Sua consulta já está em processamento. Aguarde a confirmação automática.");return;
   }
@@ -3062,20 +3062,20 @@ async function startTelegramPurchase(chatId,plate,productId){
     await client.query("COMMIT");
   }catch(e){await client.query("ROLLBACK");throw e;}finally{client.release();}
   if(!pix){await telegramBot.sendTelegramMessage(chatId,"Cobrança registrada, mas a Woovi não retornou o código PIX. Não gere outra cobrança; contate o suporte.");return;}
-  await telegramBot.sendTelegramMessage(chatId,"💠 PIX para "+plate+"\\n"+product.credits+" consulta(s): R$ "+product.amount.toFixed(2).replace(".",",")+"\\n\\nPIX Copia e Cola (toque para copiar):\\n"+pix+"\\n\\nApós o pagamento confirmado pela Woovi, o relatório será enviado automaticamente aqui. Não pague duas vezes.");
+  await telegramBot.sendTelegramMessage(chatId,"💠 PIX para "+plate+"\n"+product.credits+" consulta(s): R$ "+product.amount.toFixed(2).replace(".",",")+"\n\nPIX Copia e Cola (toque para copiar):\n"+pix+"\n\nApós o pagamento confirmado pela Woovi, o relatório será enviado automaticamente aqui. Não pague duas vezes.");
 }
 function telegramReport(plate,vehicle){
   const fields=[["Placa",plate],["Marca/modelo",vehicle.brandModel||vehicle.marcaModelo||vehicle.model],["Ano",vehicle.year||vehicle.modelYear],["Cor",vehicle.color],["Combustível",vehicle.fuel],["Município/UF",vehicle.city||vehicle.uf],["FIPE",vehicle.fipe?.value]];
-  const details=fields.filter(x=>x[1]!=null&&typeof x[1]!=="object").map(x=>x[0]+": "+String(x[1])).join("\\n");
+  const details=fields.filter(x=>x[1]!=null&&typeof x[1]!=="object").map(x=>x[0]+": "+String(x[1])).join("\n");
   const labels={theft:"Roubo/furto",auction:"Leilão",accidentClaim:"Sinistro",lien:"Gravame",recall:"Recall",renajud:"RENAJUD",renainf:"Multas/RENAINF",ipvaPending:"IPVA pendente",chassisRemarked:"Chassi remarcado"};
   const indicators=Object.entries(labels).map(([key,label])=>{
     const value=vehicle.indicators?.[key];
     return label+": "+(value===true?"Indicação retornada":value===false?"Sem indicação retornada":"Não informado");
-  }).join("\\n");
-  const restrictions=Array.isArray(vehicle.restrictions)?vehicle.restrictions.slice(0,10).map(x=>typeof x==="string"?x:JSON.stringify(x)).join("\\n"):"";
+  }).join("\n");
+  const restrictions=Array.isArray(vehicle.restrictions)?vehicle.restrictions.slice(0,10).map(x=>typeof x==="string"?x:JSON.stringify(x)).join("\n"):"";
   const debt=vehicle.debts;
-  const extra=debt?("\\n\\nDÉBITOS\\n"+(debt.ipvaValue!=null?"IPVA: "+debt.ipvaValue+"\\n":"")+(debt.finesCount!=null?"Multas: "+debt.finesCount+"\\n":"")+(debt.finesTotal!=null?"Valor multas: R$ "+debt.finesTotal:"")):"";
-  return ("🚗 CONSULTA VEICULAR 360\\n\\n"+details+"\\n\\nINDICADORES\\n"+indicators+(restrictions?"\\n\\nRESTRIÇÕES\\n"+restrictions:"")+extra+"\\n\\nInformações conforme a cobertura das fontes consultadas. Ausência de indicação não garante inexistência de ocorrência.").slice(0,3900);
+  const extra=debt?("\n\nDÉBITOS\n"+(debt.ipvaValue!=null?"IPVA: "+debt.ipvaValue+"\n":"")+(debt.finesCount!=null?"Multas: "+debt.finesCount+"\n":"")+(debt.finesTotal!=null?"Valor multas: R$ "+debt.finesTotal:"")):"";
+  return ("🚗 CONSULTA VEICULAR 360\n\n"+details+"\n\nINDICADORES\n"+indicators+(restrictions?"\n\nRESTRIÇÕES\n"+restrictions:"")+extra+"\n\nInformações conforme a cobertura das fontes consultadas. Ausência de indicação não garante inexistência de ocorrência.").slice(0,3900);
 }
 
 let telegramPollRunning=false;
