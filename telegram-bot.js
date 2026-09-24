@@ -9,10 +9,11 @@ const secret = String(process.env.TELEGRAM_WEBHOOK_SECRET || "").trim();
 // Hash the configured secret to a valid fixed-length token without changing Render variables.
 const telegramHeaderSecret = secret ? crypto.createHash("sha256").update(secret).digest("hex") : "";
 const site = "https://consultaveicular360.com.br";
+let paymentServices = null;
+function configureTelegramPayments(services){paymentServices=services;}
 const keyboard = {inline_keyboard:[
-  [{text:"🚗 Digitar placa aqui",callback_data:"placa"}],
-  [{text:"🌐 Consultar no site",url:site}],
-  [{text:"💳 Ver pacotes e preços",callback_data:"pacotes"}],
+  [{text:"🚗 Consultar placa",callback_data:"placa"}],
+  [{text:"💳 Ver pacotes",callback_data:"pacotes"}],
   [{text:"📋 Sobre os relatórios",callback_data:"sobre"}]
 ]};
 function send(chatId,text,reply_markup){
@@ -49,23 +50,32 @@ function installTelegramBot(app){
     if(!chatId)return res.json({ok:true});
     try{
       if(callback?.data==="pacotes"){
-        await send(chatId,"💳 Pacotes Consulta Veicular 360:\n\n1 consulta: R$ 18,90\n2 consultas: R$ 32,90\n3 consultas: R$ 44,90\n\nOs créditos podem ser usados em placas diferentes. O pagamento é processado com segurança pelo site oficial.",{inline_keyboard:[[{text:"1 consulta · R$ 18,90",url:site}],[{text:"2 consultas · R$ 32,90",url:site}],[{text:"3 consultas · R$ 44,90",url:site}],[{text:"🚗 Digitar placa",callback_data:"placa"}]]});
+        await send(chatId,"💳 Pacotes:\\n1 consulta: R$ 18,90\\n2 consultas: R$ 32,90\\n3 consultas: R$ 44,90\\n\\nEnvie a placa primeiro para iniciar a compra.",keyboard);
       }else if(callback?.data==="placa"){
-        await send(chatId,"🚗 Envie a placa do veículo (exemplo: ABC1D23 ou ABC1234). A validação é gratuita; nenhuma consulta paga será feita sem sua confirmação.");
+        await send(chatId,"🚗 Digite a placa (ABC1234 ou ABC1D23).");
+      }else if(callback?.data?.startsWith("buy:")){
+        if(!paymentServices)throw new Error("Serviço de pagamentos indisponível.");
+        const parts=callback.data.split(":");
+        const plate=parts[1],product=parts[2];
+        if(!/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(plate)||!["consulta-completa","pacote-2","pacote-3"].includes(product))throw new Error("Pedido inválido.");
+        await paymentServices.start(chatId,plate,product);
       }else if(callback?.data==="sobre"){
-        await send(chatId,"O Consulta Veicular 360 disponibiliza relatórios conforme a cobertura das fontes contratadas. Dados indisponíveis não são garantidos. Consulte condições e preços no site.",keyboard);
+        await send(chatId,"Os relatórios reúnem dados conforme a cobertura das fontes contratadas. Informações indisponíveis não são garantidas.",keyboard);
       }else if(message?.text?.trim().startsWith("/start")||message?.text?.trim().startsWith("/menu")){
-        await send(chatId,"🚗 Bem-vindo ao Consulta Veicular 360!\n\nEscolha uma opção para conhecer nossos relatórios e comprar consultas com segurança.",keyboard);
+        await send(chatId,"🚗 Bem-vindo ao Consulta Veicular 360!\\n\\nDigite uma placa para receber seu PIX e, após a confirmação, o relatório aqui no Telegram.",keyboard);
       }else if(message?.text){
         const plate=message.text.trim().toUpperCase().replace(/[ -]/g,"");
-        if(/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(plate) && (/[0-9]/.test(plate[4]) || /^[A-Z]{3}[0-9][A-Z][0-9]{2}$/.test(plate))){
-          await send(chatId,"🚗 Placa recebida: "+plate+"\n\n💳 Consulta completa: R$ 18,90. Toque em PAGAR AGORA para continuar no checkout seguro com sua placa preenchida. O PIX só será gerado após sua confirmação no site.",{inline_keyboard:[[{text:"💳 PAGAR AGORA · R$ 18,90",url:site+"/?placa="+encodeURIComponent(plate)+"&origem=telegram#consultCard"}],[{text:"📦 Ver pacotes",callback_data:"pacotes"}],[{text:"🔄 Outra placa",callback_data:"placa"}]]});
-        }else{
-          await send(chatId,"Não reconheci uma placa válida. Envie no formato ABC1234 ou ABC1D23. Nenhuma consulta foi cobrada.",keyboard);
-        }
+        if(/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(plate)){
+          await send(chatId,"🚗 Placa: "+plate+"\\n\\nEscolha o pacote. O PIX será criado somente após sua escolha.",{inline_keyboard:[
+            [{text:"💳 1 consulta · R$ 18,90",callback_data:"buy:"+plate+":consulta-completa"}],
+            [{text:"💳 2 consultas · R$ 32,90",callback_data:"buy:"+plate+":pacote-2"}],
+            [{text:"💳 3 consultas · R$ 44,90",callback_data:"buy:"+plate+":pacote-3"}],
+            [{text:"🔄 Outra placa",callback_data:"placa"}]
+          ]});
+        }else await send(chatId,"Placa inválida. Use ABC1234 ou ABC1D23.",keyboard);
       }
       res.json({ok:true});
     }catch(e){console.error("Falha no envio Telegram:",e.message);res.sendStatus(503);}
   });
 }
-module.exports={installTelegramBot};
+module.exports={installTelegramBot,configureTelegramPayments,sendTelegramMessage:send};
