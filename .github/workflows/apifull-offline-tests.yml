@@ -8,6 +8,7 @@ on:
       - 'unified-report*.js'
       - 'fontedata-preload.js'
       - 'server.js'
+      - 'index.html'
       - '.github/workflows/apifull-offline-tests.yml'
 jobs:
   offline-tests:
@@ -32,4 +33,4 @@ jobs:
           node --check apifull-integration-plan.js
           node --check unified-report.js
           node --check apifull-presentation.js
-          node --test apifull-adapter.test.js apifull-auth-config.test.js apifull-integration-plan.test.js unified-report.test.js apifull-presentation.test.js
+          node --test apifull-adapter.test.js apifull-auth-config.test.js apifull-integration-plan.test.js unified-report.test.js apifull-presentation.test.js apifull-site.test.js
