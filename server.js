@@ -2985,6 +2985,11 @@ app.use((req, res, next) => {
   return res.status(410).type("text/plain; charset=utf-8").send("Esta página foi removida permanentemente.");
 });
 
+// Não exibir checkout de gravame antes da autorização do fornecedor e dos testes.
+app.get("/gravame.html", (req, res, next) => {
+  if (process.env.GRAVAME_DETALHADO_ENABLED !== "1") return res.status(404).type("text/plain").send("Produto temporariamente indisponível.");
+  next();
+});
 app.use(express.static(path.join(__dirname), {
   dotfiles: "deny",
   index: "index.html",
