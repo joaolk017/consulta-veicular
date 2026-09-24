@@ -5,7 +5,7 @@ const PRODUCT = Object.freeze({ id: "gravame-detalhado", amount: 29.90, cents: 2
 const enabled = () => process.env.GRAVAME_DETALHADO_ENABLED === "1";
 let schemaReady = false;
 
-function installGravameCheckout({ app, pool, ensureAccount, createOpenPixCharge, getOpenPixCharge, signPaymentToken, verifyPaymentToken, requireDatabase, checkPaymentRateLimit }) {
+function installGravameCheckout({ app, pool, ensureAccount, createOpenPixCharge, getOpenPixCharge, signPaymentToken, verifyPaymentToken, requireDatabase, checkPaymentRateLimit, fetchGravame = fetchGravameDetalhado }) {
   async function setup() {
     requireDatabase();
     if (schemaReady) return;
@@ -71,7 +71,7 @@ function installGravameCheckout({ app, pool, ensureAccount, createOpenPixCharge,
       const claim = await pool.query("UPDATE gravame_purchases SET status='running',updated_at=NOW() WHERE correlation_id=$1 AND status IN ('pending','paid') RETURNING plate",[payload.correlationID]);
       if (!claim.rowCount) return res.status(202).json({ok:true,status:"processing",mensagem:"Consulta já iniciada. Verifique novamente o status."});
       try {
-        const result = await fetchGravameDetalhado(claim.rows[0].plate,{apiKey:process.env.FONTEDATA_API_KEY,enabled:true});
+        const result = await fetchGravame(claim.rows[0].plate,{apiKey:process.env.FONTEDATA_API_KEY,enabled:true});
         await pool.query("UPDATE gravame_purchases SET status='completed',result_json=$2::jsonb,updated_at=NOW() WHERE correlation_id=$1",[payload.correlationID,JSON.stringify(result)]);
         return res.json({ok:true,status:"completed",resultado:result});
       } catch(e) {
