@@ -2993,7 +2993,7 @@ require("./gravame-checkout").installGravameCheckout({
 });
 
 // Não exibir checkout de gravame antes da autorização do fornecedor e dos testes.
-app.get("/gravame.html", (req, res, next) => {
+app.get(["/gravame", "/gravame.html", "/gravame/"], (req, res, next) => {
   if (process.env.GRAVAME_DETALHADO_ENABLED !== "1") return res.status(404).type("text/plain").send("Produto temporariamente indisponível.");
   next();
 });
