@@ -28,7 +28,7 @@ function buildRequest(service, identifiers = {}) {
 // Monta cabeçalhos em memória; não envia requisições nem registra o token.
 function buildAuthorizedRequest(service, identifiers = {}, token = "") {
   const secret = String(token || "").trim();
-  if (!secret || /[\\r\\n]/.test(secret)) throw new Error("Token API Full ausente ou inválido.");
+  if (!secret || /[\r\n]/.test(String(token || ""))) throw new Error("Token API Full ausente ou inválido.");
   const request = buildRequest(service, identifiers);
   return {
     ...request,
