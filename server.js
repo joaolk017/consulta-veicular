@@ -3014,6 +3014,12 @@ runComplete360VerifiedV3Once();
 runComplete360VerifiedV4Once();
 runStoredFonteDataShapeAuditOnce();
 runFonteDataStoredCoverageOnce();
+// Produto de gravame isolado: não altera a carteira de créditos dos pacotes existentes.
+// Desativado por padrão; requer liberação da API e testes antes da ativação.
+require("./gravame-checkout").installGravameCheckout({
+  app, pool, ensureAccount, createOpenPixCharge, getOpenPixCharge,
+  signPaymentToken, verifyPaymentToken, requireDatabase, checkPaymentRateLimit
+});
 app.listen(PORT, () => console.log(`Consulta Veicular 360 ativa na porta ${PORT}. Checkout PIX: Woovi/OpenPix. Créditos: ${pool ? "PostgreSQL" : "indisponível"}.`));
 // Auditoria FonteData permanece manual; nunca é executada automaticamente em deploy/startup.
 
