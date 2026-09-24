@@ -3,10 +3,12 @@ const crypto = require("crypto");
 const { normalizePlate, fetchGravameDetalhado } = require("./gravame-detalhado");
 const PRODUCT = Object.freeze({ id: "gravame-detalhado", amount: 29.90, cents: 2990, credits: 0, description: "Gravame detalhado" });
 const enabled = () => process.env.GRAVAME_DETALHADO_ENABLED === "1";
+let schemaReady = false;
 
 function installGravameCheckout({ app, pool, ensureAccount, createOpenPixCharge, getOpenPixCharge, signPaymentToken, verifyPaymentToken, requireDatabase, checkPaymentRateLimit }) {
   async function setup() {
     requireDatabase();
+    if (schemaReady) return;
     await pool.query(`CREATE TABLE IF NOT EXISTS gravame_purchases (
       correlation_id TEXT PRIMARY KEY,
       account_id UUID NOT NULL REFERENCES credit_accounts(id) ON DELETE CASCADE,
@@ -17,10 +19,11 @@ function installGravameCheckout({ app, pool, ensureAccount, createOpenPixCharge,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`);
+    schemaReady = true;
   }
   async function verifyPurchase(token) {
     const p = verifyPaymentToken(token);
-    if (p.product !== PRODUCT.id || Number(p.cents) !== PRODUCT.cents) throw Object.assign(new Error("Pagamento de gravame inválido."), {status:400});
+    if (p.product !== PRODUCT.id || Number(p.cents) !== PRODUCT.cents || !p.accountId || !p.plate) throw Object.assign(new Error("Pagamento de gravame inválido."), {status:400});
     const q = await pool.query("SELECT * FROM gravame_purchases WHERE correlation_id=$1 AND account_id=$2 AND plate=$3", [p.correlationID,p.accountId,p.plate]);
     if (!q.rowCount) throw Object.assign(new Error("Compra não encontrada."), {status:404});
     return { purchase:q.rows[0], payload:p };
@@ -61,6 +64,7 @@ function installGravameCheckout({ app, pool, ensureAccount, createOpenPixCharge,
       await setup();
       const {purchase,payload} = await verifyPurchase(req.body && req.body.paymentToken);
       if (purchase.status === "completed") return res.json({ok:true,status:"completed",resultado:purchase.result_json});
+      if (purchase.status === "review" || purchase.status === "running") return res.status(202).json({ok:true,status:purchase.status,mensagem:"Consulta já iniciada; aguarde análise ou conclusão."});
       // Nunca executar com status pending; confirmar pagamento diretamente na Woovi.
       const charge = await getOpenPixCharge(payload.correlationID);
       if (String(charge.status || "").toUpperCase() !== "COMPLETED" || Number(charge.value) !== PRODUCT.cents) return res.status(402).json({error:"pagamento_pendente"});
