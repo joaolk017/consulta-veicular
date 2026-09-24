@@ -1,6 +1,6 @@
 /* Cache apenas os recursos públicos. Páginas de conta e respostas de API nunca são armazenadas. */
-const CACHE = "cv360-shell-v3";
-const SHELL = ["/", "/manifest.webmanifest", "/pwa-icon.svg"];
+const CACHE = "cv360-shell-v4";
+const SHELL = ["/manifest.webmanifest", "/pwa-icon.svg"];
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE)
@@ -25,19 +25,9 @@ self.addEventListener("fetch", event => {
     event.respondWith(fetch(request));
     return;
   }
+  // HTML do checkout sempre vem da rede: não manter código PIX antigo no cache do celular.
   if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request).then(response => {
-        if (url.pathname === "/" && response.ok && response.type === "basic") {
-          const copy = response.clone();
-          caches.open(CACHE).then(cache => cache.put("/", copy)).catch(() => {});
-        }
-        return response;
-      }).catch(async () => {
-        if (url.pathname === "/") return (await caches.match("/")) || Response.error();
-        return Response.error();
-      })
-    );
+    event.respondWith(fetch(request));
     return;
   }
   event.respondWith(
