@@ -2255,6 +2255,27 @@ app.post("/api/pagamento/pix/webhook", async (req, res) => {
   }
 });
 
+// QR servido no mesmo domínio, a partir da cobrança existente: não cria outro PIX.
+app.post("/api/pagamento/pix/qr", async (req, res) => {
+  if (!enforceSensitiveRateLimit(req, res, "pix-qr", 30)) return;
+  try {
+    const token = verifyPaymentToken(req.body && req.body.paymentToken);
+    const charge = await getOpenPixCharge(token.correlationID);
+    const code = charge.brCode || (charge.pix && charge.pix.brCode);
+    if (typeof code !== "string" || code.length < 30 || code.length > 4096) {
+      return res.status(422).json({ mensagem: "Código PIX indisponível para esta cobrança." });
+    }
+    const png = await QRCode.toBuffer(code, { type: "png", width: 420, margin: 2 });
+    res.set("Content-Type", "image/png");
+    res.set("Cache-Control", "no-store");
+    res.set("X-Content-Type-Options", "nosniff");
+    return res.send(png);
+  } catch (err) {
+    console.warn("Falha ao entregar QR PIX:", err.message);
+    return res.status(502).json({ mensagem: "QR Code temporariamente indisponível. Use o PIX copia e cola." });
+  }
+});
+
 app.post("/api/pagamento/pix/status", async (req, res) => {
   if (!enforceSensitiveRateLimit(req, res, "pix-status", 120)) return;
   try {
