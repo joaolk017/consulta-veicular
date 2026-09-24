@@ -8,6 +8,7 @@ const { Pool } = require("pg");
 const { fetchSPDebts } = require("./infosimples-sp-debitos");
 const { mergeReport: mergeApiFullReport } = require("./apifull-integration");
 const { buildUnifiedReport } = require("./unified-vehicle-report");
+const { fetchComplements: fetchApiFullComplements } = require("./apifull-paid-client");
 const { buildFonteDataRequest, isFonteDataPaidApproved, assertFonteDataSuccess } = require("./vehicle-provider-plan");
 
 const app = express();
@@ -2884,12 +2885,13 @@ async function buildPaidVehicleReport(plate){
   // API Full conectada somente ao estágio de composição do relatório.
   // Não executar requisições enquanto contrato, preços e autorização não forem validados.
   // APIFULL_ENABLED e APIFULL_TOKEN, isoladamente, nunca disparam consultas.
-  safeVehicle = mergeApiFullReport(safeVehicle, {});
+  const apiFullResults = await fetchApiFullComplements({ placa:plate, chassi:safeVehicle.chassis }, requestJson);
+  safeVehicle = mergeApiFullReport(safeVehicle, apiFullResults);
 
   const report360 = buildVehicle360Report(safeVehicle);
   // Exibe o formato unificado apenas quando a FonteData foi a fonte principal.
   // Não afirma que o fluxo legado consultou a FonteData ou a API Full.
-  if (fonteDataPrimary) report360.unified = buildUnifiedReport(safeVehicle, {});
+  if (fonteDataPrimary) report360.unified = buildUnifiedReport(safeVehicle, apiFullResults);
   const coverage360 = analyzeVehicle360Coverage(safeVehicle);
   const storedCoverage = safeVehicle._storedProviderCoverage || {};
   if (Array.isArray(coverage360.groups)) {
