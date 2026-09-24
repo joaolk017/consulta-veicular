@@ -11,8 +11,9 @@ function validatePaidPlate(plate) {
 // Reutiliza o contrato FonteData já presente no servidor; apenas monta a chamada.
 function buildFonteDataRequest(plate, apiKey) {
   const normalized = validatePaidPlate(plate);
-  const key = String(apiKey || "").trim();
-  if (!key || /[\r\n]/.test(key)) throw new Error("Chave FonteData ausente ou inválida.");
+  const rawKey = String(apiKey || "");
+  const key = rawKey.trim();
+  if (!key || /[\r\n]/.test(rawKey)) throw new Error("Chave FonteData ausente ou inválida.");
   return {
     url:"https://app.dabradata.com/api/v1/consulta/consulta-veicular?placa=" + encodeURIComponent(normalized),
     method:"GET",
