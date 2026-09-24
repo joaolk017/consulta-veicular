@@ -1,0 +1,23 @@
+name: API Full offline tests
+on:
+  pull_request:
+    paths:
+      - "integrations/apifull-debitos.js"
+      - "test/apifull-debitos.test.js"
+      - ".github/workflows/apifull-offline.yml"
+  workflow_dispatch:
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    env:
+      APIFULL_ENABLED: "false"
+      APIFULL_TOKEN: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Syntax check
+        run: node --check integrations/apifull-debitos.js
+      - name: Offline tests (no paid API calls)
+        run: node --test test/apifull-debitos.test.js
