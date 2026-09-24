@@ -1,0 +1,27 @@
+name: API Full public catalog
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/apifull-catalog.js'
+      - '.github/workflows/apifull-catalog.yml'
+permissions:
+  contents: read
+jobs:
+  catalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Read public OpenAPI (no token, no paid requests)
+        run: node scripts/apifull-catalog.js
+      - name: Upload catalog for review
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apifull-public-catalog
+          path: apifull-catalog.json
+          retention-days: 7
