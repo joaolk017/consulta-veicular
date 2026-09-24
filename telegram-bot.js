@@ -30,7 +30,8 @@ function send(chatId,text,reply_markup){
 // Send the original welcome artwork when assets/telegram-welcome.png is present.
 async function sendWelcome(chatId){
   const caption="🚘 CONSULTA VEICULAR 360\n\n🔎 Envie sua placa ou toque em Consultar placa.\n💳 Pagamento por PIX e entrega do relatório aqui no Telegram.";
-  const artwork=path.join(__dirname,"assets","telegram-welcome.png");
+  const artworkInAssets=path.join(__dirname,"assets","telegram-welcome.png");
+  const artwork=fs.existsSync(artworkInAssets)?artworkInAssets:path.join(__dirname,"telegram-welcome.png");
   if(fs.existsSync(artwork)){
     try{
       const image=fs.readFileSync(artwork);
