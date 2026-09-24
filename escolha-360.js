@@ -122,7 +122,7 @@ var Escolha360 = (function () {
       '<table class="c360-matrix"><thead><tr><th scope="col">Indicador</th>'+
       data.map(function(d){return '<th scope="col">'+esc(d.vehicle&&d.vehicle.plate||d.consulta&&d.consulta.plate||"Veículo")+'</th>';}).join("")+
       '</tr></thead><tbody>'+
-      checks.map(function(f){return '<tr><th scope="row">'+esc(f.label)+'</th>'+data.map(function(d){return '<td>'+statusTag(getStatus(d,f))+'</td>';}).join("")+'</tr>';}).join("")+
+      checks.map(function(f){return '<tr><th scope="row">'+esc(f.label)+'</th>'+data.map(function(d){return '<td data-vehicle="'+esc(d.vehicle&&d.vehicle.plate||d.consulta&&d.consulta.plate||'Veículo')+'">'+statusTag(getStatus(d,f))+'</td>';}).join("")+'</tr>';}).join("")+
       '</tbody></table></div>';
   }
   function renderAll(data,isDemo){
