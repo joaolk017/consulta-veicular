@@ -8,6 +8,18 @@ function validatePaidPlate(plate) {
   if (!/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(value)) throw new Error("Placa inválida.");
   return value;
 }
+// Reutiliza o contrato FonteData já presente no servidor; apenas monta a chamada.
+function buildFonteDataRequest(plate, apiKey) {
+  const normalized = validatePaidPlate(plate);
+  const key = String(apiKey || "").trim();
+  if (!key || /[\\r\\n]/.test(key)) throw new Error("Chave FonteData ausente ou inválida.");
+  return {
+    url:"https://app.dabradata.com/api/v1/consulta/consulta-veicular?placa=" + encodeURIComponent(normalized),
+    method:"GET",
+    headers:{"X-API-Key":key},
+    timeout:120000
+  };
+}
 function planVehicleProviders({ plate, chassis, paid = false, fonteDataContractVerified = false } = {}) {
   if (!paid) return { preview:"falcon", paidBase:null, complements:[] };
   if (!fonteDataContractVerified) return {
@@ -20,4 +32,4 @@ function planVehicleProviders({ plate, chassis, paid = false, fonteDataContractV
     migrationStatus:"planned_only_no_network"
   };
 }
-module.exports = { planVehicleProviders, validatePaidPlate };
+module.exports = { planVehicleProviders, validatePaidPlate, buildFonteDataRequest };
