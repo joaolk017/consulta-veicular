@@ -47,7 +47,7 @@ function assertPaidCallsDisabled() {
   throw error;
 }
 // Planejamento sem rede: selecionar serviços não os executa.
-const DEFAULT_SERVICES = Object.freeze(["leilao", "rouboFurto", "debitos"]);
+const DEFAULT_SERVICES = Object.freeze(["rouboFurto", "debitos"]);
 function planComplementaryQueries(identifiers = {}, requested = DEFAULT_SERVICES) {
   if (!Array.isArray(requested)) throw new Error("Seleção de serviços inválida.");
   const unique = [...new Set(requested)];
