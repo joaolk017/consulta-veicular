@@ -3038,11 +3038,11 @@ async function telegramOrderStatus(chatId){
   const result=await pool.query("SELECT plate,product,status,created_at FROM telegram_orders WHERE chat_id=$1 ORDER BY created_at DESC LIMIT 5",[String(chatId)]);
   if(!result.rowCount)return "📦 Você ainda não possui pedidos neste bot. Envie uma placa para começar. Nenhuma cobrança foi gerada por esta consulta.";
   const labels={pending:"⏳ Aguardando pagamento",processing:"🔄 Preparando relatório",ready:"📨 Aguardando envio",delivered:"✅ Relatório enviado",failed:"⚠️ Atendimento necessário"};
-  return "📦 SEUS ÚLTIMOS PEDIDOS\\n\\n"+result.rows.map(order=>{
+  return "📦 SEUS ÚLTIMOS PEDIDOS\n\n"+result.rows.map(order=>{
     const p=paymentProduct(order.product);
     const value=p?"R$ "+p.amount.toFixed(2).replace(".",","):"Pacote";
-    return "🚗 "+order.plate+" · "+value+"\\n"+(labels[order.status]||"Status em verificação");
-  }).join("\\n\\n")+"\\n\\nA consulta de status não gera PIX nem consome créditos.";
+    return "🚗 "+order.plate+" · "+value+"\n"+(labels[order.status]||"Status em verificação");
+  }).join("\n\n")+"\n\nA consulta de status não gera PIX nem consome créditos.";
 }
 async function sendTelegramPix(chatId,plate,product,pix){
   const amount=product.amount.toFixed(2).replace(".",",");
