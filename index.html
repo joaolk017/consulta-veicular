@@ -1607,6 +1607,9 @@ function setStep(s){$('pixForm').classList.toggle('hidden',s!=='form');$('pixPay
 async function carregarQrPixLocal(x){
   if(!x || !x.paymentToken || !x.copyPaste)return;
   const svgBox=$('pixQrSvg');
+  const diagnostic=$('pixQrFallback');
+  diagnostic.classList.remove('hidden');
+  diagnostic.textContent='Verificando QR Code com o servidor...';
   try{
     const response=await fetch('/api/pagamento/pix/qr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentToken:x.paymentToken,copyPaste:x.copyPaste,format:'svg'}),cache:'no-store'});
     if(!response.ok){const detail=await response.json().catch(()=>({}));throw new Error('HTTP '+response.status+(detail.codigo?' / '+detail.codigo:''));}
