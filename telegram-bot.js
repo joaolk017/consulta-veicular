@@ -87,7 +87,7 @@ function installTelegramBot(app){
         if(!paymentServices?.status)throw new Error("Consulta de pedidos indisponível.");
         await send(chatId,await paymentServices.status(chatId),keyboard);
       }else if(callback?.data==="ajuda"||message?.text?.trim()==="/ajuda"){
-        await send(chatId,"❓ COMO FUNCIONA\\n\\n1. Envie a placa do veículo.\\n2. Escolha um pacote.\\n3. Receba o QR Code e o PIX Copia e Cola.\\n4. Após a confirmação do pagamento, o relatório será enviado nesta conversa.\\n\\nUse /pedidos para acompanhar seu pedido sem gerar outra cobrança. Se ainda não deseja pagar, não precisa selecionar nenhum pacote.",keyboard);
+        await send(chatId,"❓ COMO FUNCIONA\n\n1. Envie a placa do veículo.\n2. Escolha um pacote.\n3. Receba o QR Code e o PIX Copia e Cola.\n4. Após a confirmação do pagamento, o relatório será enviado nesta conversa.\n\nUse /pedidos para acompanhar seu pedido sem gerar outra cobrança. Se ainda não deseja pagar, não precisa selecionar nenhum pacote.",keyboard);
       }else if(callback?.data==="pacotes"){
         await send(chatId,"💳 Pacotes:\n1 consulta: R$ 18,90\n2 consultas: R$ 32,90\n3 consultas: R$ 44,90\n\nEnvie a placa primeiro para iniciar a compra.",keyboard);
       }else if(callback?.data==="placa"){
