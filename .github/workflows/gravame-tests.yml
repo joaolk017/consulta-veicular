@@ -23,6 +23,17 @@ jobs:
           node --check gravame-detalhado.js
           node --check gravame-checkout.js
           node --check server.js
+      - name: Validar ordem das rotas
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const source = fs.readFileSync('server.js', 'utf8');
+          const checkout = source.indexOf('installGravameCheckout({');
+          const fallback = source.indexOf('const notFound = path.join(__dirname, "404.html")');
+          if (checkout < 0 || fallback < 0 || checkout > fallback) {
+            throw new Error('Rotas de gravame devem ser registradas antes do middleware 404');
+          }
+          NODE
       - name: Testes sem chamadas externas
         env:
           GRAVAME_DETALHADO_ENABLED: '0'
