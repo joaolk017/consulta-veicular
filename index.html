@@ -1354,7 +1354,7 @@ html body section.hero .hero-grid>.cv-photo-hero .cv-photo-glow{pointer-events:n
         <div class="cv-demo-field">Cor<strong>Prata</strong></div>
         <div class="cv-demo-field">Situação<strong>Exemplo: circulação normal</strong></div>
         <div class="cv-demo-field">Roubo / furto<strong>Exemplo: sem apontamento</strong></div>
-        <div class="cv-demo-field">Leilão<strong>Exemplo: sem apontamento</strong></div>
+        <div class="cv-demo-field">Leilão<strong>Exemplo fictício: sem apontamento</strong></div>
         <div class="cv-demo-field">Gravame<strong>Exemplo: sem gravame ativo</strong></div>
       </div>
       <p style="margin:15px 0 0;color:#536b84;font-size:11px">DEMONSTRAÇÃO • Sem placa, chassi, RENAVAM ou documentos reais.</p>
@@ -1380,7 +1380,7 @@ html body section.hero .hero-grid>.cv-photo-hero .cv-photo-glow{pointer-events:n
   <div class="desktop-benefits-grid">
     <span>🛡️ Roubo e furto</span>
     <span>🏷️ Indícios de leilão, se disponíveis</span>
-    <span>📣 Recall</span>
+    <span>📣 Recall, se disponível</span>
     <span>⚠️ Restrições</span>
     <span>💰 Referência FIPE</span>
     <span>🚘 Dados técnicos</span>
@@ -1393,9 +1393,9 @@ html body section.hero .hero-grid>.cv-photo-hero .cv-photo-glow{pointer-events:n
     <div class="desktop-step"><b>3</b><span><strong>Libere o relatório, se desejar</strong><small>Pagamento único via PIX de R$ 18,90.</small></span></div>
   </div>
 </aside>
-  <details class="firstfold-indicators"><summary>Ver todos os indicadores e limites da consulta <span aria-hidden="true">⌄</span></summary><div class="report-value"><b>🔎 Possíveis indicadores, conforme as fontes ativas</b><div class="report-chips"><span data-icon="🛡️">Roubo/Furto</span><span data-icon="🏷️">Indícios de leilão, se disponíveis</span><span data-icon="📣">Recall</span><span data-icon="⚖️">Restrições relacionadas a RENAJUD*</span><span data-icon="📋">Registros relacionados a RENAINF*</span><span data-icon="⚠️">Outras restrições</span><span data-icon="💰">FIPE</span><span data-icon="🚘">Dados técnicos</span></div><small>*Nem todos os indicadores estão disponíveis em todas as consultas. Os complementos da API Full ainda não estão ativos. Confira os campos efetivamente retornados no relatório. A Consulta Veicular 360 não é órgão governamental e não afirma acesso oficial direto aos sistemas RENAJUD ou RENAINF.</small></div></details>
+  <details class="firstfold-indicators"><summary>Ver todos os indicadores e limites da consulta <span aria-hidden="true">⌄</span></summary><div class="report-value"><b>🔎 Possíveis indicadores, conforme as fontes ativas</b><div class="report-chips"><span data-icon="🛡️">Roubo/Furto</span><span data-icon="🏷️">Indícios de leilão, se disponíveis</span><span data-icon="📣">Recall, se disponível</span><span data-icon="⚖️">Restrições relacionadas a RENAJUD*</span><span data-icon="📋">Registros relacionados a RENAINF*</span><span data-icon="⚠️">Outras restrições</span><span data-icon="💰">FIPE</span><span data-icon="🚘">Dados técnicos</span></div><small>*Nem todos os indicadores estão disponíveis em todas as consultas. Os complementos da API Full ainda não estão ativos. Confira os campos efetivamente retornados no relatório. A Consulta Veicular 360 não é órgão governamental e não afirma acesso oficial direto aos sistemas RENAJUD ou RENAINF.</small></div></details>
   <section class="firstfold-sample" aria-label="Exemplo demonstrativo do relatório">
-    <div class="report-sample"><div class="sample-head"><b>📋 Exemplo do relatório</b><span>DEMONSTRAÇÃO</span></div><p class="sample-intro">Veja como as informações podem aparecer no relatório completo:</p><div class="sample-grid sample-premium"><div><small>🚘 Veículo</small><strong>Marca / modelo / ano</strong></div><div><small>💰 Referência FIPE</small><strong>Valor quando disponível</strong></div><div><small>🔎 Roubo/Furto</small><strong>Status retornado pela fonte</strong></div><div><small>🏷️ Leilão</small><strong>Indicador quando disponível</strong></div><div><small>⚠️ Restrições</small><strong>Registros retornados</strong></div><div><small>📋 Dados técnicos</small><strong>Informações do veículo</strong></div></div><small class="sample-note">Demonstração ilustrativa — não representa uma consulta real. Os campos e resultados exibidos variam conforme o veículo e a disponibilidade das fontes integradas.</small></div>
+    <div class="report-sample"><div class="sample-head"><b>📋 Exemplo do relatório</b><span>DEMONSTRAÇÃO</span></div><p class="sample-intro">Veja como as informações podem aparecer no relatório completo:</p><div class="sample-grid sample-premium"><div><small>🚘 Veículo</small><strong>Marca / modelo / ano</strong></div><div><small>💰 Referência FIPE</small><strong>Valor quando disponível</strong></div><div><small>🔎 Roubo/Furto</small><strong>Status retornado pela fonte</strong></div><div><small>🏷️ Indícios de leilão</small><strong>Somente quando retornados pela fonte</strong></div><div><small>⚠️ Restrições</small><strong>Registros retornados</strong></div><div><small>📋 Dados técnicos</small><strong>Informações do veículo</strong></div></div><small class="sample-note">Demonstração ilustrativa — não representa uma consulta real. Os campos e resultados exibidos variam conforme o veículo e a disponibilidade das fontes integradas.</small></div>
     <div class="firstfold-sample-cta"><a href="#consultCard">CONSULTAR UMA PLACA →</a><span>A prévia é gratuita. A consulta completa é opcional.</span></div>
   </section>
 </div>
@@ -1556,8 +1556,8 @@ function prepararPlaca(){const el=$('plate'),hint=$('plateHint');if(!el)return;e
   <div class="preview-detail-content">
     <p>Conforme o veículo e a disponibilidade dos provedores, o relatório pode incluir indicadores como:</p>
     <div class="locked-preview">
-      <div class="locked-item">🔎 <b>Leilão</b></div>
-      <div class="locked-item">🛠️ <b>Indícios de sinistro</b></div>
+      <div class="locked-item">🔎 <b>Indícios de leilão, quando disponíveis</b></div>
+      <div class="locked-item">🛠️ <b>Indícios de sinistro, quando disponíveis</b></div>
       <div class="locked-item">📋 <b>Gravame</b></div>
       <div class="locked-item">📣 <b>Recall</b></div>
       <div class="locked-item">⚠️ <b>Multas e restrições</b></div>
