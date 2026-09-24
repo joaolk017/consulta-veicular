@@ -2273,8 +2273,8 @@ app.post("/api/pagamento/pix/qr", async (req, res) => {
       const match = suppliedCode.match(/6304([0-9A-Fa-f]{4})$/);
       if (!match || suppliedCode.length < 30 || suppliedCode.length > 4096) return res.status(422).json({ mensagem: "Código PIX inválido." });
       let crc = 0xFFFF;
-      for (const ch of suppliedCode.slice(0, -4)) {
-        crc ^= ch.charCodeAt(0) << 8;
+      for (const byte of Buffer.from(suppliedCode.slice(0, -4), 'utf8')) {
+        crc ^= byte << 8;
         for (let bit = 0; bit < 8; bit++) crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF;
       }
       if (crc.toString(16).toUpperCase().padStart(4, "0") !== match[1].toUpperCase()) return res.status(422).json({ mensagem: "CRC do PIX inválido." });
