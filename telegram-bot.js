@@ -3,6 +3,8 @@
 // Configure TELEGRAM_BOT_TOKEN e TELEGRAM_WEBHOOK_SECRET no Render para ativar.
 const https = require("https");
 const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
 const token = String(process.env.TELEGRAM_BOT_TOKEN || "").trim();
 const secret = String(process.env.TELEGRAM_WEBHOOK_SECRET || "").trim();
 // Telegram only accepts A-Z, a-z, 0-9, underscore and hyphen in its secret token.
@@ -22,6 +24,34 @@ function send(chatId,text,reply_markup){
     const req=https.request("https://api.telegram.org/bot"+token+"/sendMessage",{
       method:"POST",headers:{"Content-Type":"application/json","Content-Length":Buffer.byteLength(body)}
     },r=>{let s="";r.on("data",c=>s+=c);r.on("end",()=>r.statusCode===200?resolve():reject(new Error("Telegram HTTP "+r.statusCode)));});
+    req.on("error",reject);req.end(body);
+  });
+}
+// Send the original welcome artwork when assets/telegram-welcome.png is present.
+async function sendWelcome(chatId){
+  const caption="🚘 CONSULTA VEICULAR 360\n\n🔎 Envie sua placa ou toque em Consultar placa.\n💳 Pagamento por PIX e entrega do relatório aqui no Telegram.";
+  const artwork=path.join(__dirname,"assets","telegram-welcome.png");
+  if(fs.existsSync(artwork)){
+    try{
+      const image=fs.readFileSync(artwork);
+      if(image.length>0&&image.length<10*1024*1024){
+        await sendWelcomePhoto(chatId,image,caption,keyboard);
+        return;
+      }
+    }catch(err){console.error("Telegram: imagem de boas-vindas indisponível:",err.message);}
+  }
+  await send(chatId,caption,keyboard);
+}
+function sendWelcomePhoto(chatId,png,caption,reply_markup){
+  return new Promise((resolve,reject)=>{
+    const boundary="cv360welcome"+crypto.randomBytes(12).toString("hex");
+    const part=(name,value)=>Buffer.from("--"+boundary+"\\r\\nContent-Disposition: form-data; name=\\\""+name+"\\\"\\r\\n\\r\\n"+value+"\\r\\n");
+    const imageHeader=Buffer.from("--"+boundary+"\\r\\nContent-Disposition: form-data; name=\\\"photo\\\"; filename=\\\"telegram-welcome.png\\\"\\r\\nContent-Type: image/png\\r\\n\\r\\n");
+    const body=Buffer.concat([part("chat_id",String(chatId)),part("caption",caption),part("reply_markup",JSON.stringify(reply_markup)),imageHeader,png,Buffer.from("\\r\\n--"+boundary+"--\\r\\n")]);
+    const req=https.request("https://api.telegram.org/bot"+token+"/sendPhoto",{
+      method:"POST",headers:{"Content-Type":"multipart/form-data; boundary="+boundary,"Content-Length":body.length},timeout:15000
+    },res=>{let response="";res.on("data",chunk=>{if(response.length<1000)response+=chunk;});res.on("end",()=>res.statusCode===200?resolve():reject(new Error("Telegram welcome photo HTTP "+res.statusCode+": "+response.slice(0,180))));});
+    req.on("timeout",()=>req.destroy(new Error("Telegram welcome photo timeout")));
     req.on("error",reject);req.end(body);
   });
 }
