@@ -3135,6 +3135,10 @@ async function startTelegramPurchase(chatId,plate,productId){
   await sendTelegramPix(chatId,plate,product,pix);
 }
 function telegramReport(plate,vehicle){
+  // Exibir apenas o status efetivamente presente no relatório recebido.
+  // Não atribuir FonteData a um retorno básico nem consultar API Full aqui.
+  const { telegramComplementText } = require("./apifull-presentation");
+  const complementText = telegramComplementText(vehicle);
   const fields=[["Placa",plate],["Marca/modelo",vehicle.brandModel||vehicle.marcaModelo||vehicle.model],["Ano",vehicle.year||vehicle.modelYear],["Cor",vehicle.color],["Combustível",vehicle.fuel],["Município/UF",vehicle.city||vehicle.uf],["FIPE",vehicle.fipe?.value]];
   const details=fields.filter(x=>x[1]!=null&&typeof x[1]!=="object").map(x=>x[0]+": "+String(x[1])).join("\n");
   const labels={theft:"Roubo/furto",auction:"Leilão",accidentClaim:"Sinistro",lien:"Gravame",recall:"Recall",renajud:"RENAJUD",renainf:"Multas/RENAINF",ipvaPending:"IPVA pendente",chassisRemarked:"Chassi remarcado"};
@@ -3145,7 +3149,7 @@ function telegramReport(plate,vehicle){
   const restrictions=Array.isArray(vehicle.restrictions)?vehicle.restrictions.slice(0,10).map(x=>typeof x==="string"?x:JSON.stringify(x)).join("\n"):"";
   const debt=vehicle.debts;
   const extra=debt?("\n\nDÉBITOS\n"+(debt.ipvaValue!=null?"IPVA: "+debt.ipvaValue+"\n":"")+(debt.finesCount!=null?"Multas: "+debt.finesCount+"\n":"")+(debt.finesTotal!=null?"Valor multas: R$ "+debt.finesTotal:"")):"";
-  return ("🚗 CONSULTA VEICULAR 360\n\n"+details+"\n\nINDICADORES\n"+indicators+(restrictions?"\n\nRESTRIÇÕES\n"+restrictions:"")+extra+"\n\nInformações conforme a cobertura das fontes consultadas. Ausência de indicação não garante inexistência de ocorrência.").slice(0,3900);
+  return ("🚗 CONSULTA VEICULAR 360\n\n"+details+"\n\nINDICADORES\n"+indicators+(restrictions?"\n\nRESTRIÇÕES\n"+restrictions:"")+extra+"\n\n"+complementText+"\n\nInformações conforme a cobertura das fontes consultadas. Ausência de indicação não garante inexistência de ocorrência.").slice(0,3900);
 }
 
 let telegramPollRunning=false;

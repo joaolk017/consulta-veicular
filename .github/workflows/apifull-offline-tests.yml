@@ -1,0 +1,36 @@
+name: API Full - testes offline
+on:
+  push:
+    branches: [integracao-apifull-preparacao]
+  pull_request:
+    paths:
+      - 'apifull-*.js'
+      - 'unified-report*.js'
+      - 'fontedata-preload.js'
+      - 'server.js'
+      - 'index.html'
+      - '.github/workflows/apifull-offline-tests.yml'
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar sintaxe e executar testes sem rede
+        env:
+          APIFULL_ENABLED: 'false'
+          APIFULL_TOKEN: ''
+        run: |
+          node --check server.js
+          node --check fontedata-preload.js
+          node --check telegram-bot.js
+          node --check apifull-adapter.js
+          node --check apifull-auth-config.js
+          node --check apifull-integration-plan.js
+          node --check unified-report.js
+          node --check apifull-presentation.js
+          node --test apifull-adapter.test.js apifull-auth-config.test.js apifull-integration-plan.test.js unified-report.test.js apifull-presentation.test.js apifull-site.test.js apifull-flow.test.js
