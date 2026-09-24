@@ -20,8 +20,8 @@ async function fetchComplements(identifiers, requestJson, env=process.env) {
       const response = await requestJson(endpoint.href, {
         method:"POST",
         headers:{Authorization:"Bearer "+env.APIFULL_TOKEN,Accept:"application/json","Content-Type":"application/json"},
-        body:JSON.stringify(job.request.body),timeout:30000
-      });
+        timeout:30000
+      }, job.request.body);
       const classified = classifyResponse(response.status,response.data);
       results[job.service] = classified.ok ? classified : {ok:false,reason:classified.reason};
     } catch (error) {
