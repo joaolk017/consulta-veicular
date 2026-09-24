@@ -8,6 +8,8 @@ if (IS_BACKEND_SERVER) {
   const crypto = require('crypto');
   const express = require('express');
   const { Pool } = require('pg');
+  const { mergeReports } = require('./unified-report');
+  const { getAuthConfig } = require('./apifull-auth-config');
 
   const FONTEDATA_API_KEY = String(process.env.FONTEDATA_API_KEY || '').trim();
   const DATABASE_URL = String(process.env.DATABASE_URL || '').trim();
@@ -298,7 +300,14 @@ if (IS_BACKEND_SERVER) {
 
     const promise = (async () => {
       const raw = await requestFonteData(plate);
-      const vehicle = mapFonteData(raw, fallbackVehicle, plate);
+      const baseVehicle = mapFonteData(raw, fallbackVehicle, plate);
+      // Integração em modo seguro: apenas padroniza a saída; não chama API Full.
+      // Quando houver homologação, inserir aqui os complementos já obtidos por serviço.
+      const apiFullConfig = getAuthConfig();
+      if (apiFullConfig.enabled) {
+        console.warn('API Full sinalizada como ativa, mas consultas pagas ainda não foram homologadas; nenhuma chamada será feita.');
+      }
+      const vehicle = mergeReports(baseVehicle, {});
       resultCache.set(key, { vehicle, expiresAt: Date.now() + REPORT_TTL_MS });
       await persistStoredReport(paymentToken, vehicle);
       return vehicle;
