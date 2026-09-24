@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { planVehicleProviders } = require("../vehicle-provider-plan");
+const { planVehicleProviders, validatePaidPlate } = require("../vehicle-provider-plan");
 test("Falcon fica restrita à prévia gratuita no plano", () => {
   assert.deepEqual(planVehicleProviders({plate:"ABC1D23"}), {preview:"falcon",paidBase:null,complements:[]});
 });
@@ -15,4 +15,10 @@ test("planeja FonteData e complementos API Full sem rede", () => {
   assert.equal(plan.paidBase,"fontedata");
   assert.equal(plan.migrationStatus,"planned_only_no_network");
   assert.deepEqual(plan.complements.map(x=>x.service),["leilao","rouboFurto","debitos"]);
+});
+
+test("valida a placa antes de planejar consulta paga", () => {
+  assert.equal(validatePaidPlate("abc-1d23"), "ABC1D23");
+  assert.throws(() => validatePaidPlate("123"), /inválida/);
+  assert.throws(() => planVehicleProviders({plate:"123",paid:true,fonteDataContractVerified:true}), /inválida/);
 });
