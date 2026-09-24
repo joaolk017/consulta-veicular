@@ -1,0 +1,21 @@
+name: API Full offline tests
+on:
+  push:
+    paths:
+      - 'apifull-integration.js'
+      - 'test/apifull-integration.test.js'
+      - '.github/workflows/apifull-offline-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate API Full mapping without network or token
+        run: node --test test/apifull-integration.test.js
