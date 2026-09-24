@@ -14,8 +14,8 @@ const site = "https://consultaveicular360.com.br";
 let paymentServices = null;
 function configureTelegramPayments(services){paymentServices=services;}
 const keyboard = {inline_keyboard:[
-  [{text:"🔎 CONSULTAR PLACA",callback_data:"placa"}],
-  [{text:"💳 Pacotes e preços",callback_data:"pacotes"},{text:"📦 Meus pedidos",callback_data:"pedidos"}],
+  [{text:"🔎 CONSULTAR PLACA",callback_data:"placa",style:"primary"}],
+  [{text:"💳 Pacotes e preços",callback_data:"pacotes",style:"success"},{text:"📦 Meus pedidos",callback_data:"pedidos"}],
   [{text:"💰 Ver pagamento",callback_data:"status"},{text:"❓ Ajuda",callback_data:"ajuda"}]
 ]};
 function send(chatId,text,reply_markup){
