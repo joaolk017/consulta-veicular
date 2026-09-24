@@ -1051,6 +1051,43 @@ html{scroll-behavior:smooth}
  .cv-product:not(.cv-product--consult) .cv-product-action{min-height:42px;padding:10px}
 }
 </style>
+<style id="cv-screenshot-mobile-fix-20260923">
+/* Corrige o contraste e o tamanho excessivo dos cartões visto nas capturas. */
+@media(max-width:900px){
+ .cv-products{gap:9px!important}
+ .cv-product{display:grid!important;grid-template-columns:52px minmax(0,1fr) auto!important;align-items:center!important;gap:5px 10px!important;padding:12px!important;min-height:0!important;box-shadow:0 5px 16px #00132655!important}
+ .cv-product .cv-product-icon{grid-column:1!important;grid-row:1 / span 2!important;float:none!important;margin:0!important;width:48px!important;height:48px!important}
+ .cv-product:not(.cv-product--consult) h2{grid-column:2!important;grid-row:1!important;font-size:15px!important;line-height:1.2!important;margin:0!important}
+ .cv-product:not(.cv-product--consult) p{grid-column:2!important;grid-row:2!important;font-size:10px!important;line-height:1.35!important;margin:0!important;color:#43556b!important}
+ .cv-product:not(.cv-product--consult) .cv-product-price{grid-column:3!important;grid-row:1 / span 2!important;align-self:center!important;white-space:nowrap!important;margin:0!important;font-size:9px!important;text-align:right!important}
+ .cv-product:not(.cv-product--consult) .cv-product-price strong{font-size:17px!important;display:block!important;line-height:1.15!important;color:#10253f!important}
+ .cv-product:not(.cv-product--consult) .cv-product-price small{display:none!important}
+ .cv-product:not(.cv-product--consult) .cv-product-action{grid-column:1 / -1!important;grid-row:4!important;min-height:38px!important;margin:6px 0 0!important;font-size:12px!important}
+ .cv-product:not(.cv-product--consult) .cv-package{grid-column:1 / -1!important;font-size:12px!important;padding:9px!important;margin:0!important}
+ .cv-product:not(.cv-product--consult) .cv-package:first-of-type{margin-top:9px!important}
+ .cv-product--gravame ul{display:none!important}
+ .cv-product--gravame .cv-product-action--disabled{display:none!important}
+ .cv-product--gravame .cv-product-badge{font-size:9px!important;top:-9px!important;right:10px!important}
+ .cv-product--consult{display:block!important;padding:0!important}
+ #consultCard{background:#f9fcff!important;background-image:none!important;color:#10253f!important;border:1px solid #cbddea!important;border-radius:15px!important}
+ #consultCard .cv-consult-heading .title{color:#10253f!important}
+ #consultCard .cv-consult-heading .sub{color:#43556b!important}
+ #consultCard .cv-mobile-expand{margin:9px 0 0!important;padding:10px!important;min-height:40px!important}
+ #consultCard .cv-consult-form{background:#0d2945!important;color:#f5faff!important}
+ #consultCard .cv-consult-form .cv-consult-benefits,#consultCard .cv-consult-form .cv-consult-benefits>b{color:#f5faff!important}
+ #consultCard .cv-consult-form .cv-consult-benefits>div,#consultCard .cv-consult-form .cv-consult-benefits small{color:#d5e9f7!important}
+ #consultCard .cv-consult-form .plate-field-label{color:#ffdc65!important}
+ #consultCard .cv-consult-form #plateHint{color:#d3e4f5!important}
+ #consultCard .cv-consult-form .preview-reassurance{color:#b4f3d3!important}
+ .hero-grid{min-height:280px!important}
+ .hero-copy>.firstfold-trust{gap:5px!important}
+ .hero-copy>.firstfold-trust span{font-size:9px!important}
+}
+@media(min-width:901px){
+ .cv-photo-hero{background-position:center center!important}
+ .hero-grid{min-height:355px!important}
+}
+</style>
 </head>
 <body>
 <div id="appSplash" class="app-splash" aria-hidden="true"><img src="/file_00000000d76c820e88ceb6c39ce70f0d.png" alt=""></div>
