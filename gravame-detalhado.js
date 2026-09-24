@@ -16,8 +16,7 @@ function normalizePlate(value) {
 function summarizeGravame(payload) {
   const root = payload && typeof payload === "object" && !Array.isArray(payload) ? payload : {};
   const data = root.data && typeof root.data === "object" && !Array.isArray(root.data) ? root.data : root;
-  // Schema oficial FonteData: temGravame, situacao, situacaoDescricao,
-  // agenteFinanceiro, restricao, contrato e veiculo.
+  // Campos conforme a documentação pública da FonteData.
   const text = value => typeof value === "string" && value.trim() ? value.trim().slice(0, 250) : null;
   const obj = value => value && typeof value === "object" && !Array.isArray(value) ? value : {};
   const credor = obj(data.agenteFinanceiro);
@@ -30,10 +29,10 @@ function summarizeGravame(payload) {
     temGravame: typeof data.temGravame === "boolean" ? data.temGravame : null,
     situacao,
     situacaoDescricao: text(data.situacaoDescricao),
-    agenteFinanceiro: { nome: text(credor.nome), codigo: text(credor.codigo) },
+    agenteFinanceiro: { nome: text(credor.nome), codigo: text(credor.codigo), documento: text(credor.documento) },
     restricao: { numero: text(restricao.numero), data: text(restricao.data), uf: text(restricao.uf) },
     contrato: { numero: text(contrato.numero), data: text(contrato.data), uf: text(contrato.uf) },
-    veiculo: { placa: text(veiculo.placa), marcaModelo: text(veiculo.marcaModelo) },
+    veiculo: { placa: text(veiculo.placa), chassi: text(veiculo.chassi), marcaModelo: text(veiculo.marcaModelo) },
     observacao: "Dados fornecidos pelo provedor. Campos ausentes não comprovam ausência de gravame."
   };
 }
