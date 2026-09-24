@@ -1,15 +1,13 @@
 #!/usr/bin/env node
 /**
- * API Full: read-only OpenAPI catalog inspection.
- * Usage: APIFULL_OPENAPI_URL=https://doc.apifull.com.br/... node scripts/apifull-catalog.js
- * Does not send bearer tokens or execute paid consultations.
+ * Read-only API Full OpenAPI catalog. No token and no paid API calls.
+ * node scripts/apifull-catalog.js
  */
 const fs = require('node:fs');
-const url = process.env.APIFULL_OPENAPI_URL;
+const url = process.env.APIFULL_OPENAPI_URL || 'https://doc.apifull.com.br/openapi.json';
 const output = process.env.APIFULL_CATALOG_OUTPUT || 'apifull-catalog.json';
 const keywords = /leil[aã]o|gravame|d[eé]bito|roubo|furto|sinistro/i;
 async function main() {
-  if (!url) throw new Error('Configure APIFULL_OPENAPI_URL com a URL exata do JSON OpenAPI da API Full.');
   const target = new URL(url);
   if (target.protocol !== 'https:' || target.hostname !== 'doc.apifull.com.br') {
     throw new Error('Somente URLs HTTPS de doc.apifull.com.br são permitidas.');
