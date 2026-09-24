@@ -3059,14 +3059,19 @@ async function startTelegramPurchase(chatId,plate,productId){
   await telegramBot.sendTelegramMessage(chatId,"💠 PIX para "+plate+"\\n"+product.credits+" consulta(s): R$ "+product.amount.toFixed(2).replace(".",",")+"\\n\\nPIX Copia e Cola (toque para copiar):\\n"+pix+"\\n\\nApós o pagamento confirmado pela Woovi, o relatório será enviado automaticamente aqui. Não pague duas vezes.");
 }
 function telegramReport(plate,vehicle){
-  const fields=[
-    ["Placa",plate],["Marca/modelo",vehicle.brandModel||vehicle.marcaModelo||vehicle.model||vehicle.modelo],
-    ["Ano",vehicle.year||vehicle.modelYear||vehicle.ano],["Cor",vehicle.color||vehicle.cor],
-    ["Combustível",vehicle.fuel||vehicle.combustivel],["Município/UF",vehicle.city||vehicle.municipio||vehicle.uf]
-  ];
+  const fields=[["Placa",plate],["Marca/modelo",vehicle.brandModel||vehicle.marcaModelo||vehicle.model],["Ano",vehicle.year||vehicle.modelYear],["Cor",vehicle.color],["Combustível",vehicle.fuel],["Município/UF",vehicle.city||vehicle.uf],["FIPE",vehicle.fipe?.value]];
   const details=fields.filter(x=>x[1]!=null&&typeof x[1]!=="object").map(x=>x[0]+": "+String(x[1])).join("\\n");
-  return "🚗 CONSULTA VEICULAR 360\\n\\n"+details+"\\n\\nO relatório completo está salvo na sua carteira. As informações dependem da cobertura das fontes consultadas.";
+  const labels={theft:"Roubo/furto",auction:"Leilão",accidentClaim:"Sinistro",lien:"Gravame",recall:"Recall",renajud:"RENAJUD",renainf:"Multas/RENAINF",ipvaPending:"IPVA pendente",chassisRemarked:"Chassi remarcado"};
+  const indicators=Object.entries(labels).map(([key,label])=>{
+    const value=vehicle.indicators?.[key];
+    return label+": "+(value===true?"Indicação retornada":value===false?"Sem indicação retornada":"Não informado");
+  }).join("\\n");
+  const restrictions=Array.isArray(vehicle.restrictions)?vehicle.restrictions.slice(0,10).map(x=>typeof x==="string"?x:JSON.stringify(x)).join("\\n"):"";
+  const debt=vehicle.debts;
+  const extra=debt?("\\n\\nDÉBITOS\\n"+(debt.ipvaValue!=null?"IPVA: "+debt.ipvaValue+"\\n":"")+(debt.finesCount!=null?"Multas: "+debt.finesCount+"\\n":"")+(debt.finesTotal!=null?"Valor multas: R$ "+debt.finesTotal:"")):"";
+  return ("🚗 CONSULTA VEICULAR 360\\n\\n"+details+"\\n\\nINDICADORES\\n"+indicators+(restrictions?"\\n\\nRESTRIÇÕES\\n"+restrictions:"")+extra+"\\n\\nInformações conforme a cobertura das fontes consultadas. Ausência de indicação não garante inexistência de ocorrência.").slice(0,3900);
 }
+
 let telegramPollRunning=false;
 async function pollTelegramOrders(){
   if(telegramPollRunning||!pool)return;
