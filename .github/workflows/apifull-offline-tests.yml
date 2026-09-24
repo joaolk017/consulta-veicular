@@ -5,6 +5,7 @@ on:
       - 'apifull-integration.js'
       - 'test/apifull-integration.test.js'
       - 'vehicle-provider-plan.js'
+      - 'server.js'
       - 'test/vehicle-provider-plan.test.js'
       - '.github/workflows/apifull-offline-tests.yml'
   workflow_dispatch:
@@ -20,4 +21,6 @@ jobs:
         with:
           node-version: '20'
       - name: Validate API Full mapping without network or token
-        run: node --test test/apifull-integration.test.js test/vehicle-provider-plan.test.js
+        run: |
+          node --check server.js
+          node --test test/apifull-integration.test.js test/vehicle-provider-plan.test.js
