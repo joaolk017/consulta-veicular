@@ -39,6 +39,13 @@ function buildAuthorizedRequest(service, identifiers = {}, token = "") {
     }
   };
 }
+// Proteção: este módulo ainda não tem cliente de rede. Mesmo com a variável
+// APIFULL_ENABLED=true, não autoriza consultas até confirmação contratual.
+function assertPaidCallsDisabled() {
+  const error = new Error("Consultas API Full bloqueadas até validar autenticação e preços.");
+  error.code = "APIFULL_PAID_CALLS_LOCKED";
+  throw error;
+}
 // Planejamento sem rede: selecionar serviços não os executa.
 const DEFAULT_SERVICES = Object.freeze(["leilao", "rouboFurto", "debitos"]);
 function planComplementaryQueries(identifiers = {}, requested = DEFAULT_SERVICES) {
@@ -86,4 +93,4 @@ function mergeReport(baseReport, results = {}) {
   if (Object.keys(extra).length) merged.complementosApiFull = extra;
   return merged;
 }
-module.exports = { SERVICES, normalizePlate, normalizeChassis, buildRequest, buildAuthorizedRequest, planComplementaryQueries, classifyResponse, mergeReport };
+module.exports = { SERVICES, normalizePlate, normalizeChassis, buildRequest, buildAuthorizedRequest, assertPaidCallsDisabled, planComplementaryQueries, classifyResponse, mergeReport };
