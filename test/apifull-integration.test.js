@@ -1,7 +1,7 @@
 "use strict";
 const assert = require("node:assert/strict");
 const test = require("node:test");
-const { buildRequest, planComplementaryQueries, classifyResponse, mergeReport, normalizePlate, normalizeChassis } = require("../apifull-integration");
+const { buildRequest, buildAuthorizedRequest, planComplementaryQueries, classifyResponse, mergeReport, normalizePlate, normalizeChassis } = require("../apifull-integration");
 test("normaliza placa sem chamar provedor", () => {
   assert.equal(normalizePlate("abc-1d23"), "ABC1D23");
   assert.throws(() => normalizePlate("123"), /inválida/);
@@ -46,4 +46,13 @@ test("planeja serviços sem rede e sem habilitar consultas", () => {
   assert.deepEqual(plan.map(x => x.status), ["ready_for_review","pending_chassis"]);
   assert.equal(plan[1].request, null);
   assert.equal(plan[0].request.path, "/api/leilao");
+});
+
+test("prepara Bearer Token em memória, sem executar consultas", () => {
+  const req = buildAuthorizedRequest("leilao", {placa:"ABC1D23"}, "token-ficticio");
+  assert.equal(req.headers.Authorization, "Bearer token-ficticio");
+  assert.equal(req.headers["Content-Type"], "application/json");
+  assert.equal(req.body.placa, "ABC1D23");
+  assert.throws(() => buildAuthorizedRequest("leilao", {placa:"ABC1D23"}, ""), /Token/);
+  assert.throws(() => buildAuthorizedRequest("leilao", {placa:"ABC1D23"}, "abc\\r\\nInjected: yes"), /Token/);
 });
