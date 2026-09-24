@@ -3033,6 +3033,18 @@ async function initTelegramOrders(){
   setInterval(()=>pollTelegramOrders().catch(e=>console.error("Telegram polling:",e.message)),15000).unref();
   console.log("Telegram PIX: pagamentos e entrega automática ativados.");
 }
+async function sendTelegramPix(chatId,plate,product,pix){
+  const amount=product.amount.toFixed(2).replace(".",",");
+  const caption="💠 Consulta Veicular 360\n🚗 Placa: "+plate+"\n💳 "+product.credits+" consulta(s) · R$ "+amount+"\n\nEscaneie o QR Code com o aplicativo do seu banco.";
+  try{
+    const png=await QRCode.toBuffer(pix,{type:"png",width:640,margin:3,errorCorrectionLevel:"M"});
+    await telegramBot.sendPixPhoto(chatId,png,caption);
+  }catch(err){
+    console.error("Telegram: falha ao enviar imagem do QR PIX:",err.message);
+    await telegramBot.sendTelegramMessage(chatId,caption+"\n\nNão foi possível exibir a imagem do QR Code. Utilize o código PIX abaixo.");
+  }
+  await telegramBot.sendTelegramMessage(chatId,"📋 PIX COPIA E COLA\n\n"+pix+"\n\nApós o pagamento confirmado pela Woovi, seu relatório será enviado automaticamente aqui. Não pague duas vezes.");
+}
 async function startTelegramPurchase(chatId,plate,productId){
   requireDatabase();
   if(!OPENPIX_APP_ID)throw new Error("PIX indisponível.");
@@ -3045,7 +3057,7 @@ async function startTelegramPurchase(chatId,plate,productId){
     if(order.status==='pending'){
       const charge=await getOpenPixCharge(order.correlation_id);
       const pix=charge.brCode||charge.pix?.brCode;
-      if(pix){await telegramBot.sendTelegramMessage(chatId,"💠 PIX pendente para "+plate+"\nValor: R$ "+product.amount.toFixed(2).replace(".",",")+"\n\nPIX Copia e Cola (toque para copiar):\n"+pix+"\n\nApós pagar, a confirmação e a entrega são automáticas.");return;}
+      if(pix){await sendTelegramPix(chatId,plate,product,pix);return;}
     }
     await telegramBot.sendTelegramMessage(chatId,"Sua consulta já está em processamento. Aguarde a confirmação automática.");return;
   }
@@ -3062,7 +3074,7 @@ async function startTelegramPurchase(chatId,plate,productId){
     await client.query("COMMIT");
   }catch(e){await client.query("ROLLBACK");throw e;}finally{client.release();}
   if(!pix){await telegramBot.sendTelegramMessage(chatId,"Cobrança registrada, mas a Woovi não retornou o código PIX. Não gere outra cobrança; contate o suporte.");return;}
-  await telegramBot.sendTelegramMessage(chatId,"💠 PIX para "+plate+"\n"+product.credits+" consulta(s): R$ "+product.amount.toFixed(2).replace(".",",")+"\n\nPIX Copia e Cola (toque para copiar):\n"+pix+"\n\nApós o pagamento confirmado pela Woovi, o relatório será enviado automaticamente aqui. Não pague duas vezes.");
+  await sendTelegramPix(chatId,plate,product,pix);
 }
 function telegramReport(plate,vehicle){
   const fields=[["Placa",plate],["Marca/modelo",vehicle.brandModel||vehicle.marcaModelo||vehicle.model],["Ano",vehicle.year||vehicle.modelYear],["Cor",vehicle.color],["Combustível",vehicle.fuel],["Município/UF",vehicle.city||vehicle.uf],["FIPE",vehicle.fipe?.value]];
