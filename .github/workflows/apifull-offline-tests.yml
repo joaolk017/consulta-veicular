@@ -6,6 +6,8 @@ on:
     paths:
       - 'apifull-*.js'
       - 'unified-report*.js'
+      - 'fontedata-preload.js'
+      - 'server.js'
       - '.github/workflows/apifull-offline-tests.yml'
 jobs:
   offline-tests:
@@ -22,6 +24,9 @@ jobs:
           APIFULL_ENABLED: 'false'
           APIFULL_TOKEN: ''
         run: |
+          node --check server.js
+          node --check fontedata-preload.js
+          node --check telegram-bot.js
           node --check apifull-adapter.js
           node --check apifull-auth-config.js
           node --check apifull-integration-plan.js
