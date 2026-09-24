@@ -20,6 +20,10 @@ function buildFonteDataRequest(plate, apiKey) {
     timeout:120000
   };
 }
+function isFonteDataPaidApproved(env = {}) {
+  return String(env.FONTEDATA_PAID_PRIMARY_ENABLED || "").trim() === "true"
+    && String(env.FONTEDATA_PAID_PRIMARY_APPROVED || "").trim() === "confirmed";
+}
 function planVehicleProviders({ plate, chassis, paid = false, fonteDataContractVerified = false } = {}) {
   if (!paid) return { preview:"falcon", paidBase:null, complements:[] };
   if (!fonteDataContractVerified) return {
@@ -32,4 +36,4 @@ function planVehicleProviders({ plate, chassis, paid = false, fonteDataContractV
     migrationStatus:"planned_only_no_network"
   };
 }
-module.exports = { planVehicleProviders, validatePaidPlate, buildFonteDataRequest };
+module.exports = { planVehicleProviders, validatePaidPlate, buildFonteDataRequest, isFonteDataPaidApproved };
