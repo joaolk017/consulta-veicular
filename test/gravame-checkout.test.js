@@ -9,6 +9,7 @@ function fixture() {
   const routes = {};
   let status = "pending";
   let report = null;
+  let providerError = false;
   let apiCalls = 0;
   let pixCalls = 0;
   const purchase = {
@@ -41,7 +42,7 @@ function fixture() {
     signPaymentToken:()=> "token-simulado",
     verifyPaymentToken:()=>({v:3,provider:"openpix",product:"gravame-detalhado",cents:2990,accountId:"account-test",plate:"ABC1D23",correlationID:"cv-gravame-simulado"}),
     checkPaymentRateLimit:()=>({allowed:true}),
-    fetchGravame:async()=>{apiCalls++;return report || {plate:"ABC1D23",details:{temGravame:true,situacao:"ATIVO"}};}
+    fetchGravame:async()=>{apiCalls++;if(providerError)throw new Error("Falha simulada do fornecedor");return report || {plate:"ABC1D23",details:{temGravame:true,situacao:"ATIVO"}};}
   });
   async function call(path,body={paymentToken:"token-simulado"}) {
     const req={body};let code=200;let output;
@@ -49,7 +50,7 @@ function fixture() {
     await routes[path](req,res);
     return {code,body:output};
   }
-  return {call,purchase,setStatus(v){status=v;},setReport(v){report=v;},get apiCalls(){return apiCalls;},get pixCalls(){return pixCalls;},restore(){if(previous===undefined)delete process.env.GRAVAME_DETALHADO_ENABLED;else process.env.GRAVAME_DETALHADO_ENABLED=previous;}};
+  return {call,purchase,setStatus(v){status=v;},setReport(v){report=v;},setProviderError(v){providerError=v;},get apiCalls(){return apiCalls;},get pixCalls(){return pixCalls;},restore(){if(previous===undefined)delete process.env.GRAVAME_DETALHADO_ENABLED;else process.env.GRAVAME_DETALHADO_ENABLED=previous;}};
 }
 
 test("PIX simulado: cobrança separada de R$ 29,90 sem API real",async()=>{
@@ -93,12 +94,14 @@ test("falha da API entra em revisão sem nova cobrança automática",async()=>{
   const f=fixture();
   try {
     f.setStatus("COMPLETED");
-    f.setReport(null);
-    // A fixture normal entrega relatório. Aqui simulamos uma compra já em revisão.
-    f.purchase.status="review";
-    const r=await f.call("/api/gravame/relatorio");
-    assert.equal(r.code,202);
-    assert.equal(r.body.status,"review");
-    assert.equal(f.apiCalls,0);
+    f.setProviderError(true);
+    const first=await f.call("/api/gravame/relatorio");
+    assert.equal(first.code,202);
+    assert.equal(first.body.status,"review");
+    assert.equal(f.apiCalls,1);
+    const second=await f.call("/api/gravame/relatorio");
+    assert.equal(second.code,202);
+    assert.equal(second.body.status,"review");
+    assert.equal(f.apiCalls,1);
   } finally {f.restore();}
 });
