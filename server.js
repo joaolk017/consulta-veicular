@@ -2985,6 +2985,13 @@ app.use((req, res, next) => {
   return res.status(410).type("text/plain; charset=utf-8").send("Esta página foi removida permanentemente.");
 });
 
+// Produto de gravame isolado: não altera a carteira de créditos dos pacotes existentes.
+// Desativado por padrão; requer liberação da API e testes antes da ativação.
+require("./gravame-checkout").installGravameCheckout({
+  app, pool, ensureAccount, createOpenPixCharge, getOpenPixCharge,
+  signPaymentToken, verifyPaymentToken, requireDatabase, checkPaymentRateLimit
+});
+
 // Não exibir checkout de gravame antes da autorização do fornecedor e dos testes.
 app.get("/gravame.html", (req, res, next) => {
   if (process.env.GRAVAME_DETALHADO_ENABLED !== "1") return res.status(404).type("text/plain").send("Produto temporariamente indisponível.");
@@ -3019,12 +3026,6 @@ runComplete360VerifiedV3Once();
 runComplete360VerifiedV4Once();
 runStoredFonteDataShapeAuditOnce();
 runFonteDataStoredCoverageOnce();
-// Produto de gravame isolado: não altera a carteira de créditos dos pacotes existentes.
-// Desativado por padrão; requer liberação da API e testes antes da ativação.
-require("./gravame-checkout").installGravameCheckout({
-  app, pool, ensureAccount, createOpenPixCharge, getOpenPixCharge,
-  signPaymentToken, verifyPaymentToken, requireDatabase, checkPaymentRateLimit
-});
 app.listen(PORT, () => console.log(`Consulta Veicular 360 ativa na porta ${PORT}. Checkout PIX: Woovi/OpenPix. Créditos: ${pool ? "PostgreSQL" : "indisponível"}.`));
 // Auditoria FonteData permanece manual; nunca é executada automaticamente em deploy/startup.
 
