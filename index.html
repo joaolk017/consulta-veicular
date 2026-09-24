@@ -895,6 +895,31 @@ html{scroll-behavior:smooth}
  .cv-product--consult #btn{min-height:52px!important;font-size:14px!important}
 }
 </style>
+<style id="cv-consult-dark-fix-20260923">
+/* Contraste explícito do cartão integrado em todos os breakpoints. */
+html body .cv-showcase .cv-products .cv-product.cv-product--consult,
+html body .cv-showcase .cv-products .cv-product.cv-product--consult #consultCard{
+ background:#102b49!important;
+ background-image:linear-gradient(155deg,#122f50 0%,#0a2038 100%)!important;
+ color:#f5f9ff!important;
+ border-color:#315e86!important;
+}
+html body .cv-showcase .cv-products .cv-product.cv-product--consult #consultCard{
+ border:1px solid #315e86!important;border-top:3px solid #f7c344!important;
+ box-shadow:0 15px 38px #020b2080!important;
+}
+#consultCard .cv-consult-heading .title{color:#fff!important}
+#consultCard .cv-consult-heading .sub,#consultCard .cv-consult-benefits small{color:#c3d6e8!important}
+#consultCard .cv-consult-benefits,#consultCard .cv-consult-benefits>b{color:#f5f9ff!important}
+#consultCard .cv-consult-benefits>div{color:#c8e8db!important}
+#consultCard .cv-consult-badges span{color:#d4f3e2!important;background:#153958!important;border-color:#39678b!important}
+#consultCard .preview-reassurance,#consultCard .preview-reassurance span{color:#b6f0d1!important}
+#consultCard .creditbar.zero{background:#163a59!important;border:1px solid #3b688c!important;color:#f4faff!important}
+#consultCard .creditbar.zero #creditLabel,#consultCard .creditbar.zero #creditSummary{color:#f4faff!important}
+#consultCard .creditbar.zero .credit-toggle{color:#a8dfff!important}
+#consultCard .plate{background:#f1f7ff!important;color:#233e58!important}
+@media(max-width:900px){#consultCard{padding:16px!important}}
+</style>
 </head>
 <body>
 <div id="appSplash" class="app-splash" aria-hidden="true"><img src="/file_00000000d76c820e88ceb6c39ce70f0d.png" alt=""></div>
