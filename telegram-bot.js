@@ -25,6 +25,25 @@ function send(chatId,text,reply_markup){
     req.on("error",reject);req.end(body);
   });
 }
+function sendPixCode(chatId,pix){
+  const raw=String(pix||"").trim();
+  if(!raw||raw.length>1024)throw new Error("Código PIX inválido para envio.");
+  // HTML pre prevents Telegram from auto-linking the payment payload.
+  const escaped=raw.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const markup=raw.length<=256?{inline_keyboard:[[{text:"📋 Copiar código PIX",copy_text:{text:raw}}]]}:undefined;
+  return new Promise((resolve,reject)=>{
+    const body=JSON.stringify({
+      chat_id:chatId,
+      text:"📋 PIX COPIA E COLA\n\n<pre>"+escaped+"</pre>\n\nCopie o código completo, sem espaços ou quebras de linha. Após o pagamento confirmado, seu relatório será enviado aqui.",
+      parse_mode:"HTML",reply_markup:markup,link_preview_options:{is_disabled:true}
+    });
+    const req=https.request("https://api.telegram.org/bot"+token+"/sendMessage",{
+      method:"POST",headers:{"Content-Type":"application/json","Content-Length":Buffer.byteLength(body)},timeout:15000
+    },r=>{let response="";r.on("data",chunk=>{if(response.length<1000)response+=chunk;});r.on("end",()=>r.statusCode===200?resolve():reject(new Error("Telegram PIX message HTTP "+r.statusCode+": "+response.slice(0,250))));});
+    req.on("timeout",()=>req.destroy(new Error("Telegram PIX message timeout")));
+    req.on("error",reject);req.end(body);
+  });
+}
 function sendPixPhoto(chatId,png,caption){
   return new Promise((resolve,reject)=>{
     const boundary="cv360"+crypto.randomBytes(12).toString("hex");
@@ -91,4 +110,4 @@ function installTelegramBot(app){
     }catch(e){console.error("Falha no envio Telegram:",e.message);res.sendStatus(503);}
   });
 }
-module.exports={installTelegramBot,configureTelegramPayments,sendTelegramMessage:send,sendPixPhoto};
+module.exports={installTelegramBot,configureTelegramPayments,sendTelegramMessage:send,sendPixPhoto,sendPixCode};
