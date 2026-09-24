@@ -34,7 +34,8 @@ function mergeReports(fonteData, apiFull = {}, options = {}) {
   report.complementosApiFull = complementary;
   report.fontes = sources;
   report.divergencias = conflicts;
-  report.relatorioUnificado = true;
+  // Só indicar múltiplas fontes quando algum serviço API Full efetivamente retornou dados.
+  report.relatorioUnificado = Object.values(sources.apiFull).some(status => status === "ok");
   return report;
 }
 module.exports = { mergeReports, SERVICES };
