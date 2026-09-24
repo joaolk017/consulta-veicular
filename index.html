@@ -704,6 +704,78 @@ body {
   .hero-card.result-mode{width:100%;max-width:none;}
 }
 </style>
+
+<style>
+/* Vitrine visual 360: mantém formulário, checkout e conteúdos existentes intactos. */
+.cv-showcase{max-width:1320px;margin:0 auto;padding:8px 0 34px;color:#fff}
+.cv-showcase *{box-sizing:border-box}
+.cv-showcase h2,.cv-showcase h3,.cv-showcase p{margin-top:0}
+.cv-products{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.cv-product{position:relative;display:flex;flex-direction:column;min-width:0;padding:25px 24px;border:1px solid #23619b;border-radius:18px;background:linear-gradient(155deg,#0e2748,#07192f 88%);box-shadow:0 15px 38px #020b2080}
+.cv-product--gravame{border-color:#35b6ff;box-shadow:0 0 0 1px #258dff,0 0 32px #0969d455}
+.cv-product-icon{font-size:34px;line-height:1;margin-bottom:14px}
+.cv-product h2{font-size:24px;line-height:1.15;margin-bottom:9px}
+.cv-product p{color:#cbd9e9;font-size:14px;line-height:1.55}
+.cv-product ul{padding:0;margin:4px 0 20px;list-style:none;display:grid;gap:9px}
+.cv-product li{font-size:14px;line-height:1.35;color:#edf6ff;padding-left:23px;position:relative}
+.cv-product li:before{content:"✓";position:absolute;left:0;color:#31d591;font-weight:900}
+.cv-product-price{margin-top:auto;padding:10px 0 13px;color:#fff;font-size:13px}
+.cv-product-price strong{display:block;font-size:29px;line-height:1.1}
+.cv-product-price small{display:block;color:#b4c9db;font-size:11px;margin-top:5px}
+.cv-product-action{display:block;text-align:center;text-decoration:none;border-radius:12px;padding:15px 12px;background:#0875f9;color:#fff;font-size:15px;font-weight:900}
+.cv-product-action--yellow{background:#ffdc19;color:#061b33}
+.cv-product-action--disabled{background:#244568;color:#e4edf8;cursor:default}
+.cv-product-badge{position:absolute;top:-14px;right:17px;background:#fa334f;color:#fff;padding:6px 12px;border-radius:9px;font-weight:900;font-size:12px}
+.cv-package{display:flex;justify-content:space-between;gap:8px;border:1px solid #28598a;border-radius:10px;padding:10px;margin-bottom:8px;font-size:13px}
+.cv-package strong{color:#ffdc19}.cv-package--popular{border-color:#ffdc19}
+.cv-trust-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:16px;margin:18px 0 0;border:1px solid #23619b;border-radius:14px;background:#0c315b;color:#eaf6ff;text-align:center;font-size:13px}
+.cv-demo{margin-top:22px;display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr);gap:20px;align-items:stretch;padding:22px;border:1px solid #2c639a;border-radius:18px;background:linear-gradient(125deg,#06182e,#0b305a)}
+.cv-demo-intro{padding:14px}.cv-demo-eyebrow{color:#ffdd29;font-weight:900;letter-spacing:.1em;font-size:11px}
+.cv-demo-intro h2{font-size:clamp(26px,3vw,39px);line-height:1.1;margin:12px 0}
+.cv-demo-intro p{font-size:14px;line-height:1.65;color:#d0e0f0}
+.cv-demo-note{font-size:12px!important;color:#ffe89b!important}
+.cv-demo-table{padding:20px;border-radius:15px;background:#f7fbff;color:#152e4c}
+.cv-demo-table h3{font-size:18px;margin:0 0 12px;color:#142e4c}
+.cv-demo-ok{padding:13px;border-radius:10px;background:#dcf8e9;color:#145e40;font-size:14px;font-weight:900;margin-bottom:14px}
+.cv-demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cv-demo-field{border-bottom:1px solid #d8e4f2;padding:8px 0;font-size:12px;color:#59718d}
+.cv-demo-field strong{display:block;color:#142d4b;font-size:14px;margin-top:4px}
+.cv-benefits{padding:24px 0 2px}.cv-benefits h2{text-align:center;font-size:27px;margin-bottom:17px}
+.cv-benefits-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.cv-benefits-grid div{padding:18px 13px;text-align:center;background:#102b4c;border:1px solid #265a8b;border-radius:13px}
+.cv-benefits-grid b{display:block;margin:9px 0 6px;font-size:15px}.cv-benefits-grid span{display:block;color:#c2d4e5;font-size:12px;line-height:1.5}
+.cv-benefits-grid .cv-emoji{font-size:30px}
+.cv-showcase .cv-product-action:focus-visible{outline:3px solid #ffdc19;outline-offset:3px}
+@media(min-width:901px){
+ .hero{background:radial-gradient(circle at 77% 26%,#13529d 0,transparent 37%),linear-gradient(130deg,#051225,#0a2344 70%,#07192e)}
+ .hero .shell{width:min(1320px,calc(100% - 48px))}
+ .top{border-bottom:1px solid #214775}
+ .site-logo{max-height:90px!important;width:min(340px,32vw)!important}
+ .hero-grid{padding:25px 0 20px!important}
+ .hero-copy{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;column-gap:28px!important}
+ .hero-copy>.pill,.hero-copy>h1,.hero-copy>.hero-text,.hero-copy>.hero-infos{grid-column:1!important}
+ .hero-copy>.pill{grid-row:1!important;margin-top:12px!important}
+ .hero-copy>h1{grid-row:2!important;font-size:clamp(38px,4.2vw,64px)!important;line-height:1.02!important}
+ .hero-copy>.hero-text{grid-row:3!important}
+ .hero-copy>.hero-infos{grid-row:4!important}
+ .hero-copy>.hero-card{grid-column:2!important;grid-row:1/6!important}
+ .hero-copy:has(.hero-card.result-mode)>.hero-card.result-mode{grid-column:1/-1!important}
+}
+@media(max-width:900px){
+ .cv-showcase{padding:8px 0 22px}
+ .cv-products{grid-template-columns:1fr;gap:12px}
+ .cv-product{padding:19px}
+ .cv-product h2{font-size:21px}
+ .cv-trust-strip{grid-template-columns:repeat(2,1fr);font-size:12px}
+ .cv-demo{grid-template-columns:1fr;padding:12px;gap:10px}
+ .cv-demo-intro{padding:9px}
+ .cv-demo-grid{grid-template-columns:1fr 1fr}
+ .cv-benefits-grid{grid-template-columns:repeat(2,1fr)}
+ .hero .shell{width:min(100% - 28px,600px)}
+ .site-logo{width:min(240px,70vw)!important;max-height:85px!important}
+}
+@media(max-width:370px){.cv-demo-grid{grid-template-columns:1fr}.cv-trust-strip{grid-template-columns:1fr 1fr}}
+</style>
 </head>
 <body>
 <div id="appSplash" class="app-splash" aria-hidden="true"><img src="/file_00000000d76c820e88ceb6c39ce70f0d.png" alt=""></div>
@@ -741,6 +813,61 @@ body {
 </div>
 </div>
 
+
+<section class="cv-showcase" aria-label="Serviços e demonstração da Consulta Veicular 360">
+  <div class="cv-products">
+    <article class="cv-product">
+      <div class="cv-product-icon" aria-hidden="true">📋</div>
+      <h2>Consulta Completa</h2>
+      <p>Veja uma prévia por placa e, se desejar, libere os dados disponíveis para analisar um veículo usado.</p>
+      <ul><li>Dados técnicos do veículo</li><li>Indicadores de roubo e furto, quando disponíveis</li><li>Leilão, recall e restrições conforme a fonte</li><li>Relatório organizado para sua análise</li></ul>
+      <div class="cv-product-price">A partir de <strong>R$ 18,90</strong></div>
+      <a class="cv-product-action" href="#consultCard">Consultar agora →</a>
+    </article>
+    <article class="cv-product">
+      <div class="cv-product-icon" aria-hidden="true">🪙</div>
+      <h2>Pacotes de Consultas</h2>
+      <p>Economize ao consultar veículos diferentes. Os créditos ficam na sua carteira.</p>
+      <div class="cv-package"><span>1 consulta</span><b>R$ 18,90</b></div>
+      <div class="cv-package cv-package--popular"><span>2 consultas</span><span><b>R$ 32,90</b><br><strong>Economize R$ 4,90</strong></span></div>
+      <div class="cv-package"><span>3 consultas</span><span><b>R$ 44,90</b><br><strong>Economize R$ 11,80</strong></span></div>
+      <div class="cv-product-price">Pacotes a partir de <strong>R$ 18,90</strong><small>Consulte placas diferentes.</small></div>
+      <a class="cv-product-action cv-product-action--yellow" href="#consultCard">Escolher pacote →</a>
+    </article>
+    <article class="cv-product cv-product--gravame">
+      <span class="cv-product-badge">EM PREPARAÇÃO</span>
+      <div class="cv-product-icon" aria-hidden="true">🔐</div>
+      <h2>Gravame Detalhado</h2>
+      <p>Um produto independente para consultar a situação do gravame e seu histórico, conforme o retorno do fornecedor.</p>
+      <ul><li>Gravame ativo ou baixado</li><li>Agente financeiro, quando informado</li><li>Dados do contrato</li><li>Data e número da restrição</li></ul>
+      <div class="cv-product-price">Preço previsto <strong>R$ 29,90</strong><small>Disponível após a conclusão dos testes.</small></div>
+      <span class="cv-product-action cv-product-action--disabled">Em breve</span>
+    </article>
+  </div>
+  <div class="cv-trust-strip"><span>🔎 Prévia gratuita por placa</span><span>🛡️ Informações conforme as fontes</span><span>📄 Relatório organizado</span><span>🔒 Pagamento via PIX</span></div>
+  <section class="cv-demo" aria-labelledby="cvDemoTitle">
+    <div class="cv-demo-intro"><span class="cv-demo-eyebrow">EXEMPLO ILUSTRATIVO</span><h2 id="cvDemoTitle">Veja um exemplo do resultado</h2><p>Uma prévia de como os dados podem ser organizados no relatório. Os dados abaixo são inteiramente fictícios e não correspondem a um veículo real.</p><p class="cv-demo-note">A disponibilidade e o conteúdo do relatório real variam conforme o veículo e os provedores consultados.</p><a class="cv-product-action" href="#consultCard">Ver prévia por placa →</a></div>
+    <div class="cv-demo-table"><h3>🚘 Resumo do veículo — demonstração</h3><div class="cv-demo-ok">✓ Exemplo fictício: nenhum alerta nos campos ilustrados</div>
+      <div class="cv-demo-grid">
+        <div class="cv-demo-field">Marca / modelo<strong>Veículo Modelo Exemplo</strong></div>
+        <div class="cv-demo-field">Ano<strong>2021 / 2022</strong></div>
+        <div class="cv-demo-field">Combustível<strong>Flex</strong></div>
+        <div class="cv-demo-field">Cor<strong>Prata</strong></div>
+        <div class="cv-demo-field">Situação<strong>Exemplo: circulação normal</strong></div>
+        <div class="cv-demo-field">Roubo / furto<strong>Exemplo: sem apontamento</strong></div>
+        <div class="cv-demo-field">Leilão<strong>Exemplo: sem apontamento</strong></div>
+        <div class="cv-demo-field">Gravame<strong>Exemplo: sem gravame ativo</strong></div>
+      </div>
+      <p style="margin:15px 0 0;color:#536b84;font-size:11px">DEMONSTRAÇÃO • Sem placa, chassi, RENAVAM ou documentos reais.</p>
+    </div>
+  </section>
+  <section class="cv-benefits" aria-labelledby="cvBenefitsTitle"><h2 id="cvBenefitsTitle">Por que consultar antes de comprar?</h2><div class="cv-benefits-grid">
+    <div><span class="cv-emoji">🛡️</span><b>Evite surpresas</b><span>Confira indicadores disponíveis antes de negociar.</span></div>
+    <div><span class="cv-emoji">⚖️</span><b>Identifique riscos</b><span>Analise os alertas retornados pelas fontes.</span></div>
+    <div><span class="cv-emoji">📑</span><b>Dados organizados</b><span>Informações reunidas para facilitar a leitura.</span></div>
+    <div><span class="cv-emoji">🚙</span><b>Negocie informado</b><span>Use o relatório como apoio à sua decisão.</span></div>
+  </div></section>
+</section>
 <div class="firstfold-followup" id="informacoes-da-consulta">
   <div class="firstfold-followup-head"><span>VEJA O QUE ESTÁ INCLUÍDO</span><h2>Informações para comprar com mais segurança</h2><p>Evite surpresas antes de fechar negócio. Consulte a placa primeiro e veja os indicadores disponíveis para o veículo.</p></div>
   <aside class="desktop-side-panel" aria-label="O que a consulta pode mostrar e como funciona">
