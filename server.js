@@ -7,7 +7,7 @@ const QRCode = require("qrcode");
 const { Pool } = require("pg");
 const { fetchSPDebts } = require("./infosimples-sp-debitos");
 const { mergeReport: mergeApiFullReport } = require("./apifull-integration");
-const { buildFonteDataRequest } = require("./vehicle-provider-plan");
+const { buildFonteDataRequest, isFonteDataPaidApproved } = require("./vehicle-provider-plan");
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -2827,8 +2827,7 @@ async function runFonteDataStoredCoverageOnce() {
 async function buildPaidVehicleReport(plate){
   // Migração opt-in: por padrão preserva o fluxo atual, sem nova cobrança.
   // Ativar somente após validação comercial e autorização explícita.
-  const fonteDataPrimary = String(process.env.FONTEDATA_PAID_PRIMARY_ENABLED || "").trim() === "true"
-    && String(process.env.FONTEDATA_PAID_PRIMARY_APPROVED || "").trim() === "confirmed";
+  const fonteDataPrimary = isFonteDataPaidApproved(process.env);
   let safeVehicle;
   if (fonteDataPrimary) {
     if (!FONTEDATA_API_KEY) throw new Error("FonteData principal habilitada sem chave configurada.");
