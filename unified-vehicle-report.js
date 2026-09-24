@@ -10,7 +10,7 @@ function buildUnifiedReport(fonteDataReport, apiFullResults = {}) {
     throw new Error("Relatório FonteData inválido.");
   }
   const combined = mergeReport(fonteDataReport, apiFullResults);
-  const sections = Object.keys(SERVICES).map(key => {
+  const sections = ["rouboFurto", "debitos"].map(key => {
     const result = apiFullResults[key];
     const confirmed = result && result.ok === true && result.data != null;
     return confirmed
