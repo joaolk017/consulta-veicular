@@ -17,5 +17,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Validate JavaScript syntax
+        run: |
+          node --check apifull-integration.js
+          node --check vehicle-provider-plan.js
+          node --check tests/apifull-offline-integration.test.js
       - name: Test API Full and FonteData without network or credentials
         run: node --test tests/apifull-offline-integration.test.js
