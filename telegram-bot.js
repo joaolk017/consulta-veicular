@@ -14,7 +14,7 @@ function configureTelegramPayments(services){paymentServices=services;}
 const keyboard = {inline_keyboard:[
   [{text:"🚗 Consultar placa",callback_data:"placa"}],
   [{text:"💳 Ver pacotes",callback_data:"pacotes"}],
-  [{text:"📦 Meus pedidos",callback_data:"pedidos"}],
+  [{text:"📦 Meus pedidos",callback_data:"pedidos"},{text:"💰 Consultar pagamento",callback_data:"status"}],
   [{text:"📋 Sobre os relatórios",callback_data:"sobre"}],
   [{text:"❓ Ajuda",callback_data:"ajuda"}]
 ]};
@@ -83,10 +83,10 @@ function installTelegramBot(app){
     const chatId=message?.chat?.id||callback?.message?.chat?.id;
     if(!chatId)return res.json({ok:true});
     try{
-      if(callback?.data==="pedidos"||message?.text?.trim()==="/pedidos"||message?.text?.trim()==="/status"){
+      if(callback?.data==="pedidos"||callback?.data==="status"||message?.text?.trim()==="/pedidos"||message?.text?.trim()==="/status"){
         if(!paymentServices?.status)throw new Error("Consulta de pedidos indisponível.");
         const listing=await paymentServices.list(chatId);
-        await send(chatId,listing.text,listing.reply_markup||keyboard);
+        await send(chatId,listing.text,listing.reply_markup?{inline_keyboard:[...listing.reply_markup.inline_keyboard,[{text:"🏠 Menu principal",callback_data:"menu"}]]}:keyboard);
       }else if(callback?.data?.startsWith("pix:")){
         if(!paymentServices?.recover)throw new Error("Recuperação indisponível.");
         await paymentServices.recover(chatId,Number(callback.data.slice(4)));
@@ -102,7 +102,7 @@ function installTelegramBot(app){
       }else if(callback?.data==="pacotes"){
         await send(chatId,"💳 Pacotes:\n1 consulta: R$ 18,90\n2 consultas: R$ 32,90\n3 consultas: R$ 44,90\n\nEnvie a placa primeiro para iniciar a compra.",keyboard);
       }else if(callback?.data==="placa"){
-        await send(chatId,"🚗 Digite a placa (ABC1234 ou ABC1D23).");
+        await send(chatId,"🚗 Digite a placa (ABC1234 ou ABC1D23).\n\nVocê só gera um PIX depois de escolher o pacote.",{inline_keyboard:[[{text:"🏠 Menu principal",callback_data:"menu"}]]});
       }else if(callback?.data?.startsWith("buy:")){
         if(!paymentServices)throw new Error("Serviço de pagamentos indisponível.");
         const parts=callback.data.split(":");
@@ -111,7 +111,7 @@ function installTelegramBot(app){
         await paymentServices.start(chatId,plate,product);
       }else if(callback?.data==="sobre"){
         await send(chatId,"Os relatórios reúnem dados conforme a cobertura das fontes contratadas. Informações indisponíveis não são garantidas.",keyboard);
-      }else if(message?.text?.trim().startsWith("/start")||message?.text?.trim().startsWith("/menu")){
+      }else if(callback?.data==="menu"||message?.text?.trim().startsWith("/start")||message?.text?.trim().startsWith("/menu")){
         await send(chatId,"🚗 Bem-vindo ao Consulta Veicular 360!\n\nDigite uma placa para receber seu PIX e, após a confirmação, o relatório aqui no Telegram.",keyboard);
       }else if(message?.text){
         const plate=message.text.trim().toUpperCase().replace(/[ -]/g,"");
@@ -120,7 +120,7 @@ function installTelegramBot(app){
             [{text:"💳 1 consulta · R$ 18,90",callback_data:"buy:"+plate+":consulta-completa"}],
             [{text:"💳 2 consultas · R$ 32,90",callback_data:"buy:"+plate+":pacote-2"}],
             [{text:"💳 3 consultas · R$ 44,90",callback_data:"buy:"+plate+":pacote-3"}],
-            [{text:"🔄 Outra placa",callback_data:"placa"}]
+            [{text:"🔄 Outra placa",callback_data:"placa"}],\n            [{text:"📦 Meus pedidos",callback_data:"pedidos"},{text:"🏠 Menu principal",callback_data:"menu"}]
           ]});
         }else await send(chatId,"Placa inválida. Use ABC1234 ou ABC1D23.",keyboard);
       }
