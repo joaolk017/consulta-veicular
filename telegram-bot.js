@@ -25,6 +25,19 @@ function send(chatId,text,reply_markup){
     req.on("error",reject);req.end(body);
   });
 }
+function sendPixPhoto(chatId,png,caption){
+  return new Promise((resolve,reject)=>{
+    const boundary="cv360"+crypto.randomBytes(12).toString("hex");
+    const part=(name,value)=>Buffer.from("--"+boundary+"\\r\\nContent-Disposition: form-data; name=\\\""+name+"\\\"\\r\\n\\r\\n"+value+"\\r\\n");
+    const imageHeader=Buffer.from("--"+boundary+"\\r\\nContent-Disposition: form-data; name=\\\"photo\\\"; filename=\\\"pix.png\\\"\\r\\nContent-Type: image/png\\r\\n\\r\\n");
+    const body=Buffer.concat([part("chat_id",String(chatId)),part("caption",caption),imageHeader,png,Buffer.from("\\r\\n--"+boundary+"--\\r\\n")]);
+    const req=https.request("https://api.telegram.org/bot"+token+"/sendPhoto",{
+      method:"POST",headers:{"Content-Type":"multipart/form-data; boundary="+boundary,"Content-Length":body.length},timeout:15000
+    },r=>{let response="";r.on("data",chunk=>{if(response.length<1000)response+=chunk;});r.on("end",()=>r.statusCode===200?resolve():reject(new Error("Telegram sendPhoto HTTP "+r.statusCode)));});
+    req.on("timeout",()=>req.destroy(new Error("Telegram photo timeout")));
+    req.on("error",reject);req.end(body);
+  });
+}
 function registerWebhook(){
   const body=JSON.stringify({url:site+"/api/telegram/webhook",secret_token:telegramHeaderSecret,allowed_updates:["message","callback_query"]});
   const req=https.request("https://api.telegram.org/bot"+token+"/setWebhook",{
@@ -78,4 +91,4 @@ function installTelegramBot(app){
     }catch(e){console.error("Falha no envio Telegram:",e.message);res.sendStatus(503);}
   });
 }
-module.exports={installTelegramBot,configureTelegramPayments,sendTelegramMessage:send};
+module.exports={installTelegramBot,configureTelegramPayments,sendTelegramMessage:send,sendPixPhoto};
