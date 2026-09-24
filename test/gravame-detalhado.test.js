@@ -104,3 +104,23 @@ test("consulta simulada: erro do provedor não é tratado como ausência de grav
     transport: mockTransport(403, {error:"nao_autorizado"}, {})
   }), /indisponível no provedor/);
 });
+
+test("resposta real anonimizada: gravame baixado não é gravame ativo", () => {
+  // Estrutura e estados observados em uma consulta real; identificadores substituídos.
+  const data = summarizeGravame({
+    veiculo: {placa:"ABC1D23",chassi:"CHASSI_FICTICIO",marcaModelo:""},
+    temGravame:false,
+    situacao:"BAIXADO",
+    situacaoDescricao:"Veículo teve gravame baixado pelo agente financeiro(04)",
+    agenteFinanceiro:{nome:"FINANCEIRA_EXEMPLO",documento:"DOCUMENTO_FICTICIO",codigo:"2949"},
+    restricao:{numero:"RESTRICAO_FICTICIA",data:"28/09/2015",uf:"SP"},
+    contrato:{numero:"CONTRATO_FICTICIO",data:"05/07/2013",uf:"SP"}
+  });
+  assert.equal(data.temGravame,false);
+  assert.equal(data.situacao,"BAIXADO");
+  assert.match(data.situacaoDescricao,/baixado/);
+  assert.equal(data.veiculo.marcaModelo,null);
+  assert.equal(data.agenteFinanceiro.nome,"FINANCEIRA_EXEMPLO");
+  assert.equal(data.contrato.data,"05/07/2013");
+  assert.equal(data.restricao.uf,"SP");
+});
