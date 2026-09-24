@@ -12,11 +12,9 @@ const site = "https://consultaveicular360.com.br";
 let paymentServices = null;
 function configureTelegramPayments(services){paymentServices=services;}
 const keyboard = {inline_keyboard:[
-  [{text:"🚗 Consultar placa",callback_data:"placa"}],
-  [{text:"💳 Ver pacotes",callback_data:"pacotes"}],
-  [{text:"📦 Meus pedidos",callback_data:"pedidos"},{text:"💰 Consultar pagamento",callback_data:"status"}],
-  [{text:"📋 Sobre os relatórios",callback_data:"sobre"}],
-  [{text:"❓ Ajuda",callback_data:"ajuda"}]
+  [{text:"🔎 CONSULTAR PLACA",callback_data:"placa"}],
+  [{text:"💳 Pacotes e preços",callback_data:"pacotes"},{text:"📦 Meus pedidos",callback_data:"pedidos"}],
+  [{text:"💰 Ver pagamento",callback_data:"status"},{text:"❓ Ajuda",callback_data:"ajuda"}]
 ]};
 function send(chatId,text,reply_markup){
   return new Promise((resolve,reject)=>{
@@ -98,9 +96,9 @@ function installTelegramBot(app){
         if(!paymentServices?.cancel)throw new Error("Cancelamento indisponível.");
         await paymentServices.cancel(chatId,Number(callback.data.slice(7)));
       }else if(callback?.data==="ajuda"||message?.text?.trim()==="/ajuda"){
-        await send(chatId,"❓ COMO FUNCIONA\n\n1. Envie a placa do veículo.\n2. Escolha um pacote.\n3. Receba o QR Code e o PIX Copia e Cola.\n4. Após a confirmação do pagamento, o relatório será enviado nesta conversa.\n\nUse /pedidos para acompanhar seu pedido sem gerar outra cobrança. Se ainda não deseja pagar, não precisa selecionar nenhum pacote.",keyboard);
+        await send(chatId,"❓ CENTRAL DE AJUDA\n\n1. Envie a placa.\n2. Escolha o pacote.\n3. Receba o QR Code e o PIX Copia e Cola.\n4. Após a confirmação, o relatório chega aqui.\n\n📋 Os dados dependem da cobertura das fontes consultadas.\n\nUse /pedidos para acompanhar compras. Consultar o status não gera novo PIX.",{inline_keyboard:[[{text:"📦 Meus pedidos",callback_data:"pedidos"}],[{text:"🏠 Voltar ao menu",callback_data:"menu"}]]});
       }else if(callback?.data==="pacotes"){
-        await send(chatId,"💳 Pacotes:\n1 consulta: R$ 18,90\n2 consultas: R$ 32,90\n3 consultas: R$ 44,90\n\nEnvie a placa primeiro para iniciar a compra.",keyboard);
+        await send(chatId,"💳 PACOTES E PREÇOS\n\n🚗 1 consulta — R$ 18,90\n🚙 2 consultas — R$ 32,90\n🚘 3 consultas — R$ 44,90\n\nOs créditos podem ser usados em placas diferentes. Envie sua placa para escolher um pacote.",{inline_keyboard:[[{text:"🔎 Consultar placa",callback_data:"placa"}],[{text:"🏠 Voltar ao menu",callback_data:"menu"}]]});
       }else if(callback?.data==="placa"){
         await send(chatId,"🚗 Digite a placa (ABC1234 ou ABC1D23).\n\nVocê só gera um PIX depois de escolher o pacote.",{inline_keyboard:[[{text:"🏠 Menu principal",callback_data:"menu"}]]});
       }else if(callback?.data?.startsWith("buy:")){
@@ -112,7 +110,7 @@ function installTelegramBot(app){
       }else if(callback?.data==="sobre"){
         await send(chatId,"Os relatórios reúnem dados conforme a cobertura das fontes contratadas. Informações indisponíveis não são garantidas.",keyboard);
       }else if(callback?.data==="menu"||message?.text?.trim().startsWith("/start")||message?.text?.trim().startsWith("/menu")){
-        await send(chatId,"🚗 Bem-vindo ao Consulta Veicular 360!\n\nDigite uma placa para receber seu PIX e, após a confirmação, o relatório aqui no Telegram.",keyboard);
+        await send(chatId,"🚘 CONSULTA VEICULAR 360\n\nConsulte seu veículo em poucos passos. Escolha uma opção abaixo ou envie a placa diretamente.\n\n🔒 PIX e entrega do relatório aqui no Telegram.",keyboard);
       }else if(message?.text){
         const plate=message.text.trim().toUpperCase().replace(/[ -]/g,"");
         if(/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(plate)){
