@@ -120,7 +120,8 @@ function installTelegramBot(app){
             [{text:"💳 1 consulta · R$ 18,90",callback_data:"buy:"+plate+":consulta-completa"}],
             [{text:"💳 2 consultas · R$ 32,90",callback_data:"buy:"+plate+":pacote-2"}],
             [{text:"💳 3 consultas · R$ 44,90",callback_data:"buy:"+plate+":pacote-3"}],
-            [{text:"🔄 Outra placa",callback_data:"placa"}],\n            [{text:"📦 Meus pedidos",callback_data:"pedidos"},{text:"🏠 Menu principal",callback_data:"menu"}]
+            [{text:"🔄 Outra placa",callback_data:"placa"}],
+            [{text:"📦 Meus pedidos",callback_data:"pedidos"},{text:"🏠 Menu principal",callback_data:"menu"}]
           ]});
         }else await send(chatId,"Placa inválida. Use ABC1234 ou ABC1D23.",keyboard);
       }
