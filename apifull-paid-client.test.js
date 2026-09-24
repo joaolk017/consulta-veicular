@@ -2,7 +2,7 @@
 const {test}=require("node:test");
 const assert=require("node:assert/strict");
 const {enabled,fetchComplements}=require("./apifull-paid-client");
-const config={APIFULL_ENABLED:"true",APIFULL_PAID_APPROVED:"confirmed",APIFULL_TOKEN:"test-only",APIFULL_BASE_URL:"https://example.invalid"};
+const config={APIFULL_ENABLED:"true",APIFULL_PAID_APPROVED:"confirmed",APIFULL_TOKEN:"test-only",APIFULL_BASE_URL:"https://api.apifull.com.br"};
 test("sem aprovação comercial não realiza chamadas",async()=>{
   let calls=0;
   const out=await fetchComplements({placa:"ABC1D23"},()=>{calls++;throw Error("não chamar");},{...config,APIFULL_PAID_APPROVED:""});
@@ -25,4 +25,10 @@ test("simula dois serviços sem rede e trata falha HTTP 200",async()=>{
   assert.equal(calls[0].body.placa,"ABC1D23");
   assert.equal(out.rouboFurto.ok,true);
   assert.equal(out.debitos.ok,false);
+});
+
+test("rejeita domínio não oficial sem consultar nem interromper relatório",async()=>{
+  let calls=0;
+  const out=await fetchComplements({placa:"ABC1D23"},()=>{calls++;}, {...config,APIFULL_BASE_URL:"https://example.invalid"});
+  assert.deepEqual(out,{});assert.equal(calls,0);
 });
