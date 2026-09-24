@@ -2821,6 +2821,71 @@ async function runFonteDataStoredCoverageOnce() {
   } catch (err) { console.error("FONTEDATA COVERAGE: falha:", err.message); }
 }
 
+
+async function buildPaidVehicleReport(plate){
+  const vehicle = await getVehicle(plate);
+  let safeVehicle = safeVehicleDetails(vehicle, plate);
+
+  // Aproveita um retorno FonteData já armazenado para a mesma placa, quando existir.
+  // Esta etapa é somente leitura do PostgreSQL: não chama o provedor e não consome crédito.
+  if (pool) {
+    try {
+      const fonteSaved = await pool.query(`
+        SELECT result_json FROM (
+          SELECT result_json, created_at, plate FROM admin_provider_retry_audits
+            WHERE provider='fontedata' AND status='success' AND result_json IS NOT NULL
+          UNION ALL
+          SELECT result_json, created_at, plate FROM admin_provider_audits
+            WHERE provider='fontedata' AND result_json IS NOT NULL
+        ) x
+        WHERE UPPER(plate)=UPPER($1)
+        ORDER BY created_at DESC LIMIT 1
+      `, [plate]);
+      if (fonteSaved.rowCount) {
+        const storedFontePayload = fonteSaved.rows[0].result_json;
+        const fonteVehicle = normalizeFonteDataVehicle(storedFontePayload, plate);
+        safeVehicle = mergeVehicleReports(safeVehicle, fonteVehicle);
+        safeVehicle._storedProviderCoverage = detectProviderCoverageFromStoredPayload(storedFontePayload);
+      }
+    } catch (mergeErr) {
+      console.warn("Relatório 360: FonteData salva não pôde ser combinada:", mergeErr.message);
+    }
+  }
+
+  // O módulo complementar fica DESLIGADO por padrão. Token isolado não ativa cobrança.
+  // Somente veículos de SP com Renavam válido e configuração explicitamente aprovada.
+  // Falha do complemento não altera a entrega nem o crédito da consulta principal.
+  const spComplement = await fetchSPDebts(safeVehicle, requestJson);
+  if (spComplement) safeVehicle.infosimplesSP = spComplement;
+
+  const report360 = buildVehicle360Report(safeVehicle);
+  const coverage360 = analyzeVehicle360Coverage(safeVehicle);
+  const storedCoverage = safeVehicle._storedProviderCoverage || {};
+  if (Array.isArray(coverage360.groups)) {
+    // FonteData salva usa IDs canônicos (leilao, sinistro, gravame etc.).
+    // Marcar cobertura significa apenas que o grupo foi fornecido; nunca
+    // transforma "sem dado" em "sem ocorrência".
+    coverage360.groups = coverage360.groups.map(group =>
+      storedCoverage[group.id] === true ? { ...group, status:"available" } : group
+    );
+    coverage360.available = coverage360.groups.filter(g => g.status === "available").map(g => g.label);
+    coverage360.missing = coverage360.groups.filter(g => g.status !== "available").map(g => g.label);
+    coverage360.availableCount = coverage360.available.length;
+    coverage360.missingCount = coverage360.missing.length;
+  }
+  delete safeVehicle._storedProviderCoverage;
+  report360.coverage = coverage360;
+  const safeApiCaps = calculateSafeApiCaps(55);
+  // Um crédito representa uma consulta. Usa o menor teto por consulta entre os pacotes,
+  // preservando a margem mesmo quando o crédito veio de um pacote promocional.
+  const conservativeCap = Math.min(...safeApiCaps.rows.map(r => r.maxApiCostPerConsult));
+  report360.credproRecommendation = recommendCredProModulesFromCoverage(coverage360, conservativeCap);
+  report360.internalEconomics = calculatePackageEconomics(report360.credproRecommendation.estimatedCost);
+  report360.safeApiCaps = { ...safeApiCaps, appliedPerConsultCap: conservativeCap };
+  report360.optimizerAudit = auditCredProOptimizer();
+  const deliveredVehicle = { ...safeVehicle, report360 };
+  return deliveredVehicle;
+}
 app.post("/api/consulta-completa", async (req, res) => {
   if (!enforceSensitiveRateLimit(req, res, "consulta-completa", 30)) return;
   try {
@@ -2838,67 +2903,8 @@ app.post("/api/consulta-completa", async (req, res) => {
     if (!validPlate(plate)) return res.status(400).json({ error: "placa_invalida", mensagem: "Placa inválida." });
     const debit = await consumeCredit(accountId, plate);
     try {
-      const vehicle = await getVehicle(plate);
-      let safeVehicle = safeVehicleDetails(vehicle, plate);
-
-      // Aproveita um retorno FonteData já armazenado para a mesma placa, quando existir.
-      // Esta etapa é somente leitura do PostgreSQL: não chama o provedor e não consome crédito.
-      if (pool) {
-        try {
-          const fonteSaved = await pool.query(`
-            SELECT result_json FROM (
-              SELECT result_json, created_at, plate FROM admin_provider_retry_audits
-                WHERE provider='fontedata' AND status='success' AND result_json IS NOT NULL
-              UNION ALL
-              SELECT result_json, created_at, plate FROM admin_provider_audits
-                WHERE provider='fontedata' AND result_json IS NOT NULL
-            ) x
-            WHERE UPPER(plate)=UPPER($1)
-            ORDER BY created_at DESC LIMIT 1
-          `, [plate]);
-          if (fonteSaved.rowCount) {
-            const storedFontePayload = fonteSaved.rows[0].result_json;
-            const fonteVehicle = normalizeFonteDataVehicle(storedFontePayload, plate);
-            safeVehicle = mergeVehicleReports(safeVehicle, fonteVehicle);
-            safeVehicle._storedProviderCoverage = detectProviderCoverageFromStoredPayload(storedFontePayload);
-          }
-        } catch (mergeErr) {
-          console.warn("Relatório 360: FonteData salva não pôde ser combinada:", mergeErr.message);
-        }
-      }
-
-      // O módulo complementar fica DESLIGADO por padrão. Token isolado não ativa cobrança.
-      // Somente veículos de SP com Renavam válido e configuração explicitamente aprovada.
-      // Falha do complemento não altera a entrega nem o crédito da consulta principal.
-      const spComplement = await fetchSPDebts(safeVehicle, requestJson);
-      if (spComplement) safeVehicle.infosimplesSP = spComplement;
-
-      const report360 = buildVehicle360Report(safeVehicle);
-      const coverage360 = analyzeVehicle360Coverage(safeVehicle);
-      const storedCoverage = safeVehicle._storedProviderCoverage || {};
-      if (Array.isArray(coverage360.groups)) {
-        // FonteData salva usa IDs canônicos (leilao, sinistro, gravame etc.).
-        // Marcar cobertura significa apenas que o grupo foi fornecido; nunca
-        // transforma "sem dado" em "sem ocorrência".
-        coverage360.groups = coverage360.groups.map(group =>
-          storedCoverage[group.id] === true ? { ...group, status:"available" } : group
-        );
-        coverage360.available = coverage360.groups.filter(g => g.status === "available").map(g => g.label);
-        coverage360.missing = coverage360.groups.filter(g => g.status !== "available").map(g => g.label);
-        coverage360.availableCount = coverage360.available.length;
-        coverage360.missingCount = coverage360.missing.length;
-      }
-      delete safeVehicle._storedProviderCoverage;
-      report360.coverage = coverage360;
-      const safeApiCaps = calculateSafeApiCaps(55);
-      // Um crédito representa uma consulta. Usa o menor teto por consulta entre os pacotes,
-      // preservando a margem mesmo quando o crédito veio de um pacote promocional.
-      const conservativeCap = Math.min(...safeApiCaps.rows.map(r => r.maxApiCostPerConsult));
-      report360.credproRecommendation = recommendCredProModulesFromCoverage(coverage360, conservativeCap);
-      report360.internalEconomics = calculatePackageEconomics(report360.credproRecommendation.estimatedCost);
-      report360.safeApiCaps = { ...safeApiCaps, appliedPerConsultCap: conservativeCap };
-      report360.optimizerAudit = auditCredProOptimizer();
-      const deliveredVehicle = { ...safeVehicle, report360 };
+      const deliveredVehicle = await buildPaidVehicleReport(plate);
+      const report360 = deliveredVehicle.report360;
       await finishCreditQuery(accountId, debit.queryId, true, deliveredVehicle);
       return res.json({ ok:true, paid:true, vehicle:deliveredVehicle, report360, creditosRestantes:debit.balance, price:CONSULTA_SALE_PRICE, currency:"BRL" });
     } catch (err) {
@@ -3091,10 +3097,9 @@ async function pollTelegramOrders(){
         try{
           debit=await consumeCredit(order.account_id,order.plate);
           await pool.query("UPDATE telegram_orders SET query_id=$2,updated_at=NOW() WHERE correlation_id=$1",[order.correlation_id,debit.queryId]);
-          const vehicle=await getVehicle(order.plate);
-          const safe=safeVehicleDetails(vehicle,order.plate);
-          await finishCreditQuery(order.account_id,debit.queryId,true,safe);
-          const report=telegramReport(order.plate,safe);
+          const paidVehicle=await buildPaidVehicleReport(order.plate);
+          await finishCreditQuery(order.account_id,debit.queryId,true,paidVehicle);
+          const report=telegramReport(order.plate,paidVehicle);
           await pool.query("UPDATE telegram_orders SET status='ready',report_text=$2,updated_at=NOW() WHERE correlation_id=$1",[order.correlation_id,report]);
         }catch(e){
           if(debit){try{await finishCreditQuery(order.account_id,debit.queryId,false);}catch(refundErr){console.error("Telegram: estorno pendente",refundErr.message);}}
