@@ -1730,6 +1730,16 @@ function renderSPComplement(v){
   h+='<p class="small">Consulte os órgãos competentes antes de transferir o veículo. A disponibilidade e atualização dos dados dependem da fonte.</p></section>';
   return h;
 }
+function renderApiFullSections(v){
+  const unified=v&&v.report360&&v.report360.unified;
+  if(!unified||!Array.isArray(unified.sections))return '';
+  const items=unified.sections.map(s=>{
+    const available=s.status==='consultado';
+    return '<div class="info" style="margin-top:9px"><b>'+esc(s.title||'Complemento')+'</b><br><span class="small">Fonte: API Full · '+(available?'Dados recebidos':'Não consultado')+'</span>'+
+      (available?'<p class="small" style="margin:7px 0 0">Os dados deste complemento foram recebidos. Consulte os detalhes disponíveis no relatório.</p>':'')+'</div>';
+  }).join('');
+  return '<section class="section" id="paidApiFull" aria-label="Complementos API Full"><b>🔎 Complementos da API Full</b><p class="small">Somente resultados efetivamente consultados são confirmados. Não consultado não significa ausência de ocorrências.</p>'+items+'</section>';
+}
 function renderReport(v){
   track('upsell_pos_consulta_exibido',{product:'upsell-2',source:'pos_consulta'});
   $('consultCard').classList.add('result-mode');
@@ -1758,6 +1768,7 @@ function renderReport(v){
   h+='<nav class="paid-report-jump" aria-label="Ir para uma seção do relatório"><a href="#paidSummary">Indicadores</a><a href="#paidVehicleData">Dados do veículo</a><a href="#paidReportTop">Voltar ao início ↑</a></nav>';
   h+=render360Top(v);
   h+=renderSPComplement(v);
+  h+=renderApiFullSections(v);
   const summaryIndicator=(label,value)=>`<div class="report-summary-item ${value===true?'warn':value===false?'ok':'na'}"><span>${esc(label)}</span><b>${value===true?'⚠ Conferir ocorrência':value===false?'✓ Sem indicação no retorno':'— Não informado'}</b></div>`;
   const restrictionsSummary=Array.isArray(v.restrictions)?`<div class="report-summary-item ${v.restrictions.length?'warn':'ok'}"><span>Restrições listadas</span><b>${v.restrictions.length?'⚠ Registros retornados':'✓ Nenhuma listada no retorno'}</b></div>`:summaryIndicator('Restrições listadas',undefined);
   h+=`<div class="report-summary" id="paidSummary"><div class="report-summary-title">Indicadores do relatório</div><div class="report-legend" aria-label="Legenda dos indicadores"><span class="ok">✓ Sem indicação no retorno</span><span class="warn">⚠ Conferir registro</span><span class="na">— Não informado</span></div><div class="report-summary-grid">${summaryIndicator('Roubo / Furto',inds.theft)}${summaryIndicator('Leilão',inds.auction)}${summaryIndicator('Recall',inds.recall)}${restrictionsSummary}${summaryIndicator('RENAJUD*',inds.renajud)}${summaryIndicator('RENAINF*',inds.renainf)}</div><div class="small" style="margin-top:11px;color:#648092;line-height:1.5">A indicação se refere apenas ao retorno das fontes consultadas. “Não informado” não confirma ausência de ocorrências. *Indicadores relacionados a RENAJUD e RENAINF dependem da cobertura dos provedores.</div></div>`;
