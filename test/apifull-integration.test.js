@@ -34,3 +34,9 @@ test("aceita apenas resposta explicitamente bem-sucedida com dados", () => {
   assert.deepEqual(classifyResponse(200, {status:"sucesso",dados:{leilao:[]}}), {ok:true,data:{leilao:[]}});
   assert.deepEqual(classifyResponse(200, {status:"sucesso"}), {ok:false,reason:"missing_data"});
 });
+
+test("usa a rota atual de roubo e furto por placa", () => {
+  assert.deepEqual(buildRequest("rouboFurto", {placa:"ABC1D23"}), {
+    path:"/api/roubo-furto", method:"POST", body:{link:"roubo-furto",placa:"ABC1D23"}
+  });
+});
