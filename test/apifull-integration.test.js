@@ -1,7 +1,7 @@
 "use strict";
 const assert = require("node:assert/strict");
 const test = require("node:test");
-const { buildRequest, classifyResponse, mergeReport, normalizePlate, normalizeChassis } = require("../apifull-integration");
+const { buildRequest, planComplementaryQueries, classifyResponse, mergeReport, normalizePlate, normalizeChassis } = require("../apifull-integration");
 test("normaliza placa sem chamar provedor", () => {
   assert.equal(normalizePlate("abc-1d23"), "ABC1D23");
   assert.throws(() => normalizePlate("123"), /inválida/);
@@ -39,4 +39,11 @@ test("usa a rota atual de roubo e furto por placa", () => {
   assert.deepEqual(buildRequest("rouboFurto", {placa:"ABC1D23"}), {
     path:"/api/roubo-furto", method:"POST", body:{link:"roubo-furto",placa:"ABC1D23"}
   });
+});
+
+test("planeja serviços sem rede e sem habilitar consultas", () => {
+  const plan = planComplementaryQueries({placa:"ABC1D23"}, ["leilao","gravame","leilao"]);
+  assert.deepEqual(plan.map(x => x.status), ["ready_for_review","pending_chassis"]);
+  assert.equal(plan[1].request, null);
+  assert.equal(plan[0].request.path, "/api/leilao");
 });
