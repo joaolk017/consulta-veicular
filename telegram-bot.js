@@ -45,9 +45,9 @@ async function sendWelcome(chatId){
 function sendWelcomePhoto(chatId,png,caption,reply_markup){
   return new Promise((resolve,reject)=>{
     const boundary="cv360welcome"+crypto.randomBytes(12).toString("hex");
-    const part=(name,value)=>Buffer.from("--"+boundary+"\\r\\nContent-Disposition: form-data; name=\\\""+name+"\\\"\\r\\n\\r\\n"+value+"\\r\\n");
-    const imageHeader=Buffer.from("--"+boundary+"\\r\\nContent-Disposition: form-data; name=\\\"photo\\\"; filename=\\\"telegram-welcome.png\\\"\\r\\nContent-Type: image/png\\r\\n\\r\\n");
-    const body=Buffer.concat([part("chat_id",String(chatId)),part("caption",caption),part("reply_markup",JSON.stringify(reply_markup)),imageHeader,png,Buffer.from("\\r\\n--"+boundary+"--\\r\\n")]);
+    const part=(name,value)=>Buffer.from("--"+boundary+"\r\nContent-Disposition: form-data; name=\""+name+"\"\r\n\r\n"+value+"\r\n");
+    const imageHeader=Buffer.from("--"+boundary+"\r\nContent-Disposition: form-data; name=\"photo\"; filename=\"telegram-welcome.png\"\r\nContent-Type: image/png\r\n\r\n");
+    const body=Buffer.concat([part("chat_id",String(chatId)),part("caption",caption),part("reply_markup",JSON.stringify(reply_markup)),imageHeader,png,Buffer.from("\r\n--"+boundary+"--\r\n")]);
     const req=https.request("https://api.telegram.org/bot"+token+"/sendPhoto",{
       method:"POST",headers:{"Content-Type":"multipart/form-data; boundary="+boundary,"Content-Length":body.length},timeout:15000
     },res=>{let response="";res.on("data",chunk=>{if(response.length<1000)response+=chunk;});res.on("end",()=>res.statusCode===200?resolve():reject(new Error("Telegram welcome photo HTTP "+res.statusCode+": "+response.slice(0,180))));});
@@ -161,7 +161,7 @@ function installTelegramBot(app){
       }else if(callback?.data==="sobre"){
         await send(chatId,"Os relatórios reúnem dados conforme a cobertura das fontes contratadas. Informações indisponíveis não são garantidas.",keyboard);
       }else if(callback?.data==="menu"||message?.text?.trim().startsWith("/start")||message?.text?.trim().startsWith("/menu")){
-        await send(chatId,"🚘 CONSULTA VEICULAR 360\n\n🔎 Envie a placa ou toque em Consultar placa.\n💳 Pague por PIX e receba seu relatório aqui mesmo.",keyboard);
+        await sendWelcome(chatId);
       }else if(message?.text){
         const plate=message.text.trim().toUpperCase().replace(/[ -]/g,"");
         if(/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(plate)){
