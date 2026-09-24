@@ -59,7 +59,7 @@ function installTelegramBot(app){
       }else if(message?.text){
         const plate=message.text.trim().toUpperCase().replace(/[ -]/g,"");
         if(/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(plate) && (/[0-9]/.test(plate[4]) || /^[A-Z]{3}[0-9][A-Z][0-9]{2}$/.test(plate))){
-          await send(chatId,"🚗 Placa recebida: "+plate+"\n\nA consulta completa exige pagamento confirmado ou crédito disponível. Por enquanto, conclua a consulta pelo site; não envie senhas nem códigos de recuperação por aqui.",{inline_keyboard:[[{text:"💳 Consultar no site",url:site}],[{text:"🔄 Outra placa",callback_data:"placa"}]]});
+          await send(chatId,"🚗 Placa recebida: "+plate+"\n\n💳 Consulta completa: R$ 18,90. Toque em PAGAR AGORA para continuar no checkout seguro com sua placa preenchida. O PIX só será gerado após sua confirmação no site.",{inline_keyboard:[[{text:"💳 PAGAR AGORA · R$ 18,90",url:site+"/?placa="+encodeURIComponent(plate)+"&origem=telegram#consultCard"}],[{text:"📦 Ver pacotes",callback_data:"pacotes"}],[{text:"🔄 Outra placa",callback_data:"placa"}]]});
         }else{
           await send(chatId,"Não reconheci uma placa válida. Envie no formato ABC1234 ou ABC1D23. Nenhuma consulta foi cobrada.",keyboard);
         }
