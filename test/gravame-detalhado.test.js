@@ -12,7 +12,7 @@ test("não infere ausência de gravame quando campos faltam", () => {
   const data = summarizeGravame({});
   assert.equal(data.situacao, "INDETERMINADO");
   assert.equal(data.agenteFinanceiro.nome, null);
-  assert.match(data.observacao, /não significa ausência/);
+  assert.match(data.observacao, /não comprovam ausência/);
 });
 test("não executa API com módulo desativado", async () => {
   await assert.rejects(fetchGravameDetalhado("ABC1D23", { apiKey: "test" }), /desativado/);
@@ -21,7 +21,7 @@ test("não executa API sem chave", async () => {
   await assert.rejects(fetchGravameDetalhado("ABC1D23", { enabled: true }), /não configurada/);
 });
 
-test("interpreta schema oficial de gravame ativo", () => {
+test("interpreta formato de exemplo de gravame ativo", () => {
   const data = summarizeGravame({
     temGravame: true, situacao: "ATIVO", situacaoDescricao: "Alienação fiduciária",
     agenteFinanceiro: { nome: "Banco Exemplo", codigo: "123" },
