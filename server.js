@@ -3042,9 +3042,9 @@ async function telegramOrderList(chatId){
   const lines=result.rows.map((order,i)=>{
     const p=paymentProduct(order.product);
     if(order.status==="pending")buttons.push([{text:"💠 Ver PIX · "+order.plate,callback_data:"pix:"+i},{text:"🚫 Cancelar · "+order.plate,callback_data:"cancelask:"+i}]);
-    return "🚗 "+order.plate+" · "+(p?"R$ "+p.amount.toFixed(2).replace(".",","):"Pacote")+"\\n"+(labels[order.status]||"Status em verificação");
+    return "🚗 "+order.plate+" · "+(p?"R$ "+p.amount.toFixed(2).replace(".",","):"Pacote")+"\n"+(labels[order.status]||"Status em verificação");
   });
-  return {text:"📦 SEUS ÚLTIMOS PEDIDOS\\n\\n"+lines.join("\\n\\n")+"\\n\\nVer PIX recupera a cobrança existente. Cancelar exige confirmação.",reply_markup:buttons.length?{inline_keyboard:buttons}:undefined};
+  return {text:"📦 SEUS ÚLTIMOS PEDIDOS\n\n"+lines.join("\n\n")+"\n\nVer PIX recupera a cobrança existente. Cancelar exige confirmação.",reply_markup:buttons.length?{inline_keyboard:buttons}:undefined};
 }
 async function telegramOrderStatus(chatId){return (await telegramOrderList(chatId)).text;}
 async function telegramOrderByIndex(chatId,index){
