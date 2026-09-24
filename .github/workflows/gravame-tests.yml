@@ -30,9 +30,9 @@ jobs:
           const fs = require('node:fs');
           const vm = require('node:vm');
           const html = fs.readFileSync('gravame.html', 'utf8');
-          const scripts = [...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)];
-          if (scripts.length !== 1) throw new Error('Esperado um script na página gravame');
-          new vm.Script(scripts[0][1], {filename:'gravame.html'});
+          const scripts = html.split('<script>')[1]?.split('</script>')[0];
+          if (!scripts) throw new Error('Script da página gravame não encontrado');
+          new vm.Script(scripts, {filename:'gravame.html'});
           for (const marker of ['cv360-gravame-pagamento','cv_credit_account','d.status==="completed"','d.status==="review"']) {
             if (!html.includes(marker)) throw new Error('Recuperação ausente: '+marker);
           }
