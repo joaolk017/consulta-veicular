@@ -3,7 +3,7 @@
 // API Full adapter: disabled by default. Never call this from public routes
 // until the provider's base URL, pdf values and response contract are verified.
 const ENABLED = process.env.APIFULL_ENABLED === "true";
-const BASE_URL = String(process.env.APIFULL_BASE_URL || "").trim().replace(/\/+$/, "");
+const BASE_URL = String(process.env.APIFULL_BASE_URL || "https://api.apifull.com.br").trim().replace(/\/+$/, "");
 const TOKEN = String(process.env.APIFULL_TOKEN || "").trim();
 
 function normalizePlate(value) {
