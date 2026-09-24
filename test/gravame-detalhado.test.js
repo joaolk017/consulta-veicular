@@ -21,7 +21,7 @@ test("não executa API sem chave", async () => {
   await assert.rejects(fetchGravameDetalhado("ABC1D23", { enabled: true }), /não configurada/);
 });
 
-test("interpreta formato de exemplo de gravame ativo", () => {
+test("interpreta o esquema JSON documentado de gravame ativo", () => {
   const data = summarizeGravame({
     temGravame: true, situacao: "ATIVO", situacaoDescricao: "Alienação fiduciária",
     agenteFinanceiro: { nome: "Banco Exemplo", codigo: "123", documento: "00000000000100" },
@@ -34,4 +34,21 @@ test("interpreta formato de exemplo de gravame ativo", () => {
   assert.equal(data.contrato.numero, "C1");
   assert.equal(data.agenteFinanceiro.documento, "00000000000100");
   assert.equal(data.veiculo.chassi, "EXEMPLO");
+});
+
+
+test("interpreta resposta documentada com envelope data", () => {
+  const data = summarizeGravame({data:{
+    veiculo:{placa:"ABC1D23",chassi:"9BWEXEMPLO",marcaModelo:"MODELO"},
+    contrato:{uf:"SP",data:"2026-09-20",numero:"C123"},
+    situacao:"ATIVO",restricao:{uf:"SP",data:"2026-09-21",numero:"R123"},
+    temGravame:true,
+    agenteFinanceiro:{nome:"Banco Exemplo",codigo:"001",documento:"00000000000100"},
+    situacaoDescricao:"Alienação fiduciária"
+  }});
+  assert.equal(data.temGravame,true);
+  assert.equal(data.veiculo.chassi,"9BWEXEMPLO");
+  assert.equal(data.contrato.numero,"C123");
+  assert.equal(data.restricao.numero,"R123");
+  assert.equal(data.agenteFinanceiro.documento,"00000000000100");
 });
