@@ -121,3 +121,17 @@ test("valor de PIX incorreto não libera consulta nem altera compra",async()=>{
     assert.equal(f.purchase.status,"pending");
   } finally {f.restore();}
 });
+
+
+test("produto desativado bloqueia criação de PIX e acesso ao relatório",async()=>{
+  const f=fixture();
+  try {
+    process.env.GRAVAME_DETALHADO_ENABLED="0";
+    const pix=await f.call("/api/gravame/pix/criar",{placa:"ABC1D23"});
+    const report=await f.call("/api/gravame/relatorio");
+    assert.equal(pix.code,404);
+    assert.equal(report.code,404);
+    assert.equal(f.pixCalls,0);
+    assert.equal(f.apiCalls,0);
+  } finally {f.restore();}
+});
