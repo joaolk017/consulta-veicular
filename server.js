@@ -3135,11 +3135,10 @@ async function startTelegramPurchase(chatId,plate,productId){
   await sendTelegramPix(chatId,plate,product,pix);
 }
 function telegramReport(plate,vehicle){
-  // FonteData permanece como base. API Full não é chamada neste fluxo.
-  const { mergeReports } = require("./unified-report");
+  // Exibir apenas o status efetivamente presente no relatório recebido.
+  // Não atribuir FonteData a um retorno básico nem consultar API Full aqui.
   const { telegramComplementText } = require("./apifull-presentation");
-  const unified = vehicle.fontes?.apiFull ? vehicle : mergeReports(vehicle, {});
-  const complementText = telegramComplementText(unified);
+  const complementText = telegramComplementText(vehicle);
   const fields=[["Placa",plate],["Marca/modelo",vehicle.brandModel||vehicle.marcaModelo||vehicle.model],["Ano",vehicle.year||vehicle.modelYear],["Cor",vehicle.color],["Combustível",vehicle.fuel],["Município/UF",vehicle.city||vehicle.uf],["FIPE",vehicle.fipe?.value]];
   const details=fields.filter(x=>x[1]!=null&&typeof x[1]!=="object").map(x=>x[0]+": "+String(x[1])).join("\n");
   const labels={theft:"Roubo/furto",auction:"Leilão",accidentClaim:"Sinistro",lien:"Gravame",recall:"Recall",renajud:"RENAJUD",renainf:"Multas/RENAINF",ipvaPending:"IPVA pendente",chassisRemarked:"Chassi remarcado"};
