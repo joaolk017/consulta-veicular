@@ -1,5 +1,5 @@
 "use strict";
-// Primeira etapa: bot informativo. Não consulta APIs, não cobra nem expõe dados pessoais.
+// Bot de consulta com pagamento PIX integrado ao servidor.
 // Configure TELEGRAM_BOT_TOKEN e TELEGRAM_WEBHOOK_SECRET no Render para ativar.
 const https = require("https");
 const crypto = require("crypto");
@@ -50,7 +50,7 @@ function installTelegramBot(app){
     if(!chatId)return res.json({ok:true});
     try{
       if(callback?.data==="pacotes"){
-        await send(chatId,"💳 Pacotes:\\n1 consulta: R$ 18,90\\n2 consultas: R$ 32,90\\n3 consultas: R$ 44,90\\n\\nEnvie a placa primeiro para iniciar a compra.",keyboard);
+        await send(chatId,"💳 Pacotes:\n1 consulta: R$ 18,90\n2 consultas: R$ 32,90\n3 consultas: R$ 44,90\n\nEnvie a placa primeiro para iniciar a compra.",keyboard);
       }else if(callback?.data==="placa"){
         await send(chatId,"🚗 Digite a placa (ABC1234 ou ABC1D23).");
       }else if(callback?.data?.startsWith("buy:")){
@@ -62,11 +62,11 @@ function installTelegramBot(app){
       }else if(callback?.data==="sobre"){
         await send(chatId,"Os relatórios reúnem dados conforme a cobertura das fontes contratadas. Informações indisponíveis não são garantidas.",keyboard);
       }else if(message?.text?.trim().startsWith("/start")||message?.text?.trim().startsWith("/menu")){
-        await send(chatId,"🚗 Bem-vindo ao Consulta Veicular 360!\\n\\nDigite uma placa para receber seu PIX e, após a confirmação, o relatório aqui no Telegram.",keyboard);
+        await send(chatId,"🚗 Bem-vindo ao Consulta Veicular 360!\n\nDigite uma placa para receber seu PIX e, após a confirmação, o relatório aqui no Telegram.",keyboard);
       }else if(message?.text){
         const plate=message.text.trim().toUpperCase().replace(/[ -]/g,"");
         if(/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(plate)){
-          await send(chatId,"🚗 Placa: "+plate+"\\n\\nEscolha o pacote. O PIX será criado somente após sua escolha.",{inline_keyboard:[
+          await send(chatId,"🚗 Placa: "+plate+"\n\nEscolha o pacote. O PIX será criado somente após sua escolha.",{inline_keyboard:[
             [{text:"💳 1 consulta · R$ 18,90",callback_data:"buy:"+plate+":consulta-completa"}],
             [{text:"💳 2 consultas · R$ 32,90",callback_data:"buy:"+plate+":pacote-2"}],
             [{text:"💳 3 consultas · R$ 44,90",callback_data:"buy:"+plate+":pacote-3"}],
