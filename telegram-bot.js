@@ -85,7 +85,18 @@ function installTelegramBot(app){
     try{
       if(callback?.data==="pedidos"||message?.text?.trim()==="/pedidos"||message?.text?.trim()==="/status"){
         if(!paymentServices?.status)throw new Error("Consulta de pedidos indisponível.");
-        await send(chatId,await paymentServices.status(chatId),keyboard);
+        const listing=await paymentServices.list(chatId);
+        await send(chatId,listing.text,listing.reply_markup||keyboard);
+      }else if(callback?.data?.startsWith("pix:")){
+        if(!paymentServices?.recover)throw new Error("Recuperação indisponível.");
+        await paymentServices.recover(chatId,Number(callback.data.slice(4)));
+      }else if(callback?.data?.startsWith("cancelask:")){
+        const index=Number(callback.data.slice(10));
+        if(!Number.isSafeInteger(index)||index<0||index>4)throw new Error("Pedido inválido.");
+        await send(chatId,"⚠️ Deseja cancelar este pedido? A cobrança será cancelada na Woovi somente se ainda não estiver paga.",{inline_keyboard:[[{text:"🚫 Confirmar cancelamento",callback_data:"cancel:"+index}],[{text:"↩️ Voltar aos pedidos",callback_data:"pedidos"}]]});
+      }else if(callback?.data?.startsWith("cancel:")){
+        if(!paymentServices?.cancel)throw new Error("Cancelamento indisponível.");
+        await paymentServices.cancel(chatId,Number(callback.data.slice(7)));
       }else if(callback?.data==="ajuda"||message?.text?.trim()==="/ajuda"){
         await send(chatId,"❓ COMO FUNCIONA\n\n1. Envie a placa do veículo.\n2. Escolha um pacote.\n3. Receba o QR Code e o PIX Copia e Cola.\n4. Após a confirmação do pagamento, o relatório será enviado nesta conversa.\n\nUse /pedidos para acompanhar seu pedido sem gerar outra cobrança. Se ainda não deseja pagar, não precisa selecionar nenhum pacote.",keyboard);
       }else if(callback?.data==="pacotes"){
