@@ -1088,6 +1088,35 @@ html{scroll-behavior:smooth}
  .hero-grid{min-height:355px!important}
 }
 </style>
+<style id="cv-visual-hotfix-20260924">
+/* Ajustes das capturas: legibilidade, ordem dos preços e largura da apresentação. */
+@media(max-width:900px){
+ html body #consultCard .cv-consult-heading .title{color:#fff!important;-webkit-text-fill-color:#fff!important;text-shadow:none!important}
+ html body #consultCard .cv-consult-heading .sub{color:#d4e4f2!important;-webkit-text-fill-color:#d4e4f2!important}
+ html body .cv-product--consult #consultCard{background:#152f4e!important;background-image:linear-gradient(155deg,#173b60,#0d243e)!important;border-color:#426b91!important}
+ html body .cv-product--consult #consultCard .cv-mobile-expand{background:#126fe3!important;color:#fff!important}
+ html body .cv-product--consult #consultCard .cv-consult-form{background:#102c4b!important}
+ html body .cv-product--consult #consultCard .cv-consult-form .cv-consult-benefits>div span{color:#e0f5e9!important}
+ html body .cv-product--gravame ul{display:none!important}
+ html body .cv-product:not(.cv-product--consult) .cv-package{grid-column:1 / -1!important;grid-row:auto!important;order:10!important}
+ html body .cv-product:not(.cv-product--consult) .cv-product-price{grid-column:3!important;grid-row:1 / span 2!important;order:0!important}
+ html body .cv-product:not(.cv-product--consult) .cv-product-action{grid-column:1 / -1!important;grid-row:auto!important;order:20!important}
+ html body .cv-product:not(.cv-product--consult) .cv-package:first-of-type{margin-top:8px!important}
+ html body .cv-product:not(.cv-product--consult) .cv-product-icon{grid-column:1!important;grid-row:1 / span 2!important}
+ html body .cv-product:not(.cv-product--consult) h2{grid-column:2!important;grid-row:1!important}
+ html body .cv-product:not(.cv-product--consult) p{grid-column:2!important;grid-row:2!important}
+ html body .cv-product:not(.cv-product--consult) .cv-product-price strong{color:#10253f!important}
+ html body .cv-product:not(.cv-product--consult) .cv-product-price{color:#2b4560!important}
+ html body .cv-product:not(.cv-product--consult) .cv-package strong{color:#c58d00!important}
+ html body .cv-product--gravame .cv-product-badge{z-index:2}
+}
+@media(min-width:901px){
+ .hero-grid{min-height:350px!important}
+ .cv-photo-hero{left:42%!important;right:0!important;opacity:1!important}
+ .hero-copy{max-width:57%!important}
+ .cv-products>.cv-product{min-width:0!important}
+}
+</style>
 </head>
 <body>
 <div id="appSplash" class="app-splash" aria-hidden="true"><img src="/file_00000000d76c820e88ceb6c39ce70f0d.png" alt=""></div>
