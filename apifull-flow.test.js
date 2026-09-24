@@ -18,7 +18,7 @@ test("bot só prepara relatório após PIX confirmado e crédito consumido",()=>
  assert.match(server,/if\(String\(charge\.status\|\|""\)\.toUpperCase\(\)!=="COMPLETED"\|\|Number\(charge\.value\)!==product\.cents\)continue/);
  assert.match(server,/const paidVehicle=await buildPaidVehicleReport\(order\.plate\)/);
  assert.match(server,/const report=telegramReport\(order\.plate,paidVehicle\)/);
- assert.match(server,/telegramComplementText\(unified\)/);
+ assert.match(server,/telegramComplementText\(vehicle\)/);
 });
 test("preload une dados já obtidos e não invoca adaptador pago",()=>{
  assert.match(preload,/mergeReports\(baseVehicle, \{\}\)/);
