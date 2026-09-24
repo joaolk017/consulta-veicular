@@ -776,6 +776,51 @@ body {
 }
 @media(max-width:370px){.cv-demo-grid{grid-template-columns:1fr}.cv-trust-strip{grid-template-columns:1fr 1fr}}
 </style>
+<style id="cv-visual-refinement-20260923">
+/* Refinamento visual: prioriza a consulta e reduz rolagem sem alterar checkout. */
+html{scroll-behavior:smooth}
+@media(max-width:900px){
+ .hero-grid{padding:12px 0 22px!important}
+ .hero-copy{display:flex!important;flex-direction:column;gap:9px;text-align:center}
+ .hero-copy>.hero-card{order:0;width:100%;margin:0 auto 6px!important}
+ .hero-copy>.pill{order:1;align-self:center;margin:2px 0 0!important}
+ .hero-copy>h1{order:2;margin:0!important;font-size:clamp(26px,7vw,37px)!important;line-height:1.14!important}
+ .hero-copy>.hero-text{order:3;margin:0 auto!important;line-height:1.48!important}
+ .hero-copy>.firstfold-trust{order:4;margin:4px auto 0!important}
+ .hero-copy>.desktop-side-panel{display:none!important}
+ .hero-card:not(.result-mode)>.title{font-size:22px!important}
+ .hero-card:not(.result-mode){padding:17px!important}
+ .cv-showcase{padding-top:4px}
+ .cv-products{gap:12px}
+ .cv-product{padding:17px 18px!important;border-radius:18px}
+ .cv-product-icon{font-size:27px;margin-bottom:8px}
+ .cv-product h2{font-size:23px;margin:3px 0 8px}
+ .cv-product p{margin:0 0 11px;line-height:1.45}
+ .cv-product ul{gap:7px;margin:0 0 12px}
+ .cv-product li{font-size:13px}
+ .cv-product-price{padding:8px 0 10px}
+ .cv-product-price strong{font-size:27px}
+ .cv-product-action{padding:13px}
+ .cv-trust-strip{margin-top:12px}
+}
+@media(min-width:901px){
+ .hero-copy{align-items:start!important}
+ .hero-copy>.hero-card{align-self:start}
+ .hero-copy>.desktop-side-panel{grid-column:1!important;grid-row:5!important;margin:10px 0 0!important}
+ .hero-copy>.hero-card{grid-column:2!important;grid-row:1/7!important}
+ .cv-products{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
+ .cv-product{padding:22px}
+ .cv-product h2{font-size:22px}
+ .cv-product p{font-size:13px}
+ .cv-product li{font-size:13px}
+}
+@media(max-width:520px){
+ .hero-card .creditbar{padding:12px!important}
+ .hero-card .creditactions{gap:7px}
+ .hero-card .creditactions .secondary{min-height:42px}
+ .cv-demo{margin-top:14px}
+}
+</style>
 </head>
 <body>
 <div id="appSplash" class="app-splash" aria-hidden="true"><img src="/file_00000000d76c820e88ceb6c39ce70f0d.png" alt=""></div>
