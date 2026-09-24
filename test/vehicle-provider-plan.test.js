@@ -29,7 +29,7 @@ test("monta requisição FonteData sem executá-la", () => {
   assert.equal(request.url,"https://app.dabradata.com/api/v1/consulta/consulta-veicular?placa=ABC1D23");
   assert.equal(request.headers["X-API-Key"],"chave-ficticia");
   assert.throws(() => buildFonteDataRequest("ABC1D23",""), /Chave/);
-  assert.throws(() => buildFonteDataRequest("ABC1D23","abc\\r\\nInjected"), /Chave/);
+  assert.throws(() => buildFonteDataRequest("ABC1D23","abc\r\nInjected"), /Chave/);
 });
 
 test("bloqueia cobrança FonteData sem duas confirmações independentes", () => {
