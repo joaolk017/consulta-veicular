@@ -2264,6 +2264,7 @@ app.post("/api/pagamento/pix/qr", async (req, res) => {
   if (!enforceSensitiveRateLimit(req, res, "pix-qr", 30)) return;
   try {
     const token = verifyPaymentToken(req.body && req.body.paymentToken);
+    console.info("PIX QR request:", req.body && req.body.format === "svg" ? "svg" : "png", "payload:", typeof req.body?.copyPaste === "string" ? req.body.copyPaste.length : 0);
     // O código PIX já foi emitido para o checkout; não depender de uma segunda consulta à Woovi.
     const suppliedCode = typeof req.body?.copyPaste === "string" ? req.body.copyPaste.trim() : "";
     let code = "";
