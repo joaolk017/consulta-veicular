@@ -1,0 +1,29 @@
+name: Testes Gravame Detalhado
+on:
+  push:
+    branches: [feature/gravame-detalhado]
+  pull_request:
+    paths:
+      - gravame-detalhado.js
+      - gravame-checkout.js
+      - gravame.html
+      - test/gravame-detalhado.test.js
+      - .github/workflows/gravame-tests.yml
+jobs:
+  gravame:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar sintaxe
+        run: |
+          node --check gravame-detalhado.js
+          node --check gravame-checkout.js
+          node --check server.js
+      - name: Testes sem chamadas externas
+        env:
+          GRAVAME_DETALHADO_ENABLED: '0'
+        run: node --test test/gravame-detalhado.test.js
