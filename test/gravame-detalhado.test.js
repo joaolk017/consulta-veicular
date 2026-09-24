@@ -52,3 +52,55 @@ test("interpreta resposta documentada com envelope data", () => {
   assert.equal(data.restricao.numero,"R123");
   assert.equal(data.agenteFinanceiro.documento,"00000000000100");
 });
+
+const { EventEmitter } = require("node:events");
+
+function mockTransport(statusCode, body, capture) {
+  return {
+    request(url, options, callback) {
+      capture.url = String(url);
+      capture.options = options;
+      const req = new EventEmitter();
+      req.setTimeout = () => {};
+      req.destroy = error => req.emit("error", error);
+      req.end = () => {
+        const res = new EventEmitter();
+        res.statusCode = statusCode;
+        process.nextTick(() => {
+          callback(res);
+          res.emit("data", Buffer.from(JSON.stringify(body)));
+          res.emit("end");
+        });
+      };
+      return req;
+    }
+  };
+}
+
+test("consulta simulada: monta POST, autentica e interpreta JSON sem rede", async () => {
+  const capture = {};
+  const result = await fetchGravameDetalhado("abc1d23", {
+    enabled: true,
+    apiKey: "CHAVE_FICTICIA_NAO_REAL",
+    transport: mockTransport(200, {
+      temGravame: true, situacao: "ATIVO",
+      agenteFinanceiro: {nome:"Banco Simulado",documento:"DOCUMENTO_FICTICIO"},
+      contrato: {numero:"CONTRATO_TESTE"},
+      veiculo: {placa:"ABC1D23",chassi:"CHASSI_FICTICIO"}
+    }, capture)
+  });
+  assert.equal(capture.options.method, "POST");
+  assert.equal(capture.options.headers["X-API-Key"], "CHAVE_FICTICIA_NAO_REAL");
+  assert.equal(new URL(capture.url).searchParams.get("placa"), "ABC1D23");
+  assert.equal(result.details.temGravame, true);
+  assert.equal(result.details.agenteFinanceiro.nome, "Banco Simulado");
+  assert.equal(result.details.contrato.numero, "CONTRATO_TESTE");
+});
+
+test("consulta simulada: erro do provedor não é tratado como ausência de gravame", async () => {
+  await assert.rejects(fetchGravameDetalhado("ABC1D23", {
+    enabled: true,
+    apiKey: "CHAVE_FICTICIA_NAO_REAL",
+    transport: mockTransport(403, {error:"nao_autorizado"}, {})
+  }), /indisponível no provedor/);
+});
