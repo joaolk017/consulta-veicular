@@ -19,8 +19,22 @@ function send(chatId,text,reply_markup){
     req.on("error",reject);req.end(body);
   });
 }
+function registerWebhook(){
+  const body=JSON.stringify({url:site+"/api/telegram/webhook",secret_token:secret,allowed_updates:["message","callback_query"]});
+  const req=https.request("https://api.telegram.org/bot"+token+"/setWebhook",{
+    method:"POST",headers:{"Content-Type":"application/json","Content-Length":Buffer.byteLength(body)},timeout:10000
+  },response=>{let data="";response.on("data",chunk=>data+=chunk);response.on("end",()=>{
+    try{const result=JSON.parse(data);if(response.statusCode===200&&result.ok)console.log("Telegram webhook registrado com sucesso.");
+    else console.error("Telegram webhook: registro falhou (HTTP "+response.statusCode+").");}
+    catch{console.error("Telegram webhook: resposta inválida.");}
+  });});
+  req.on("timeout",()=>req.destroy(new Error("tempo esgotado")));
+  req.on("error",err=>console.error("Telegram webhook: erro de conexão:",err.message));
+  req.end(body);
+}
 function installTelegramBot(app){
   if(!token||!secret){console.log("Telegram bot desativado: configure token e segredo.");return;}
+  registerWebhook();
   app.post("/api/telegram/webhook",async(req,res)=>{
     if(req.get("X-Telegram-Bot-Api-Secret-Token")!==secret)return res.sendStatus(403);
     const update=req.body||{};
