@@ -1259,7 +1259,17 @@ html body section.hero .hero-grid>.cv-photo-hero .cv-hero-car-photo{position:abs
 html body section.hero .hero-grid>.cv-photo-hero .cv-suv-fallback{display:none!important}
 html body section.hero .hero-grid>.cv-photo-hero .cv-photo-glow{pointer-events:none!important}
 @media(max-width:900px){html body section.hero .hero-grid>.cv-photo-hero .cv-hero-car-photo{object-position:55% center!important}}
-</style></head>
+</style><style>
+#paidApiFull{margin-top:20px}
+#paidApiFull .apifull-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}
+#paidApiFull .apifull-item{min-width:0;margin:0!important;padding:14px;border-radius:14px}
+#paidApiFull .apifull-status{display:inline-block;margin-top:7px;font-size:.9rem;line-height:1.5}
+#paidApiFull .apifull-item details{max-width:100%}
+#paidApiFull .apifull-item pre{max-height:320px;overflow:auto;padding:12px;border-radius:10px;font-size:12px;line-height:1.55;background:rgba(0,0,0,.06)}
+@media(max-width:650px){#paidApiFull .apifull-grid{grid-template-columns:minmax(0,1fr);gap:9px}#paidApiFull .apifull-item{padding:12px}#paidApiFull .apifull-item pre{font-size:11px}}
+@media print{#paidApiFull .apifull-grid{display:block}#paidApiFull .apifull-item{break-inside:avoid;margin-bottom:10px!important}}
+</style>
+</head>
 <body>
 <div id="appSplash" class="app-splash" aria-hidden="true"><img src="/file_00000000d76c820e88ceb6c39ce70f0d.png" alt=""></div>
 <section class="hero">
@@ -1739,9 +1749,9 @@ function renderApiFullComplement(v){
     const status=Object.prototype.hasOwnProperty.call(statuses,key)?statuses[key]:'nao_consultado';
     const details=status==='ok'&&v.complementosApiFull&&v.complementosApiFull[key]!=null
       ?'<details style="margin-top:8px"><summary>Ver dados retornados</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere">'+esc(JSON.stringify(v.complementosApiFull[key],null,2))+'</pre></details>':'';
-    return '<div class="info" style="margin-top:8px"><b>'+esc(label)+'</b><br>'+esc(messages[status]||'Não consultado')+details+'</div>';
+    return '<div class="info apifull-item"><b>'+esc(label)+'</b><br><span class="apifull-status">'+esc(messages[status]||'Não consultado')+'</span>'+details+'</div>';
   }).join('');
-  return '<section class="section" id="paidApiFull" aria-label="Dados complementares API Full"><h2>Dados complementares · API Full</h2>'+rows+'<p class="small">Não consultado ou sem dados não significa ausência de débitos, restrições ou ocorrências.</p></section>';
+  return '<section class="section" id="paidApiFull" aria-label="Dados complementares API Full"><h2>Dados complementares · API Full</h2><div class="apifull-grid">'+rows+'</div><p class="small">Não consultado ou sem dados não significa ausência de débitos, restrições ou ocorrências.</p></section>';
 }
 function renderReport(v){
   track('upsell_pos_consulta_exibido',{product:'upsell-2',source:'pos_consulta'});
