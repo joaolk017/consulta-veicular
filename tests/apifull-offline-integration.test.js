@@ -45,3 +45,9 @@ test("Merge preserves FonteData base and only includes confirmed API Full eviden
 test("Paid API Full network calls remain locked", () => {
   assert.throws(() => api.assertPaidCallsDisabled(), { code: "APIFULL_PAID_CALLS_LOCKED" });
 });
+
+test("API Full accepts ordinary tokens but rejects raw CRLF", () => {
+  const request = api.buildAuthorizedRequest("leilao", { placa: "ABC1D23" }, "token-normal");
+  assert.equal(request.headers.Authorization, "Bearer token-normal");
+  assert.throws(() => api.buildAuthorizedRequest("leilao", { placa: "ABC1D23" }, "token\r\nInjected: yes"), /inválido/);
+});
