@@ -8,6 +8,7 @@ on:
       - gravame-checkout.js
       - gravame.html
       - test/gravame-detalhado.test.js
+      - test/gravame-checkout.test.js
       - .github/workflows/gravame-tests.yml
 jobs:
   gravame:
@@ -38,4 +39,4 @@ jobs:
       - name: Testes sem chamadas externas
         env:
           GRAVAME_DETALHADO_ENABLED: '0'
-        run: node --test test/gravame-detalhado.test.js
+        run: node --test test/gravame-detalhado.test.js test/gravame-checkout.test.js
