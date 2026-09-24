@@ -1,7 +1,7 @@
 "use strict";
 const assert = require("node:assert/strict");
 const test = require("node:test");
-const { buildRequest, buildAuthorizedRequest, planComplementaryQueries, classifyResponse, mergeReport, normalizePlate, normalizeChassis } = require("../apifull-integration");
+const { buildRequest, buildAuthorizedRequest, assertPaidCallsDisabled, planComplementaryQueries, classifyResponse, mergeReport, normalizePlate, normalizeChassis } = require("../apifull-integration");
 test("normaliza placa sem chamar provedor", () => {
   assert.equal(normalizePlate("abc-1d23"), "ABC1D23");
   assert.throws(() => normalizePlate("123"), /inválida/);
@@ -55,4 +55,8 @@ test("prepara Bearer Token em memória, sem executar consultas", () => {
   assert.equal(req.body.placa, "ABC1D23");
   assert.throws(() => buildAuthorizedRequest("leilao", {placa:"ABC1D23"}, ""), /Token/);
   assert.throws(() => buildAuthorizedRequest("leilao", {placa:"ABC1D23"}, "abc\\r\\nInjected: yes"), /Token/);
+});
+
+test("bloqueia chamadas pagas mesmo se a variável for ativada por engano", () => {
+  assert.throws(() => assertPaidCallsDisabled(), {code:"APIFULL_PAID_CALLS_LOCKED"});
 });
