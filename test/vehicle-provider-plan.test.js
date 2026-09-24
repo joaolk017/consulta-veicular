@@ -1,7 +1,7 @@
 "use strict";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { planVehicleProviders, validatePaidPlate, buildFonteDataRequest } = require("../vehicle-provider-plan");
+const { planVehicleProviders, validatePaidPlate, buildFonteDataRequest, isFonteDataPaidApproved } = require("../vehicle-provider-plan");
 test("Falcon fica restrita à prévia gratuita no plano", () => {
   assert.deepEqual(planVehicleProviders({plate:"ABC1D23"}), {preview:"falcon",paidBase:null,complements:[]});
 });
@@ -30,4 +30,11 @@ test("monta requisição FonteData sem executá-la", () => {
   assert.equal(request.headers["X-API-Key"],"chave-ficticia");
   assert.throws(() => buildFonteDataRequest("ABC1D23",""), /Chave/);
   assert.throws(() => buildFonteDataRequest("ABC1D23","abc\\r\\nInjected"), /Chave/);
+});
+
+test("bloqueia cobrança FonteData sem duas confirmações independentes", () => {
+  assert.equal(isFonteDataPaidApproved({}), false);
+  assert.equal(isFonteDataPaidApproved({FONTEDATA_PAID_PRIMARY_ENABLED:"true"}), false);
+  assert.equal(isFonteDataPaidApproved({FONTEDATA_PAID_PRIMARY_APPROVED:"confirmed"}), false);
+  assert.equal(isFonteDataPaidApproved({FONTEDATA_PAID_PRIMARY_ENABLED:"true",FONTEDATA_PAID_PRIMARY_APPROVED:"confirmed"}), true);
 });
