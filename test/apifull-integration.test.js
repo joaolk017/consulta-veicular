@@ -1,7 +1,7 @@
 "use strict";
 const assert = require("node:assert/strict");
 const test = require("node:test");
-const { buildRequest, mergeReport, normalizePlate, normalizeChassis } = require("../apifull-integration");
+const { buildRequest, classifyResponse, mergeReport, normalizePlate, normalizeChassis } = require("../apifull-integration");
 test("normaliza placa sem chamar provedor", () => {
   assert.equal(normalizePlate("abc-1d23"), "ABC1D23");
   assert.throws(() => normalizePlate("123"), /inválida/);
@@ -23,4 +23,14 @@ test("não sobrescreve relatório base nem inventa resultados", () => {
   assert.equal(merged.indicators.auction, null);
   assert.deepEqual(Object.keys(merged.complementosApiFull), ["leilao"]);
   assert.equal(merged.complementosApiFull.leilao.source, "API Full");
+});
+
+test("rejeita erro de saldo retornado com HTTP 200", () => {
+  assert.deepEqual(classifyResponse(200, {status:"erro",dados:"Saldo insuficiente"}), {ok:false,reason:"provider_error"});
+  assert.deepEqual(classifyResponse(200, {status:"desconhecido",dados:{}}), {ok:false,reason:"unconfirmed_status"});
+  assert.deepEqual(classifyResponse(503, {status:"sucesso",dados:{}}), {ok:false,reason:"http_error"});
+});
+test("aceita apenas resposta explicitamente bem-sucedida com dados", () => {
+  assert.deepEqual(classifyResponse(200, {status:"sucesso",dados:{leilao:[]}}), {ok:true,data:{leilao:[]}});
+  assert.deepEqual(classifyResponse(200, {status:"sucesso"}), {ok:false,reason:"missing_data"});
 });
