@@ -25,6 +25,20 @@ function buildRequest(service, identifiers = {}) {
   const value = item.input === "placa" ? normalizePlate(identifiers.placa) : normalizeChassis(identifiers.chassi);
   return { path: item.path, method: "POST", body: { link: item.link, [item.input]: value } };
 }
+// Planejamento sem rede: selecionar serviços não os executa.
+const DEFAULT_SERVICES = Object.freeze(["leilao", "rouboFurto", "debitos"]);
+function planComplementaryQueries(identifiers = {}, requested = DEFAULT_SERVICES) {
+  if (!Array.isArray(requested)) throw new Error("Seleção de serviços inválida.");
+  const unique = [...new Set(requested)];
+  return unique.map(name => {
+    const service = SERVICES[name];
+    if (!service) throw new Error("Serviço API Full não autorizado.");
+    if (service.input === "chassi" && !identifiers.chassi) {
+      return { service:name, status:"pending_chassis", request:null };
+    }
+    return { service:name, status:"ready_for_review", request:buildRequest(name, identifiers) };
+  });
+}
 // Endpoints legados podem devolver erro mesmo com HTTP 200.
 function classifyResponse(httpStatus, payload) {
   if (!Number.isInteger(httpStatus) || httpStatus < 200 || httpStatus >= 300) {
@@ -58,4 +72,4 @@ function mergeReport(baseReport, results = {}) {
   if (Object.keys(extra).length) merged.complementosApiFull = extra;
   return merged;
 }
-module.exports = { SERVICES, normalizePlate, normalizeChassis, buildRequest, classifyResponse, mergeReport };
+module.exports = { SERVICES, normalizePlate, normalizeChassis, buildRequest, planComplementaryQueries, classifyResponse, mergeReport };
