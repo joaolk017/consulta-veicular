@@ -24,12 +24,14 @@ test("não executa API sem chave", async () => {
 test("interpreta formato de exemplo de gravame ativo", () => {
   const data = summarizeGravame({
     temGravame: true, situacao: "ATIVO", situacaoDescricao: "Alienação fiduciária",
-    agenteFinanceiro: { nome: "Banco Exemplo", codigo: "123" },
+    agenteFinanceiro: { nome: "Banco Exemplo", codigo: "123", documento: "00000000000100" },
     restricao: { numero: "R1", data: "2026-09-20", uf: "SP" },
     contrato: { numero: "C1", data: "2026-09-19", uf: "SP" },
-    veiculo: { placa: "ABC1D23", marcaModelo: "Modelo" }
+    veiculo: { placa: "ABC1D23", chassi: "EXEMPLO", marcaModelo: "Modelo" }
   });
   assert.equal(data.temGravame, true);
   assert.equal(data.agenteFinanceiro.nome, "Banco Exemplo");
   assert.equal(data.contrato.numero, "C1");
+  assert.equal(data.agenteFinanceiro.documento, "00000000000100");
+  assert.equal(data.veiculo.chassi, "EXEMPLO");
 });
