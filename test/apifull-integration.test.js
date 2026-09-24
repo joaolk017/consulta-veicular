@@ -54,7 +54,7 @@ test("prepara Bearer Token em memória, sem executar consultas", () => {
   assert.equal(req.headers["Content-Type"], "application/json");
   assert.equal(req.body.placa, "ABC1D23");
   assert.throws(() => buildAuthorizedRequest("leilao", {placa:"ABC1D23"}, ""), /Token/);
-  assert.throws(() => buildAuthorizedRequest("leilao", {placa:"ABC1D23"}, "abc\\r\\nInjected: yes"), /Token/);
+  assert.throws(() => buildAuthorizedRequest("leilao", {placa:"ABC1D23"}, "abc\r\nInjected: yes"), /Token/);
 });
 
 test("bloqueia chamadas pagas mesmo se a variável for ativada por engano", () => {
