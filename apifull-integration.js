@@ -25,6 +25,20 @@ function buildRequest(service, identifiers = {}) {
   const value = item.input === "placa" ? normalizePlate(identifiers.placa) : normalizeChassis(identifiers.chassi);
   return { path: item.path, method: "POST", body: { link: item.link, [item.input]: value } };
 }
+// Monta cabeçalhos em memória; não envia requisições nem registra o token.
+function buildAuthorizedRequest(service, identifiers = {}, token = "") {
+  const secret = String(token || "").trim();
+  if (!secret || /[\\r\\n]/.test(secret)) throw new Error("Token API Full ausente ou inválido.");
+  const request = buildRequest(service, identifiers);
+  return {
+    ...request,
+    headers: {
+      Authorization: "Bearer " + secret,
+      Accept: "application/json",
+      "Content-Type": "application/json"
+    }
+  };
+}
 // Planejamento sem rede: selecionar serviços não os executa.
 const DEFAULT_SERVICES = Object.freeze(["leilao", "rouboFurto", "debitos"]);
 function planComplementaryQueries(identifiers = {}, requested = DEFAULT_SERVICES) {
@@ -72,4 +86,4 @@ function mergeReport(baseReport, results = {}) {
   if (Object.keys(extra).length) merged.complementosApiFull = extra;
   return merged;
 }
-module.exports = { SERVICES, normalizePlate, normalizeChassis, buildRequest, planComplementaryQueries, classifyResponse, mergeReport };
+module.exports = { SERVICES, normalizePlate, normalizeChassis, buildRequest, buildAuthorizedRequest, planComplementaryQueries, classifyResponse, mergeReport };
