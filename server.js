@@ -6,6 +6,7 @@ const sharp = require("sharp");
 const QRCode = require("qrcode");
 const { Pool } = require("pg");
 const { fetchSPDebts } = require("./infosimples-sp-debitos");
+const { mergeReport: mergeApiFullReport } = require("./apifull-integration");
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -2857,6 +2858,11 @@ async function buildPaidVehicleReport(plate){
   // Falha do complemento não altera a entrega nem o crédito da consulta principal.
   const spComplement = await fetchSPDebts(safeVehicle, requestJson);
   if (spComplement) safeVehicle.infosimplesSP = spComplement;
+
+  // API Full conectada somente ao estágio de composição do relatório.
+  // Não executar requisições enquanto contrato, preços e autorização não forem validados.
+  // APIFULL_ENABLED e APIFULL_TOKEN, isoladamente, nunca disparam consultas.
+  safeVehicle = mergeApiFullReport(safeVehicle, {});
 
   const report360 = buildVehicle360Report(safeVehicle);
   const coverage360 = analyzeVehicle360Coverage(safeVehicle);
