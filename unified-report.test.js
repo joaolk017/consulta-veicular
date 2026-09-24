@@ -22,3 +22,11 @@ test("divergencias ficam visiveis",()=>{
  assert.equal(merged.divergencias.length,1);
 });
 test("rejeita relatorio FonteData invalido",()=>assert.throws(()=>mergeReports(null),TypeError));
+
+test("não declara duas fontes sem retorno da API Full",()=>{
+ const onlyFonteData=mergeReports({plate:"ABC1D23"},{});
+ assert.equal(onlyFonteData.relatorioUnificado,false);
+ assert.ok(Object.values(onlyFonteData.fontes.apiFull).every(x=>x==="nao_consultado"));
+ const withComplement=mergeReports({plate:"ABC1D23"},{leilao:{status:"ok",dados:{ocorrencias:1}}});
+ assert.equal(withComplement.relatorioUnificado,true);
+});
