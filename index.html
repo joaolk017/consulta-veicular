@@ -1117,6 +1117,32 @@ html{scroll-behavior:smooth}
  .cv-products>.cv-product{min-width:0!important}
 }
 </style>
+<style id="cv-car-photo-layout-fix-20260924">
+/* Fotografia com elemento IMG: não depende de imagens de fundo sobrepostas. */
+.hero .hero-grid{position:relative!important;isolation:isolate!important;overflow:hidden!important}
+.hero .hero-grid>.cv-photo-hero{display:block!important;position:absolute!important;z-index:0!important;inset:0 0 0 43%!important;width:auto!important;height:100%!important;opacity:1!important;background:none!important;filter:none!important;pointer-events:none!important}
+.cv-photo-hero .cv-hero-car-photo{display:block!important;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;object-position:center center!important;opacity:1!important;filter:saturate(1.1) contrast(1.08)!important}
+.cv-photo-hero:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#071a30 0%,#071a3000 32%),linear-gradient(0deg,#071a30 0%,transparent 36%);pointer-events:none}
+.cv-photo-hero .cv-photo-badge{z-index:2}
+.hero .hero-grid>.hero-copy{position:relative!important;z-index:2!important}
+@media(min-width:901px){
+ .hero .hero-grid{min-height:370px!important}
+ .hero .hero-grid>.cv-photo-hero{inset:0 0 0 43%!important}
+ .hero .hero-grid>.hero-copy{max-width:57%!important}
+}
+@media(max-width:900px){
+ .hero .hero-grid{min-height:310px!important;padding:18px 8px 14px!important}
+ .hero .hero-grid>.cv-photo-hero{inset:0 -14% 18% 32%!important;width:auto!important;height:auto!important;opacity:.78!important}
+ .cv-photo-hero .cv-hero-car-photo{object-position:56% center!important}
+ .cv-photo-hero:after{background:linear-gradient(90deg,#071a30 0%,#071a3044 35%,#071a3000 100%),linear-gradient(0deg,#071a30,transparent 55%)}
+ .hero .hero-grid>.hero-copy{max-width:100%!important}
+ .hero-copy>h1{max-width:78%!important}
+ .hero-copy>.hero-text{max-width:73%!important}
+ .hero-copy>.firstfold-trust{margin:24px 0 4px!important}
+ .hero .cv-hero-cta{display:none!important}
+ .cv-products{margin-top:0!important}
+}
+</style>
 </head>
 <body>
 <div id="appSplash" class="app-splash" aria-hidden="true"><img src="/file_00000000d76c820e88ceb6c39ce70f0d.png" alt=""></div>
@@ -1134,7 +1160,7 @@ html{scroll-behavior:smooth}
 <div class="shell">
 <header class="top"><div class="brand"><img src="/logo%20site.png?v=7870a0d9" alt="Consulta Veicular 360" class="site-logo" width="2172" height="724" loading="eager" decoding="async" fetchpriority="high"></div><nav class="nav"><a href="/sobre/">Sobre nós</a><a href="/termos.html">Termos</a><a href="/privacidade.html">Privacidade</a><a href="/reembolso.html">Reembolso</a><a href="/contato.html">Suporte</a></nav><details class="mobile-site-menu"><summary aria-label="Abrir menu de navegação"><span aria-hidden="true">☰</span> Menu</summary><nav aria-label="Menu do celular"><a href="/sobre/">Sobre nós</a><a href="/termos.html">Termos</a><a href="/privacidade.html">Privacidade</a><a href="/reembolso.html">Reembolso</a><a href="/contato.html">Suporte</a></nav></details></header>
 <div class="hero-grid">
-<div class="cv-photo-hero" aria-hidden="true"><div class="cv-photo-glow"></div><div class="cv-photo-badge"><span>🛡️</span><b>CONSULTA<br>SEGURA</b></div></div>
+<div class="cv-photo-hero" aria-hidden="true"><img class="cv-hero-car-photo" src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&amp;fit=crop&amp;w=1400&amp;q=85" alt="" loading="eager" fetchpriority="high"><div class="cv-photo-glow"></div><div class="cv-photo-badge"><span>🛡️</span><b>CONSULTA<br>SEGURA</b></div></div>
 <div class="hero-copy">
 <span class="pill">PRÉVIA GRATUITA POR PLACA</span>
 <h1>Vai comprar<br>um <em>carro usado?</em></h1>
