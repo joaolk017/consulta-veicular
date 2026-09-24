@@ -135,3 +135,19 @@ test("produto desativado bloqueia criação de PIX e acesso ao relatório",async
     assert.equal(f.apiCalls,0);
   } finally {f.restore();}
 });
+
+
+test("duas solicitações simultâneas de relatório não duplicam consulta paga",async()=>{
+  const f=fixture();
+  try {
+    f.setStatus("COMPLETED");
+    const [a,b]=await Promise.all([
+      f.call("/api/gravame/relatorio"),
+      f.call("/api/gravame/relatorio")
+    ]);
+    assert.equal(f.apiCalls,1);
+    assert.equal(f.purchase.status,"completed");
+    assert.ok([a.body.status,b.body.status].includes("completed"));
+    assert.ok([a.body.status,b.body.status].every(x=>["completed","processing","running"].includes(x)));
+  } finally {f.restore();}
+});
