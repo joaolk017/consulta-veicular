@@ -3043,7 +3043,7 @@ async function sendTelegramPix(chatId,plate,product,pix){
     console.error("Telegram: falha ao enviar imagem do QR PIX:",err.message);
     await telegramBot.sendTelegramMessage(chatId,caption+"\n\nNão foi possível exibir a imagem do QR Code. Utilize o código PIX abaixo.");
   }
-  await telegramBot.sendTelegramMessage(chatId,"📋 PIX COPIA E COLA\n\n"+pix+"\n\nApós o pagamento confirmado pela Woovi, seu relatório será enviado automaticamente aqui. Não pague duas vezes.");
+  await telegramBot.sendPixCode(chatId,pix);
 }
 async function startTelegramPurchase(chatId,plate,productId){
   requireDatabase();
