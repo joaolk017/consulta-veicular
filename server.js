@@ -60,8 +60,10 @@ const confirmedPaymentCache = new Map();
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
 app.use(express.json({ limit: "20kb" }));
+// Pagamento e entrega no Telegram reutilizam a Woovi e a carteira existentes.
+const telegramBot = require("./telegram-bot");
 // Bot Telegram isolado: só ativa quando token e segredo estiverem configurados.
-require("./telegram-bot").installTelegramBot(app);
+telegramBot.installTelegramBot(app);
 
 // URLs canônicas para o Google: uma única etapa de redirecionamento.
 // Respeita X-Forwarded-Proto do proxy confiável do Render para evitar loops.
@@ -3006,7 +3008,109 @@ if (!OPENPIX_APP_ID) console.warn("OPENPIX_APP_ID não configurado. O checkout P
 if (!PAYMENT_SIGNING_SECRET) console.warn("PAYMENT_SIGNING_SECRET não configurado.");
 if (!DATABASE_URL) console.warn("DATABASE_URL não configurado. O controle persistente de créditos ficará indisponível.");
 
+
+async function initTelegramOrders(){
+  if(!pool||!process.env.TELEGRAM_BOT_TOKEN||!process.env.TELEGRAM_WEBHOOK_SECRET)return;
+  await pool.query(`CREATE TABLE IF NOT EXISTS telegram_orders(
+    correlation_id TEXT PRIMARY KEY REFERENCES payments(correlation_id),
+    chat_id TEXT NOT NULL,
+    plate TEXT NOT NULL,
+    account_id UUID NOT NULL REFERENCES credit_accounts(id),
+    product TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    report_text TEXT,
+    query_id UUID,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  ); CREATE INDEX IF NOT EXISTS idx_telegram_orders_status ON telegram_orders(status,created_at);`);
+  telegramBot.configureTelegramPayments({start:startTelegramPurchase});
+  setInterval(()=>pollTelegramOrders().catch(e=>console.error("Telegram polling:",e.message)),15000).unref();
+  console.log("Telegram PIX: pagamentos e entrega automática ativados.");
+}
+async function startTelegramPurchase(chatId,plate,productId){
+  requireDatabase();
+  if(!OPENPIX_APP_ID)throw new Error("PIX indisponível.");
+  const product=paymentProduct(productId);
+  if(!product||!validPlate(plate))throw new Error("Pedido inválido.");
+  // Reuse a pending order instead of creating duplicate charges on repeated taps.
+  const existing=await pool.query("SELECT * FROM telegram_orders WHERE chat_id=$1 AND plate=$2 AND product=$3 AND status IN ('pending','processing','ready') AND created_at>NOW()-INTERVAL '25 minutes' ORDER BY created_at DESC LIMIT 1",[String(chatId),plate,productId]);
+  if(existing.rowCount){
+    const order=existing.rows[0];
+    if(order.status==='pending'){
+      const charge=await getOpenPixCharge(order.correlation_id);
+      const pix=charge.brCode||charge.pix?.brCode;
+      if(pix){await telegramBot.sendTelegramMessage(chatId,"💠 PIX pendente para "+plate+"\\nValor: R$ "+product.amount.toFixed(2).replace(".",",")+"\\n\\nPIX Copia e Cola (toque para copiar):\\n"+pix+"\\n\\nApós pagar, a confirmação e a entrega são automáticas.");return;}
+    }
+    await telegramBot.sendTelegramMessage(chatId,"Sua consulta já está em processamento. Aguarde a confirmação automática.");return;
+  }
+  const account=await ensureAccount(null);
+  const correlationID="cv-"+plate+"-"+Date.now()+"-"+crypto.randomBytes(6).toString("hex");
+  const charge=await createOpenPixCharge({correlationID,plate,product});
+  const pix=charge.brCode||charge.pix?.brCode;
+  // Save payment and Telegram order atomically before showing a payable PIX.
+  const client=await pool.connect();
+  try{
+    await client.query("BEGIN");
+    await client.query("INSERT INTO payments(correlation_id,account_id,product,cents,credits) VALUES($1,$2,$3,$4,$5)",[correlationID,account.id,product.id,product.cents,product.credits]);
+    await client.query("INSERT INTO telegram_orders(correlation_id,chat_id,plate,account_id,product) VALUES($1,$2,$3,$4,$5)",[correlationID,String(chatId),plate,account.id,product.id]);
+    await client.query("COMMIT");
+  }catch(e){await client.query("ROLLBACK");throw e;}finally{client.release();}
+  if(!pix){await telegramBot.sendTelegramMessage(chatId,"Cobrança registrada, mas a Woovi não retornou o código PIX. Não gere outra cobrança; contate o suporte.");return;}
+  await telegramBot.sendTelegramMessage(chatId,"💠 PIX para "+plate+"\\n"+product.credits+" consulta(s): R$ "+product.amount.toFixed(2).replace(".",",")+"\\n\\nPIX Copia e Cola (toque para copiar):\\n"+pix+"\\n\\nApós o pagamento confirmado pela Woovi, o relatório será enviado automaticamente aqui. Não pague duas vezes.");
+}
+function telegramReport(plate,vehicle){
+  const fields=[
+    ["Placa",plate],["Marca/modelo",vehicle.brandModel||vehicle.marcaModelo||vehicle.model||vehicle.modelo],
+    ["Ano",vehicle.year||vehicle.modelYear||vehicle.ano],["Cor",vehicle.color||vehicle.cor],
+    ["Combustível",vehicle.fuel||vehicle.combustivel],["Município/UF",vehicle.city||vehicle.municipio||vehicle.uf]
+  ];
+  const details=fields.filter(x=>x[1]!=null&&typeof x[1]!=="object").map(x=>x[0]+": "+String(x[1])).join("\\n");
+  return "🚗 CONSULTA VEICULAR 360\\n\\n"+details+"\\n\\nO relatório completo está salvo na sua carteira. As informações dependem da cobertura das fontes consultadas.";
+}
+let telegramPollRunning=false;
+async function pollTelegramOrders(){
+  if(telegramPollRunning||!pool)return;
+  telegramPollRunning=true;
+  try{
+    const pending=await pool.query("SELECT * FROM telegram_orders WHERE status='pending' AND created_at>NOW()-INTERVAL '24 hours' ORDER BY created_at LIMIT 12");
+    for(const order of pending.rows){
+      try{
+        const product=paymentProduct(order.product);
+        const charge=await getOpenPixCharge(order.correlation_id);
+        if(String(charge.status||"").toUpperCase()!=="COMPLETED"||Number(charge.value)!==product.cents)continue;
+        const checked={paid:true,state:"COMPLETED",payload:{correlationID:order.correlation_id,accountId:order.account_id,product:product.id,cents:product.cents,amount:product.amount},charge};
+        await creditPaidPayment(checked);
+        const claim=await pool.query("UPDATE telegram_orders SET status='processing',updated_at=NOW() WHERE correlation_id=$1 AND status='pending' RETURNING *",[order.correlation_id]);
+        if(!claim.rowCount)continue;
+        let debit;
+        try{
+          debit=await consumeCredit(order.account_id,order.plate);
+          await pool.query("UPDATE telegram_orders SET query_id=$2,updated_at=NOW() WHERE correlation_id=$1",[order.correlation_id,debit.queryId]);
+          const vehicle=await getVehicle(order.plate);
+          const safe=safeVehicleDetails(vehicle,order.plate);
+          await finishCreditQuery(order.account_id,debit.queryId,true,safe);
+          const report=telegramReport(order.plate,safe);
+          await pool.query("UPDATE telegram_orders SET status='ready',report_text=$2,updated_at=NOW() WHERE correlation_id=$1",[order.correlation_id,report]);
+        }catch(e){
+          if(debit){try{await finishCreditQuery(order.account_id,debit.queryId,false);}catch(refundErr){console.error("Telegram: estorno pendente",refundErr.message);}}
+          await pool.query("UPDATE telegram_orders SET status='failed',updated_at=NOW() WHERE correlation_id=$1",[order.correlation_id]);
+          await telegramBot.sendTelegramMessage(order.chat_id,"Pagamento confirmado, mas não foi possível concluir a consulta. Seu crédito foi preservado ou está em verificação. Contate o suporte antes de tentar novamente.").catch(()=>{});
+          console.error("Telegram: falha na consulta:",e.message);
+        }
+      }catch(e){console.error("Telegram: falha ao conferir pagamento:",e.message);}
+    }
+    const ready=await pool.query("SELECT * FROM telegram_orders WHERE status='ready' ORDER BY created_at LIMIT 12");
+    for(const order of ready.rows){
+      try{
+        await telegramBot.sendTelegramMessage(order.chat_id,order.report_text);
+        await pool.query("UPDATE telegram_orders SET status='delivered',updated_at=NOW() WHERE correlation_id=$1 AND status='ready'",[order.correlation_id]);
+      }catch(e){console.error("Telegram: entrega pendente:",e.message);}
+    }
+  }finally{telegramPollRunning=false;}
+}
+
 initDatabase().then(() => {
+  initTelegramOrders().catch(e=>console.error("Telegram PIX: falha na inicialização:",e.message));
   const server = runCredProCatalogMetadataOnce();
 runStoredCoverageDryRunOnStartupOnce();
 runFalconStoredCoverageDryRunOnce();
