@@ -25,7 +25,7 @@ function registerWebhook(){
     method:"POST",headers:{"Content-Type":"application/json","Content-Length":Buffer.byteLength(body)},timeout:10000
   },response=>{let data="";response.on("data",chunk=>data+=chunk);response.on("end",()=>{
     try{const result=JSON.parse(data);if(response.statusCode===200&&result.ok)console.log("Telegram webhook registrado com sucesso.");
-    else console.error("Telegram webhook: registro falhou (HTTP "+response.statusCode+").");}
+    else console.error("Telegram webhook: registro falhou (HTTP "+response.statusCode+", erro "+String(result.description||"não informado").replaceAll(token,"[redacted]").slice(0,300)+").");}
     catch{console.error("Telegram webhook: resposta inválida.");}
   });});
   req.on("timeout",()=>req.destroy(new Error("tempo esgotado")));
