@@ -848,6 +848,53 @@ html{scroll-behavior:smooth}
  .cv-demo{margin-top:14px}
 }
 </style>
+<style id="cv-integrated-consult-20260923">
+/* Consulta Completa é o único cartão de entrada; preserva os IDs e fluxos existentes. */
+.hero-copy>.hero-card{display:none!important}
+.cv-products{align-items:start!important}
+.cv-product--consult{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}
+.cv-product--consult .hero-card{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:19px!important;border:1px solid #39658b!important;border-top:3px solid #f7c344!important;border-radius:20px!important;background:linear-gradient(155deg,#133a59,#0a223a)!important;color:#f4faff!important;box-shadow:0 16px 34px #03101f55!important;text-align:left!important}
+.cv-consult-heading{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.cv-consult-heading>span{font-size:29px;line-height:1}
+.cv-consult-heading .title{color:#fff!important;font-size:24px!important;margin:0 0 3px!important}
+.cv-consult-heading .sub{color:#c7d9e9!important;font-size:12px!important;line-height:1.4!important;margin:0!important}
+.cv-consult-badges{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px}
+.cv-consult-badges span{border:1px solid #396b8c;border-radius:30px;padding:5px 9px;font-size:10px;color:#d2f2df}
+.cv-product--consult .plate-field-label{color:#f4cb61!important}
+.cv-product--consult .plate{background:#f1f7ff!important;color:#203a55!important}
+.cv-product--consult #btn{background:linear-gradient(120deg,#ffda69,#f7bb35)!important;color:#172b3e!important}
+.cv-product--consult .preview-reassurance{color:#b7e8d0!important;font-size:11px!important}
+.cv-consult-benefits{border-top:1px solid #345c7b;margin:13px 0 12px;padding-top:12px;color:#e7f2fc}
+.cv-consult-benefits>b{display:block;font-size:13px;margin-bottom:8px}
+.cv-consult-benefits>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;font-size:11px;color:#c7e6dc}
+.cv-consult-benefits>small{display:block;color:#b9cde0;margin-top:10px;line-height:1.5;font-size:10px}
+.cv-product--consult .creditbar{max-width:none!important;width:100%!important}
+.cv-product--consult .creditbar.zero .creditactions{display:none!important}
+.cv-product--consult .creditbar.zero.credits-expanded .creditactions{display:flex!important}
+.cv-product--consult .creditbar.zero .credit-toggle{display:block!important;align-self:flex-start;min-height:30px;padding:6px 0;border:0;background:transparent;box-shadow:none;color:#a7ddff;font-weight:800;font-size:12px}
+.cv-product--consult .creditbar:not(.zero) .credit-toggle{display:none!important}
+.cv-product--consult .creditbar.zero{background:#163b59!important;border-color:#426b8b!important}
+.cv-product--consult .creditbar.zero #creditLabel,.cv-product--consult .creditbar.zero #creditSummary{color:#fff!important}
+.cv-product--consult .creditbar.zero .creditactions .secondary{font-size:10px!important}
+@media(min-width:901px){
+ .hero-copy{display:block!important;max-width:950px!important;margin:0 auto!important;text-align:center!important}
+ .hero-copy>.pill{display:inline-flex!important;margin:0 auto 12px!important}
+ .hero-copy>h1,.hero-copy>.hero-text{max-width:800px!important;margin:0 auto 12px!important;text-align:center!important}
+ .hero-copy>.firstfold-trust{justify-content:center!important}
+ .hero-copy>.desktop-side-panel{display:none!important}
+ .cv-products{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:900px){
+ .hero-copy>.pill{order:0!important}
+ .hero-copy>h1{order:1!important}
+ .hero-copy>.hero-text{order:2!important}
+ .hero-copy>.firstfold-trust{order:3!important}
+ .cv-showcase{padding-top:10px!important}
+ .cv-product--consult .hero-card{padding:16px!important}
+ .cv-product--consult .plate{height:58px!important;min-height:58px!important;font-size:28px!important}
+ .cv-product--consult #btn{min-height:52px!important;font-size:14px!important}
+}
+</style>
 </head>
 <body>
 <div id="appSplash" class="app-splash" aria-hidden="true"><img src="/file_00000000d76c820e88ceb6c39ce70f0d.png" alt=""></div>
@@ -871,30 +918,25 @@ html{scroll-behavior:smooth}
 <p class="hero-text">Veja uma prévia gratuita e, se quiser, libere o relatório completo por <strong>R$ 18,90</strong>. Informações para apoiar sua negociação.</p>
 <div class="hero-infos firstfold-trust" aria-label="Vantagens da consulta"><span>✓ Prévia gratuita</span><span>✓ Sem assinatura</span><span>✓ PIX só se optar pelo relatório</span></div>
 
-<main class="card hero-card" id="consultCard">
-<div class="title">Comece pela placa</div><div class="sub">Digite a placa para consultar gratuitamente. Não é necessário CPF.</div>
-<label class="plate-field-label" for="plate">PLACA DO VEÍCULO</label>
-<input id="plate" class="plate" maxlength="7" autocomplete="off" inputmode="text" autocapitalize="characters" spellcheck="false" placeholder="ABC1D23" aria-label="Placa do veículo">
-<div id="plateHint" class="small" style="margin:7px 0 0;text-align:center">Digite os 7 caracteres da placa. Ex.: ABC1D23</div>
-<button id="btn" onclick="consultar()">🔎 VER PRÉVIA GRATUITA</button>
-<div class="hero-infos preview-reassurance"><span>✓ Consulte a placa gratuitamente primeiro. Você só paga se quiser liberar o relatório completo.</span></div>
-<a href="/minhas-consultas.html" class="app-account-shortcut" rel="nofollow"><span class="app-account-icon">📋</span><span><b>Minhas Consultas</b><small id="appCreditShortcut">Veja seus relatórios e créditos disponíveis</small></span><strong>›</strong></a>
-<div id="pendingPixBanner" class="info hidden" style="margin:12px 0;text-align:left"><b>💠 Seu PIX ainda está disponível</b><div id="pendingPixText" class="small" style="margin-top:5px"></div><div class="small" style="margin-top:5px">Se você saiu da tela antes de pagar, pode retomar a mesma cobrança enquanto ela estiver válida. Não é necessário gerar outro PIX.</div><button class="pay" style="margin-top:10px" onclick="continuarPixPendente()">RETOMAR PIX PENDENTE</button></div><div id="creditBar" class="creditbar hiddencredit"><span id="creditLabel">Seus créditos</span><strong id="creditSummary"><span id="creditBalance">0</span> consulta(s) disponível(is)</strong><div id="creditResume" class="success hidden" style="margin-top:10px">Você possui consultas disponíveis. Digite uma placa e use seu crédito.</div><button type="button" id="creditToggle" class="credit-toggle" aria-controls="creditActions" aria-expanded="false" onclick="toggleCreditActions()">Acessar meus créditos ▾</button><div class="creditactions" id="creditActions"><button id="creditUseNow" class="pay hiddencredit" onclick="focarConsultaCredito()">USAR CONSULTA AGORA</button><button class="secondary" onclick="abrirRecuperacao()">RECUPERAR CRÉDITOS</button><a href="/minhas-consultas.html" class="secondary creditrecover" rel="nofollow">MINHAS CONSULTAS</a></div></div>
-<div id="status" class="status"></div><div id="result" class="result hidden"></div>
-</main>
+
 </div>
 </div>
 
 
 <section class="cv-showcase" aria-label="Serviços e demonstração da Consulta Veicular 360">
   <div class="cv-products">
-    <article class="cv-product">
-      <div class="cv-product-icon" aria-hidden="true">📋</div>
-      <h2>Consulta Completa</h2>
-      <p>Veja uma prévia por placa e, se desejar, libere os dados disponíveis para analisar um veículo usado.</p>
-      <ul><li>Dados técnicos do veículo</li><li>Indicadores de roubo e furto, quando disponíveis</li><li>Leilão, recall e restrições conforme a fonte</li><li>Relatório organizado para sua análise</li></ul>
-      <div class="cv-product-price">A partir de <strong>R$ 18,90</strong></div>
-      <a class="cv-product-action" href="#consultCard">Consultar agora →</a>
+    <article class="cv-product cv-product--consult">
+<main class="card hero-card" id="consultCard">
+<div class="cv-consult-heading"><span aria-hidden="true">🚘</span><div><div class="title">Consulta Completa</div><div class="sub">Consulte antes de comprar. Digite a placa e veja sua prévia gratuita, sem CPF.</div></div></div><div class="cv-consult-badges"><span>✓ Prévia gratuita</span><span>✓ Sem assinatura</span></div>
+<label class="plate-field-label" for="plate">PLACA DO VEÍCULO</label>
+<input id="plate" class="plate" maxlength="7" autocomplete="off" inputmode="text" autocapitalize="characters" spellcheck="false" placeholder="ABC1D23" aria-label="Placa do veículo">
+<div id="plateHint" class="small" style="margin:7px 0 0;text-align:center">Digite os 7 caracteres da placa. Ex.: ABC1D23</div>
+<button id="btn" onclick="consultar()">🔎 VER PRÉVIA GRATUITA</button>
+<div class="hero-infos preview-reassurance"><span>✓ Você só paga se quiser liberar o relatório completo.</span></div><div class="cv-consult-benefits"><b>O que você pode consultar?</b><div><span>✓ Dados do veículo</span><span>✓ Roubo e furto*</span><span>✓ Leilão e recall*</span><span>✓ Gravame e restrições*</span></div><small>* Conforme disponibilidade das fontes. Relatório completo a partir de <strong>R$ 18,90</strong>.</small></div>
+<a href="/minhas-consultas.html" class="app-account-shortcut" rel="nofollow"><span class="app-account-icon">📋</span><span><b>Minhas Consultas</b><small id="appCreditShortcut">Veja seus relatórios e créditos disponíveis</small></span><strong>›</strong></a>
+<div id="pendingPixBanner" class="info hidden" style="margin:12px 0;text-align:left"><b>💠 Seu PIX ainda está disponível</b><div id="pendingPixText" class="small" style="margin-top:5px"></div><div class="small" style="margin-top:5px">Se você saiu da tela antes de pagar, pode retomar a mesma cobrança enquanto ela estiver válida. Não é necessário gerar outro PIX.</div><button class="pay" style="margin-top:10px" onclick="continuarPixPendente()">RETOMAR PIX PENDENTE</button></div><div id="creditBar" class="creditbar hiddencredit"><span id="creditLabel">Seus créditos</span><strong id="creditSummary"><span id="creditBalance">0</span> consulta(s) disponível(is)</strong><div id="creditResume" class="success hidden" style="margin-top:10px">Você possui consultas disponíveis. Digite uma placa e use seu crédito.</div><button type="button" id="creditToggle" class="credit-toggle" aria-controls="creditActions" aria-expanded="false" onclick="toggleCreditActions()">Acessar meus créditos ▾</button><div class="creditactions" id="creditActions"><button id="creditUseNow" class="pay hiddencredit" onclick="focarConsultaCredito()">USAR CONSULTA AGORA</button><button class="secondary" onclick="abrirRecuperacao()">RECUPERAR CRÉDITOS</button><a href="/minhas-consultas.html" class="secondary creditrecover" rel="nofollow">MINHAS CONSULTAS</a></div></div>
+<div id="status" class="status"></div><div id="result" class="result hidden"></div>
+</main>
     </article>
     <article class="cv-product">
       <div class="cv-product-icon" aria-hidden="true">🪙</div>
