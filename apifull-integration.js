@@ -4,6 +4,7 @@
 // A autenticação e o custo devem ser confirmados antes de habilitar consultas.
 const SERVICES = Object.freeze({
   leilao: Object.freeze({ path: "/api/leilao", link: "leilao", input: "placa" }),
+  rouboFurto: Object.freeze({ path: "/api/roubo-furto", link: "roubo-furto", input: "placa" }),
   fotoLeilao: Object.freeze({ path: "/api/ic-foto-leilao", link: "ic-foto-leilao", input: "placa" }),
   debitos: Object.freeze({ path: "/api/debitos-veicular", link: "debitos-veicular", input: "placa" }),
   gravame: Object.freeze({ path: "/api/gravame", link: "gravame", input: "chassi" })
