@@ -60,6 +60,8 @@ const confirmedPaymentCache = new Map();
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
 app.use(express.json({ limit: "20kb" }));
+// Bot Telegram isolado: só ativa quando token e segredo estiverem configurados.
+require("./telegram-bot").installTelegramBot(app);
 
 // URLs canônicas para o Google: uma única etapa de redirecionamento.
 // Respeita X-Forwarded-Proto do proxy confiável do Render para evitar loops.
