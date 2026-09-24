@@ -14,7 +14,9 @@ function configureTelegramPayments(services){paymentServices=services;}
 const keyboard = {inline_keyboard:[
   [{text:"🚗 Consultar placa",callback_data:"placa"}],
   [{text:"💳 Ver pacotes",callback_data:"pacotes"}],
-  [{text:"📋 Sobre os relatórios",callback_data:"sobre"}]
+  [{text:"📦 Meus pedidos",callback_data:"pedidos"}],
+  [{text:"📋 Sobre os relatórios",callback_data:"sobre"}],
+  [{text:"❓ Ajuda",callback_data:"ajuda"}]
 ]};
 function send(chatId,text,reply_markup){
   return new Promise((resolve,reject)=>{
@@ -81,7 +83,12 @@ function installTelegramBot(app){
     const chatId=message?.chat?.id||callback?.message?.chat?.id;
     if(!chatId)return res.json({ok:true});
     try{
-      if(callback?.data==="pacotes"){
+      if(callback?.data==="pedidos"||message?.text?.trim()==="/pedidos"||message?.text?.trim()==="/status"){
+        if(!paymentServices?.status)throw new Error("Consulta de pedidos indisponível.");
+        await send(chatId,await paymentServices.status(chatId),keyboard);
+      }else if(callback?.data==="ajuda"||message?.text?.trim()==="/ajuda"){
+        await send(chatId,"❓ COMO FUNCIONA\\n\\n1. Envie a placa do veículo.\\n2. Escolha um pacote.\\n3. Receba o QR Code e o PIX Copia e Cola.\\n4. Após a confirmação do pagamento, o relatório será enviado nesta conversa.\\n\\nUse /pedidos para acompanhar seu pedido sem gerar outra cobrança. Se ainda não deseja pagar, não precisa selecionar nenhum pacote.",keyboard);
+      }else if(callback?.data==="pacotes"){
         await send(chatId,"💳 Pacotes:\n1 consulta: R$ 18,90\n2 consultas: R$ 32,90\n3 consultas: R$ 44,90\n\nEnvie a placa primeiro para iniciar a compra.",keyboard);
       }else if(callback?.data==="placa"){
         await send(chatId,"🚗 Digite a placa (ABC1234 ou ABC1D23).");
