@@ -36,6 +36,12 @@ function assertFonteDataSuccess(response) {
       || ["error", "erro", "failed", "failure", "unauthorized"].includes(bodyStatus)) {
     throw new Error("FonteData informou falha no corpo da resposta.");
   }
+  const vehicle = data.veiculo && typeof data.veiculo === "object" && !Array.isArray(data.veiculo)
+    ? data.veiculo : data;
+  const fields = ["marca","modelo","chassi","renavam","anoModelo","anoFabricacao"];
+  if (!fields.some(field => vehicle[field] !== null && vehicle[field] !== undefined && String(vehicle[field]).trim() !== "")) {
+    throw new Error("FonteData não retornou dados suficientes para emitir relatório.");
+  }
   return data;
 }
 function planVehicleProviders({ plate, chassis, paid = false, fonteDataContractVerified = false } = {}) {
