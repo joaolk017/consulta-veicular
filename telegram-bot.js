@@ -25,6 +25,17 @@ function send(chatId,text,reply_markup){
     req.on("error",reject);req.end(body);
   });
 }
+function clearButtons(chatId,messageId){
+  if(!Number.isSafeInteger(messageId)||messageId<=0)return Promise.resolve();
+  return new Promise((resolve,reject)=>{
+    const body=JSON.stringify({chat_id:chatId,message_id:messageId,reply_markup:{inline_keyboard:[]}});
+    const req=https.request("https://api.telegram.org/bot"+token+"/editMessageReplyMarkup",{
+      method:"POST",headers:{"Content-Type":"application/json","Content-Length":Buffer.byteLength(body)},timeout:10000
+    },r=>{r.resume();r.on("end",()=>r.statusCode===200?resolve():reject(new Error("Telegram clear buttons HTTP "+r.statusCode)));});
+    req.on("timeout",()=>req.destroy(new Error("Telegram clear buttons timeout")));
+    req.on("error",reject);req.end(body);
+  });
+}
 function sendPixCode(chatId,pix){
   const raw=String(pix||"").trim();
   if(!raw||raw.length>1024)throw new Error("Código PIX inválido para envio.");
@@ -91,10 +102,20 @@ function installTelegramBot(app){
       }else if(callback?.data?.startsWith("cancelask:")){
         const index=Number(callback.data.slice(10));
         if(!Number.isSafeInteger(index)||index<0||index>4)throw new Error("Pedido inválido.");
-        await send(chatId,"⚠️ Deseja cancelar este pedido? A cobrança será cancelada na Woovi somente se ainda não estiver paga.",{inline_keyboard:[[{text:"🚫 Confirmar cancelamento",callback_data:"cancel:"+index}],[{text:"↩️ Voltar aos pedidos",callback_data:"pedidos"}]]});
+        await send(chatId,"⚠️ Deseja cancelar este pedido? A cobrança será cancelada na Woovi somente se ainda não estiver paga.",{inline_keyboard:[[{text:"🚫 Confirmar cancelamento",callback_data:"cancel:"+index+":"+callback.message.message_id}],[{text:"↩️ Voltar aos pedidos",callback_data:"pedidos"}]]});
       }else if(callback?.data?.startsWith("cancel:")){
         if(!paymentServices?.cancel)throw new Error("Cancelamento indisponível.");
-        await paymentServices.cancel(chatId,Number(callback.data.slice(7)));
+        const parts=callback.data.split(":");
+        const index=Number(parts[1]),orderListMessageId=Number(parts[2]);
+        if(!Number.isSafeInteger(index)||index<0||index>4)throw new Error("Pedido inválido.");
+        const cancelled=await paymentServices.cancel(chatId,index);
+        if(cancelled){
+          // Remove obsolete actions only after Woovi confirms cancellation.
+          await Promise.allSettled([
+            clearButtons(chatId,callback.message?.message_id),
+            clearButtons(chatId,orderListMessageId)
+          ]);
+        }
       }else if(callback?.data==="ajuda"||message?.text?.trim()==="/ajuda"){
         await send(chatId,"❓ CENTRAL DE AJUDA\n\n1. Envie a placa.\n2. Escolha o pacote.\n3. Receba o QR Code e o PIX Copia e Cola.\n4. Após a confirmação, o relatório chega aqui.\n\n📋 Os dados dependem da cobertura das fontes consultadas.\n\nUse /pedidos para acompanhar compras. Consultar o status não gera novo PIX.",{inline_keyboard:[[{text:"📦 Meus pedidos",callback_data:"pedidos"}],[{text:"🏠 Voltar ao menu",callback_data:"menu"}]]});
       }else if(callback?.data==="pacotes"){
