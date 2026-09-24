@@ -12,7 +12,7 @@ function validatePaidPlate(plate) {
 function buildFonteDataRequest(plate, apiKey) {
   const normalized = validatePaidPlate(plate);
   const key = String(apiKey || "").trim();
-  if (!key || /[\\r\\n]/.test(key)) throw new Error("Chave FonteData ausente ou inválida.");
+  if (!key || /[\r\n]/.test(key)) throw new Error("Chave FonteData ausente ou inválida.");
   return {
     url:"https://app.dabradata.com/api/v1/consulta/consulta-veicular?placa=" + encodeURIComponent(normalized),
     method:"GET",
