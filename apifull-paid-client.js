@@ -7,9 +7,10 @@ function enabled(env) {
 }
 async function fetchComplements(identifiers, requestJson, env=process.env) {
   if (!enabled(env)) return {};
-  const base = new URL(env.APIFULL_BASE_URL);
-  if (base.protocol !== "https:" || base.username || base.password || base.search || base.hash)
-    throw new Error("URL base API Full inválida.");
+  let base;
+  try { base = new URL(env.APIFULL_BASE_URL); } catch { return {}; }
+  if (base.protocol !== "https:" || base.hostname !== "api.apifull.com.br" || base.port || base.pathname !== "/" || base.username || base.password || base.search || base.hash)
+    return {};
   const jobs = planComplementaryQueries(identifiers, ["rouboFurto","debitos"]);
   const results = {};
   for (const job of jobs) {
