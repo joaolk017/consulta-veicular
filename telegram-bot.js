@@ -2,8 +2,12 @@
 // Primeira etapa: bot informativo. Não consulta APIs, não cobra nem expõe dados pessoais.
 // Configure TELEGRAM_BOT_TOKEN e TELEGRAM_WEBHOOK_SECRET no Render para ativar.
 const https = require("https");
+const crypto = require("crypto");
 const token = String(process.env.TELEGRAM_BOT_TOKEN || "").trim();
 const secret = String(process.env.TELEGRAM_WEBHOOK_SECRET || "").trim();
+// Telegram only accepts A-Z, a-z, 0-9, underscore and hyphen in its secret token.
+// Hash the configured secret to a valid fixed-length token without changing Render variables.
+const telegramHeaderSecret = secret ? crypto.createHash("sha256").update(secret).digest("hex") : "";
 const site = "https://consultaveicular360.com.br";
 const keyboard = {inline_keyboard:[
   [{text:"🚗 Consultar placa no site",url:site}],
@@ -20,7 +24,7 @@ function send(chatId,text,reply_markup){
   });
 }
 function registerWebhook(){
-  const body=JSON.stringify({url:site+"/api/telegram/webhook",secret_token:secret,allowed_updates:["message","callback_query"]});
+  const body=JSON.stringify({url:site+"/api/telegram/webhook",secret_token:telegramHeaderSecret,allowed_updates:["message","callback_query"]});
   const req=https.request("https://api.telegram.org/bot"+token+"/setWebhook",{
     method:"POST",headers:{"Content-Type":"application/json","Content-Length":Buffer.byteLength(body)},timeout:10000
   },response=>{let data="";response.on("data",chunk=>data+=chunk);response.on("end",()=>{
@@ -36,7 +40,7 @@ function installTelegramBot(app){
   if(!token||!secret){console.log("Telegram bot desativado: configure token e segredo.");return;}
   registerWebhook();
   app.post("/api/telegram/webhook",async(req,res)=>{
-    if(req.get("X-Telegram-Bot-Api-Secret-Token")!==secret)return res.sendStatus(403);
+    if(req.get("X-Telegram-Bot-Api-Secret-Token")!==telegramHeaderSecret)return res.sendStatus(403);
     const update=req.body||{};
     const message=update.message;
     const callback=update.callback_query;
