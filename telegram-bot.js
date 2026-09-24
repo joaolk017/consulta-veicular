@@ -110,7 +110,7 @@ function installTelegramBot(app){
       }else if(callback?.data==="sobre"){
         await send(chatId,"Os relatórios reúnem dados conforme a cobertura das fontes contratadas. Informações indisponíveis não são garantidas.",keyboard);
       }else if(callback?.data==="menu"||message?.text?.trim().startsWith("/start")||message?.text?.trim().startsWith("/menu")){
-        await send(chatId,"🚘 CONSULTA VEICULAR 360\n\nConsulte seu veículo em poucos passos. Escolha uma opção abaixo ou envie a placa diretamente.\n\n🔒 PIX e entrega do relatório aqui no Telegram.",keyboard);
+        await send(chatId,"🚘 CONSULTA VEICULAR 360\n\n🔎 Envie a placa ou toque em Consultar placa.\n💳 Pague por PIX e receba seu relatório aqui mesmo.",keyboard);
       }else if(message?.text){
         const plate=message.text.trim().toUpperCase().replace(/[ -]/g,"");
         if(/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(plate)){
