@@ -4,6 +4,7 @@ on:
     paths:
       - 'apifull-integration.js'
       - 'vehicle-provider-plan.js'
+      - 'unified-vehicle-report.js'
       - 'tests/**'
       - '.github/workflows/offline-api-tests.yml'
   workflow_dispatch:
@@ -21,6 +22,7 @@ jobs:
         run: |
           node --check apifull-integration.js
           node --check vehicle-provider-plan.js
+          node --check unified-vehicle-report.js
           node --check tests/apifull-offline-integration.test.js
       - name: Test API Full and FonteData without network or credentials
         run: node --test tests/apifull-offline-integration.test.js
