@@ -2281,6 +2281,12 @@ app.post("/api/pagamento/pix/qr", async (req, res) => {
     if (typeof code !== "string" || code.length < 30 || code.length > 4096) {
       return res.status(422).json({ mensagem: "Código PIX indisponível para esta cobrança." });
     }
+    if (req.body && req.body.format === "svg") {
+      const svg = await QRCode.toString(code, { type: "svg", width: 420, margin: 2 });
+      res.set("Content-Type", "image/svg+xml; charset=utf-8");
+      res.set("Cache-Control", "no-store");
+      return res.send(svg);
+    }
     const png = await QRCode.toBuffer(code, { type: "png", width: 420, margin: 2 });
     res.set("Content-Type", "image/png");
     res.set("Cache-Control", "no-store");
