@@ -2142,7 +2142,10 @@ app.post("/api/pagamento/pix/criar", async (req, res) => {
     const charge = await createOpenPixCharge({ correlationID, plate, product });
     const copyPaste = charge.brCode || (charge.pix && charge.pix.brCode) || null;
     let qrcodeUrl = null;
+    let qrcodeSvg = null;
     if (copyPaste) {
+      try { qrcodeSvg = await QRCode.toString(copyPaste, { type: "svg", width: 420, margin: 2 }); }
+      catch (qrError) { console.warn("Falha ao gerar QR PIX SVG:", qrError.message); }
       try { qrcodeUrl = await QRCode.toDataURL(copyPaste, { width: 420, margin: 2 }); }
       catch (qrError) { console.warn("Falha ao gerar QR PIX localmente:", qrError.message); }
     }
@@ -2171,6 +2174,7 @@ app.post("/api/pagamento/pix/criar", async (req, res) => {
       status: String(charge.status || "ACTIVE").toUpperCase(),
       copyPaste,
       qrcodeUrl,
+      qrcodeSvg,
       paymentLinkUrl: charge.paymentLinkUrl || null,
       paymentToken,
       accountToken: account.token,
