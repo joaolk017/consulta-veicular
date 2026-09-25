@@ -3222,8 +3222,10 @@ async function startTelegramPurchase(chatId,plate,productId){
   const key=String(chatId)+":"+plate+":"+productId;
   if(telegramPurchaseInFlight.has(key))return; // First request already sent the processing notice.
   telegramPurchaseInFlight.add(key);
+  let noticeId=null;
+  let noticeResult="⚠️ Não foi possível preparar o PIX. Confira Meus pedidos antes de tentar novamente.";
   try{
-    await telegramBot.sendTelegramMessage(chatId,"⏳ Preparando seu PIX para a placa "+plate+". Aguarde alguns instantes e não toque novamente em comprar.");
+    noticeId=await telegramBot.sendTelegramMessage(chatId,"⏳ Preparando seu PIX para a placa "+plate+". Aguarde alguns instantes e não toque novamente em comprar.");
     // Reuse an existing active charge instead of creating another one.
     const existing=await pool.query("SELECT * FROM telegram_orders WHERE chat_id=$1 AND plate=$2 AND product=$3 AND status IN ('pending','processing','ready') AND created_at>NOW()-INTERVAL '25 minutes' ORDER BY created_at DESC LIMIT 1",[String(chatId),plate,productId]);
     if(existing.rowCount){
@@ -3233,7 +3235,7 @@ async function startTelegramPurchase(chatId,plate,productId){
         const state=String(charge.status||"").toUpperCase();
         if(state==="ACTIVE"){
           const pix=charge.brCode||charge.pix?.brCode;
-          if(pix){await sendTelegramPix(chatId,plate,product,pix);return;}
+          if(pix){await sendTelegramPix(chatId,plate,product,pix);noticeResult="✅ PIX pronto! QR Code e copia e cola enviados abaixo.";return;}
           await telegramBot.sendTelegramMessage(chatId,"Já existe uma cobrança ativa, mas o código PIX está indisponível. Consulte Meus pedidos; nenhuma nova cobrança foi gerada.");
           return;
         }
@@ -3269,7 +3271,11 @@ async function startTelegramPurchase(chatId,plate,productId){
       return;
     }
     await sendTelegramPix(chatId,plate,product,pix);
-  }finally{telegramPurchaseInFlight.delete(key);}
+    noticeResult="✅ PIX pronto! QR Code e copia e cola enviados abaixo.";
+  }finally{
+    telegramPurchaseInFlight.delete(key);
+    if(noticeId)await telegramBot.editTelegramMessage(chatId,noticeId,noticeResult).catch(err=>console.error("Telegram: aviso de processamento:",err.message));
+  }
 }
 function telegramReport(plate,vehicle){
   const fields=[["Placa",plate],["Marca/modelo",vehicle.brandModel||vehicle.marcaModelo||vehicle.model],["Ano",vehicle.year||vehicle.modelYear],["Cor",vehicle.color],["Combustível",vehicle.fuel],["Município/UF",vehicle.city||vehicle.uf],["FIPE",vehicle.fipe?.value]];
