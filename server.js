@@ -3212,36 +3212,64 @@ async function sendTelegramPix(chatId,plate,product,pix){
   }
   await telegramBot.sendPixCode(chatId,pix);
 }
+// Prevent repeated taps from starting concurrent Woovi charges in this bot process.
+const telegramPurchaseInFlight=new Set();
 async function startTelegramPurchase(chatId,plate,productId){
   requireDatabase();
   if(!OPENPIX_APP_ID)throw new Error("PIX indisponível.");
   const product=paymentProduct(productId);
   if(!product||!validPlate(plate))throw new Error("Pedido inválido.");
-  // Reuse a pending order instead of creating duplicate charges on repeated taps.
-  const existing=await pool.query("SELECT * FROM telegram_orders WHERE chat_id=$1 AND plate=$2 AND product=$3 AND status IN ('pending','processing','ready') AND created_at>NOW()-INTERVAL '25 minutes' ORDER BY created_at DESC LIMIT 1",[String(chatId),plate,productId]);
-  if(existing.rowCount){
-    const order=existing.rows[0];
-    if(order.status==='pending'){
-      const charge=await getOpenPixCharge(order.correlation_id);
-      const pix=charge.brCode||charge.pix?.brCode;
-      if(pix){await sendTelegramPix(chatId,plate,product,pix);return;}
-    }
-    await telegramBot.sendTelegramMessage(chatId,"Sua consulta já está em processamento. Aguarde a confirmação automática.");return;
-  }
-  const account=await ensureAccount(null);
-  const correlationID="cv-"+plate+"-"+Date.now()+"-"+crypto.randomBytes(6).toString("hex");
-  const charge=await createOpenPixCharge({correlationID,plate,product});
-  const pix=charge.brCode||charge.pix?.brCode;
-  // Save payment and Telegram order atomically before showing a payable PIX.
-  const client=await pool.connect();
+  const key=String(chatId)+":"+plate+":"+productId;
+  if(telegramPurchaseInFlight.has(key))return; // First request already sent the processing notice.
+  telegramPurchaseInFlight.add(key);
   try{
-    await client.query("BEGIN");
-    await client.query("INSERT INTO payments(correlation_id,account_id,product,cents,credits) VALUES($1,$2,$3,$4,$5)",[correlationID,account.id,product.id,product.cents,product.credits]);
-    await client.query("INSERT INTO telegram_orders(correlation_id,chat_id,plate,account_id,product) VALUES($1,$2,$3,$4,$5)",[correlationID,String(chatId),plate,account.id,product.id]);
-    await client.query("COMMIT");
-  }catch(e){await client.query("ROLLBACK");throw e;}finally{client.release();}
-  if(!pix){await telegramBot.sendTelegramMessage(chatId,"Cobrança registrada, mas a Woovi não retornou o código PIX. Não gere outra cobrança; contate o suporte.");return;}
-  await sendTelegramPix(chatId,plate,product,pix);
+    await telegramBot.sendTelegramMessage(chatId,"⏳ Preparando seu PIX para a placa "+plate+". Aguarde alguns instantes e não toque novamente em comprar.");
+    // Reuse an existing active charge instead of creating another one.
+    const existing=await pool.query("SELECT * FROM telegram_orders WHERE chat_id=$1 AND plate=$2 AND product=$3 AND status IN ('pending','processing','ready') AND created_at>NOW()-INTERVAL '25 minutes' ORDER BY created_at DESC LIMIT 1",[String(chatId),plate,productId]);
+    if(existing.rowCount){
+      const order=existing.rows[0];
+      if(order.status==='pending'){
+        const charge=await getOpenPixCharge(order.correlation_id);
+        const state=String(charge.status||"").toUpperCase();
+        if(state==="ACTIVE"){
+          const pix=charge.brCode||charge.pix?.brCode;
+          if(pix){await sendTelegramPix(chatId,plate,product,pix);return;}
+          await telegramBot.sendTelegramMessage(chatId,"Já existe uma cobrança ativa, mas o código PIX está indisponível. Consulte Meus pedidos; nenhuma nova cobrança foi gerada.");
+          return;
+        }
+        if(state==="COMPLETED"){
+          await telegramBot.sendTelegramMessage(chatId,"Pagamento já confirmado. Aguarde o processamento do relatório.");
+          return;
+        }
+        if(["EXPIRED","CANCELLED","CANCELED","REMOVED"].includes(state)){
+          await syncTelegramPendingOrder(order);
+        }else{
+          await telegramBot.sendTelegramMessage(chatId,"Não foi possível verificar sua cobrança anterior. Consulte Meus pedidos antes de tentar novamente.");
+          return;
+        }
+      }else{
+        await telegramBot.sendTelegramMessage(chatId,"Sua consulta já está em processamento. Aguarde a confirmação automática.");
+        return;
+      }
+    }
+    const account=await ensureAccount(null);
+    const correlationID="cv-"+plate+"-"+Date.now()+"-"+crypto.randomBytes(6).toString("hex");
+    const charge=await createOpenPixCharge({correlationID,plate,product});
+    const pix=charge.brCode||charge.pix?.brCode;
+    // Persist payment and Telegram order together before showing the payable PIX.
+    const client=await pool.connect();
+    try{
+      await client.query("BEGIN");
+      await client.query("INSERT INTO payments(correlation_id,account_id,product,cents,credits) VALUES($1,$2,$3,$4,$5)",[correlationID,account.id,product.id,product.cents,product.credits]);
+      await client.query("INSERT INTO telegram_orders(correlation_id,chat_id,plate,account_id,product) VALUES($1,$2,$3,$4,$5)",[correlationID,String(chatId),plate,account.id,product.id]);
+      await client.query("COMMIT");
+    }catch(e){await client.query("ROLLBACK");throw e;}finally{client.release();}
+    if(!pix){
+      await telegramBot.sendTelegramMessage(chatId,"Cobrança registrada, mas a Woovi não retornou o código PIX. Não gere outra cobrança; contate o suporte.");
+      return;
+    }
+    await sendTelegramPix(chatId,plate,product,pix);
+  }finally{telegramPurchaseInFlight.delete(key);}
 }
 function telegramReport(plate,vehicle){
   const fields=[["Placa",plate],["Marca/modelo",vehicle.brandModel||vehicle.marcaModelo||vehicle.model],["Ano",vehicle.year||vehicle.modelYear],["Cor",vehicle.color],["Combustível",vehicle.fuel],["Município/UF",vehicle.city||vehicle.uf],["FIPE",vehicle.fipe?.value]];
