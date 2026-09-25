@@ -43,8 +43,8 @@ const VEHICLE_API_COST_CENTS = 300;
 const PAYMENT_FEE_RATE = 0.008;
 const PACKAGES = Object.freeze({
   "consulta-completa": { id: "consulta-completa", amount: 18.90, cents: 1890, credits: 1, description: "1 consulta veicular completa" },
-  "pacote-2": { id: "pacote-2", amount: 34.90, cents: 3490, credits: 2, description: "Pacote com 2 consultas veiculares" },
-  "pacote-3": { id: "pacote-3", amount: 49.90, cents: 4990, credits: 3, description: "Pacote com 3 consultas veiculares" },
+  "pacote-2": { id: "pacote-2", amount: 32.90, cents: 3290, credits: 2, description: "Pacote com 2 consultas veiculares" },
+  "pacote-3": { id: "pacote-3", amount: 44.90, cents: 4490, credits: 3, description: "Pacote com 3 consultas veiculares" },
   "upsell-2": { id: "upsell-2", amount: 24.90, cents: 2490, credits: 2, description: "Oferta adicional com 2 consultas veiculares" }
 });
 const PAYMENT_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
