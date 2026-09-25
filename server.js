@@ -3118,7 +3118,7 @@ async function initTelegramOrders(){
 }
 async function telegramOrderList(chatId){
   requireDatabase();
-  const result=await pool.query("SELECT correlation_id,plate,product,status,created_at FROM telegram_orders WHERE chat_id=$1 ORDER BY created_at DESC LIMIT 5",[String(chatId)]);
+  const result=await pool.query("SELECT correlation_id,plate,product,status,created_at FROM telegram_orders WHERE chat_id=$1 AND status <> 'cancelled' ORDER BY created_at DESC LIMIT 5",[String(chatId)]);
   if(!result.rowCount)return {text:"📦 Você ainda não possui pedidos neste bot. Envie uma placa para começar.",reply_markup:undefined};
   const labels={pending:"⏳ Aguardando pagamento",cancelling:"🔄 Cancelamento em andamento",cancelled:"🚫 Cancelado",processing:"🔄 Preparando relatório",ready:"📨 Aguardando envio",delivered:"✅ Relatório enviado",failed:"⚠️ Atendimento necessário"};
   const buttons=[];
@@ -3132,7 +3132,7 @@ async function telegramOrderList(chatId){
 async function telegramOrderStatus(chatId){return (await telegramOrderList(chatId)).text;}
 async function telegramOrderByIndex(chatId,index){
   if(!Number.isSafeInteger(index)||index<0||index>4)throw new Error("Pedido inválido.");
-  const result=await pool.query("SELECT * FROM telegram_orders WHERE chat_id=$1 ORDER BY created_at DESC LIMIT 5",[String(chatId)]);
+  const result=await pool.query("SELECT * FROM telegram_orders WHERE chat_id=$1 AND status <> 'cancelled' ORDER BY created_at DESC LIMIT 5",[String(chatId)]);
   return result.rows[index]||null;
 }
 async function telegramRecoverPix(chatId,index){
