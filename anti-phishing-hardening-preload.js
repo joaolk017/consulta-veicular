@@ -227,9 +227,9 @@ function rewriteHomeHtml(html) {
   const transparentNotice = '<div class="info" style="margin-top:12px"><b>O que a consulta completa pode apresentar</b><br>Os campos, indicadores e ocorrências exibidos dependem exclusivamente dos dados realmente disponíveis nas fontes integradas para este veículo.</div>';
   output = output.replace(lockedSequence, transparentNotice);
   output = output.replace(/const lock=l=>`<div class="row"><span>\$\{esc\(l\)\}<\/span><span class="locked">██████ 🔒<\/span><\/div>`;/, 'const lock=function(){return ""};');
-  if (!output.includes('cv-same-origin-pix-hardening')) {
-    output = output.replace('</body>', `${CLIENT_HARDENING_SCRIPT}</body>`);
-  }
+  // Keep the checkout's current showPix implementation; the legacy injected script
+  // overwrote it and used an incompatible v2-only QR endpoint.
+
   return output;
 }
 
@@ -267,9 +267,8 @@ function wrapResponse(req, res, pathname) {
             data.availabilityNotice = 'A consulta completa apresenta somente os dados realmente disponíveis nas fontes integradas para o veículo.';
           }
           if (isPixCreate) {
-            delete data.qrcodeUrl;
-            delete data.paymentLinkUrl;
-            data.qrcodeEndpoint = '/api/pagamento/pix/qrcode';
+            // Preserve the locally generated QR image and SVG from the current checkout.
+            // The legacy endpoint expects v2 tokens; current payment tokens are v3.
           }
           body = Buffer.from(JSON.stringify(data), 'utf8');
         }
