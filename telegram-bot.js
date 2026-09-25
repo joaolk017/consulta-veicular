@@ -23,7 +23,7 @@ function send(chatId,text,reply_markup){
     const body=JSON.stringify({chat_id:chatId,text,reply_markup,disable_web_page_preview:true});
     const req=https.request("https://api.telegram.org/bot"+token+"/sendMessage",{
       method:"POST",headers:{"Content-Type":"application/json","Content-Length":Buffer.byteLength(body)}
-    },r=>{let s="";r.on("data",c=>s+=c);r.on("end",()=>r.statusCode===200?resolve():reject(new Error("Telegram HTTP "+r.statusCode)));});
+    },r=>{let s="";r.on("data",c=>s+=c);r.on("end",()=>{if(r.statusCode!==200)return reject(new Error("Telegram HTTP "+r.statusCode));try{const result=JSON.parse(s);resolve(result.result?.message_id||null);}catch{resolve(null);}});});
     req.on("error",reject);req.end(body);
   });
 }
@@ -44,6 +44,17 @@ async function sendWelcome(chatId){
     }catch(err){console.error("Telegram: imagem de boas-vindas indisponível:",err.message);}
   }
   await send(chatId,caption,keyboard);
+}
+function editTelegramMessage(chatId,messageId,text){
+  if(!Number.isSafeInteger(messageId)||messageId<=0)return Promise.resolve();
+  return new Promise((resolve,reject)=>{
+    const body=JSON.stringify({chat_id:chatId,message_id:messageId,text});
+    const req=https.request("https://api.telegram.org/bot"+token+"/editMessageText",{
+      method:"POST",headers:{"Content-Type":"application/json","Content-Length":Buffer.byteLength(body)},timeout:10000
+    },r=>{r.resume();r.on("end",()=>r.statusCode===200?resolve():reject(new Error("Telegram edit message HTTP "+r.statusCode)));});
+    req.on("timeout",()=>req.destroy(new Error("Telegram edit timeout")));
+    req.on("error",reject);req.end(body);
+  });
 }
 function sendWelcomePhoto(chatId,png,caption,reply_markup){
   return new Promise((resolve,reject)=>{
@@ -194,4 +205,4 @@ function installTelegramBot(app){
     }catch(e){console.error("Falha no envio Telegram:",e.message);res.sendStatus(503);}
   });
 }
-module.exports={installTelegramBot,configureTelegramPayments,sendTelegramMessage:send,sendPixPhoto,sendPixCode};
+module.exports={installTelegramBot,configureTelegramPayments,sendTelegramMessage:send,editTelegramMessage,sendPixPhoto,sendPixCode};
