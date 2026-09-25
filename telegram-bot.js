@@ -58,6 +58,17 @@ function sendWelcomePhoto(chatId,png,caption,reply_markup){
     req.on("error",reject);req.end(body);
   });
 }
+function acknowledgeCallback(callbackId,text){
+  if(!callbackId)return Promise.resolve();
+  return new Promise((resolve,reject)=>{
+    const body=JSON.stringify({callback_query_id:callbackId,text,show_alert:false});
+    const req=https.request("https://api.telegram.org/bot"+token+"/answerCallbackQuery",{
+      method:"POST",headers:{"Content-Type":"application/json","Content-Length":Buffer.byteLength(body)},timeout:5000
+    },r=>{r.resume();r.on("end",()=>r.statusCode===200?resolve():reject(new Error("Telegram callback HTTP "+r.statusCode)));});
+    req.on("timeout",()=>req.destroy(new Error("Telegram callback timeout")));
+    req.on("error",reject);req.end(body);
+  });
+}
 function clearButtons(chatId,messageId){
   if(!Number.isSafeInteger(messageId)||messageId<=0)return Promise.resolve();
   return new Promise((resolve,reject)=>{
@@ -160,6 +171,8 @@ function installTelegramBot(app){
         const parts=callback.data.split(":");
         const plate=parts[1],product=parts[2];
         if(!/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(plate)||!["consulta-completa","pacote-2","pacote-3"].includes(product))throw new Error("Pedido inválido.");
+        // Acknowledge the tap immediately so Telegram does not keep spinning.
+        await acknowledgeCallback(callback.id,"⏳ Preparando seu PIX...").catch(err=>console.error("Telegram callback:",err.message));
         await paymentServices.start(chatId,plate,product);
       }else if(callback?.data==="sobre"){
         await send(chatId,"Os relatórios reúnem dados conforme a cobertura das fontes contratadas. Informações indisponíveis não são garantidas.",keyboard);
