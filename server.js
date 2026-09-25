@@ -3160,16 +3160,24 @@ async function telegramOrderByIndex(chatId,index){
 async function telegramRecoverPix(chatId,index){
   const order=await telegramOrderByIndex(chatId,index);
   if(!order||order.status!=="pending"){await telegramBot.sendTelegramMessage(chatId,"Esse pedido não possui PIX pendente. Consulte Meus pedidos.");return;}
-  const charge=await getOpenPixCharge(order.correlation_id);
-  if(String(charge.status||"").toUpperCase()==="COMPLETED"){await telegramBot.sendTelegramMessage(chatId,"Pagamento confirmado pela Woovi. Aguarde o processamento do relatório.");return;}
-  if(String(charge.status||"").toUpperCase()!=="ACTIVE"){
-    await syncTelegramPendingOrder(order);
-    await telegramBot.sendTelegramMessage(chatId,"Esta cobrança não está ativa. Se expirou ou foi cancelada, ela será retirada de Meus pedidos. Nenhum novo PIX foi gerado.");
-    return;
+  const noticeId=await telegramBot.sendTelegramMessage(chatId,"⏳ Recuperando seu PIX existente. Aguarde alguns instantes.");
+  let result="⚠️ Não foi possível recuperar o PIX. Confira Meus pedidos antes de tentar novamente.";
+  try{
+    const charge=await getOpenPixCharge(order.correlation_id);
+    const state=String(charge.status||"").toUpperCase();
+    if(state==="COMPLETED"){result="✅ Pagamento confirmado pela Woovi. Aguarde o processamento do relatório.";return;}
+    if(state!=="ACTIVE"){
+      await syncTelegramPendingOrder(order);
+      result="⚠️ Esta cobrança não está ativa. Se expirou ou foi cancelada, será retirada de Meus pedidos. Nenhum novo PIX foi gerado.";
+      return;
+    }
+    const pix=charge.brCode||charge.pix?.brCode;
+    if(!pix){result="⚠️ A Woovi não retornou o código PIX deste pedido. Nenhuma nova cobrança foi gerada.";return;}
+    await sendTelegramPix(chatId,order.plate,paymentProduct(order.product),pix);
+    result="✅ PIX recuperado! QR Code e copia e cola enviados abaixo.";
+  }finally{
+    if(noticeId)await telegramBot.editTelegramMessage(chatId,noticeId,result).catch(err=>console.error("Telegram: aviso PIX recuperado:",err.message));
   }
-  const pix=charge.brCode||charge.pix?.brCode;
-  if(!pix)throw new Error("A Woovi não retornou o código PIX deste pedido.");
-  await sendTelegramPix(chatId,order.plate,paymentProduct(order.product),pix);
 }
 async function telegramCancelOrder(chatId,index){
   const order=await telegramOrderByIndex(chatId,index);
