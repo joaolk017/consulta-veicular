@@ -7,7 +7,7 @@
 </style><link rel="stylesheet" href="/minhas-consultas-premium.css?v=4"></head><body class="premium-account">
 <header class="top"><div class="topin"><div class="brand"><a href="/" aria-label="Consulta Veicular 360 — página inicial"><img src="/logo%20site.png?v=7870a0d9" alt="Consulta Veicular 360" width="252" height="84"></a></div><a class="back" href="/">← Voltar ao site</a></div></header>
 <main class="wrap"><section class="hero" aria-labelledby="accountTitle"><div class="hero-copy"><span class="pa-eyebrow">✦ SUA CENTRAL 360</span><h1 id="accountTitle">Tudo sobre seus veículos em um só lugar.</h1><div class="muted">Acesse seus relatórios, utilize seus créditos e organize a próxima compra com o Assistente de Compra 360.</div><div id="accountEmail" class="muted" aria-live="polite"></div></div><div class="balance"><span class="balance-icon" aria-hidden="true">◈</span><span class="muted">CRÉDITOS DISPONÍVEIS</span><strong id="balance" aria-live="polite">—</strong><span class="muted">consultas para usar</span></div></section>
-<div class="actions pa-top-actions"><button type="button" class="btn primary" onclick="location.href='/'">＋ Nova consulta</button><button type="button" id="historyRefresh" class="btn secondary" onclick="load()">↻ Atualizar meus dados</button><button type="button" class="btn secondary" onclick="openRecovery()">✉ Recuperar por e-mail</button></div>
+<div class="actions pa-top-actions"><button type="button" class="btn primary" onclick="location.href='/'">＋ Nova consulta</button><button type="button" id="historyRefresh" class="btn secondary" onclick="load()">↻ Atualizar meus dados</button></div>
 <div id="msg"></div>
 
 <section class="card ac360-account-box premium-assistant" id="assistente" aria-labelledby="assistenteTitle">
@@ -60,7 +60,6 @@
   </div>
 </div>
 <div id="reportModal" class="overlay hidden"><div class="modal"><button class="close noprint" onclick="closeReport()">✕</button><div id="report"></div></div></div>
-<div id="recoveryModal" class="overlay hidden"><div class="modal"><button class="close" onclick="closeRecovery()">✕</button><h2>Recuperar acesso</h2><p class="muted">Enviaremos um código de 6 números se o e-mail estiver cadastrado.</p><div class="info"><b>Código de recuperação dos créditos da Consulta Veicular 360</b><br>Este código serve somente para recuperar seus créditos e histórico. Não é senha bancária nem código de autenticação de outra conta.<br><br><b>Segurança:</b> nunca solicitaremos sua senha de e-mail, senha bancária ou código de autenticação de terceiros.</div><div id="stepEmail" class="recover"><label><b>E-mail</b></label><input id="email" type="email" autocomplete="email" placeholder="seuemail@exemplo.com"><button id="recoverySendButton" class="btn primary" onclick="sendCode()">ENVIAR CÓDIGO</button></div><div id="stepCode" class="recover hidden"><label><b>Código de recuperação</b></label><input id="code" class="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000"><button id="recoveryVerifyButton" class="btn primary" onclick="verifyCode()">CONFIRMAR CÓDIGO</button></div><div id="recoveryMsg" style="margin-top:12px"></div></div></div>
 <script src="/assistente-compra.js?v=10"></script>
 <script>
 /* GUIA 360 V3 — navegação autônoma: as abas respondem inclusive na prévia já renderizada. */
@@ -333,7 +332,7 @@ var Escolha360 = (function () {
   function compare(){
     if(chosen.length<2||chosen.length>3)return;
     var token=accountToken();
-    if(!token){message("Recupere sua conta por e-mail antes de comparar os relatórios.",true);return;}
+    if(!token){message("Os relatórios deste aparelho não estão disponíveis. Consulte o suporte se precisar de ajuda.",true);return;}
     var btn=el("c360CompareBtn");btn.disabled=true;btn.textContent="CARREGANDO RELATÓRIOS...";
     message("");
     Promise.all(chosen.map(function(id){
@@ -416,7 +415,7 @@ async function load(){
     document.getElementById('balance').textContent='0';
     document.getElementById('accountEmail').textContent='';
     Escolha360.sync([]);
-    document.getElementById('history').innerHTML='<div class="empty">Nenhuma conta encontrada neste aparelho. Use <b>Recuperar por e-mail</b> para restaurar seus créditos e histórico.</div>';
+    document.getElementById('history').innerHTML='<div class="empty">Nenhuma conta encontrada neste aparelho. Se já comprou consultas, entre em contato pelo canal de suporte.</div>';
     return;
   }
   try {
