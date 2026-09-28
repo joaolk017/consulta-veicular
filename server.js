@@ -316,7 +316,7 @@ async function bindRecoveryEmail(accountId, email) {
   requireDatabase();
   const normalized = normalizeEmail(email);
   const existing = await pool.query("SELECT id FROM credit_accounts WHERE LOWER(email)=LOWER($1) AND id<>$2 LIMIT 1", [normalized, accountId]);
-  if (existing.rowCount) throw Object.assign(new Error("Este e-mail já está vinculado a outra conta. Use a opção Recuperar créditos."), { status: 409 });
+  if (existing.rowCount) throw Object.assign(new Error("Este e-mail já está vinculado a outra conta. Entre em contato com o suporte."), { status: 409 });
   await pool.query("UPDATE credit_accounts SET email=$1, updated_at=NOW() WHERE id=$2", [normalized, accountId]);
   return normalized;
 }
@@ -1958,91 +1958,13 @@ app.get("/api/consulta/:plate", async (req, res) => {
 app.post("/api/creditos/conta", async (req, res) => {
   try {
     const account = await ensureAccount(req.body && req.body.accountToken);
-    // O e-mail é opcional ao apenas restaurar/criar a carteira no navegador.
-    // Quando informado explicitamente, vincula a carteira para recuperação.
-    if (req.body && req.body.email) await bindRecoveryEmail(account.id, req.body.email);
     return res.json({ ok:true, accountToken:account.token, creditos:account.balance });
   } catch(err) { return res.status(err.status || 503).json({ error:"creditos_indisponiveis", mensagem:err.message }); }
 });
 
-app.post("/api/creditos/recuperar/solicitar", async (req, res) => {
-  const ipLimit = useRateLimit(recoveryRateStore, "request-ip:" + clientIp(req), 5);
-  if (!ipLimit.allowed) {
-    res.set("Retry-After", String(ipLimit.retryAfter));
-    return res.status(429).json({ mensagem: "Muitas solicitações de recuperação. Aguarde antes de tentar novamente." });
-  }
-  try {
-    requireDatabase();
-    const email = normalizeEmail(req.body && req.body.email);
-    // Limite adicional por endereço: impede que vários IPs sejam usados para bombardear
-    // a mesma caixa de entrada com códigos e protege a reputação do remetente.
-    const emailKey = crypto.createHash("sha256").update(email).digest("hex");
-    const emailLimit = useRateLimit(recoveryRateStore, "request-email:" + emailKey, 3);
-    if (!emailLimit.allowed) {
-      res.set("Retry-After", String(emailLimit.retryAfter));
-      return res.status(429).json({ mensagem: "Muitas solicitações de recuperação. Aguarde antes de tentar novamente." });
-    }
-    const recent = await pool.query(
-      "SELECT created_at FROM credit_recovery_codes WHERE LOWER(email)=LOWER($1) AND created_at>NOW()-INTERVAL '60 seconds' ORDER BY created_at DESC LIMIT 1",
-      [email]
-    );
-    if (recent.rowCount) {
-      res.set("Retry-After", "60");
-      return res.status(429).json({ mensagem: "Aguarde 60 segundos antes de solicitar outro código." });
-    }
-    const found = await pool.query("SELECT id FROM credit_accounts WHERE LOWER(email)=LOWER($1) LIMIT 1", [email]);
-    // Resposta neutra para não revelar quais e-mails possuem conta.
-    if (!found.rowCount) return res.json({ ok: true, mensagem: "Se o e-mail estiver cadastrado, enviaremos um código de recuperação." });
-    const accountId = found.rows[0].id;
-    await pool.query("UPDATE credit_recovery_codes SET used_at=NOW() WHERE account_id=$1 AND used_at IS NULL", [accountId]);
-    const id = crypto.randomUUID();
-    const code = String(crypto.randomInt(0, 1000000)).padStart(6, "0");
-    const hash = recoveryCodeHash(id, code);
-    await pool.query("INSERT INTO credit_recovery_codes(id,account_id,email,code_hash,expires_at) VALUES($1,$2,$3,$4,NOW()+INTERVAL '10 minutes')", [id, accountId, email, hash]);
-    try {
-      await sendRecoveryEmail(email, code);
-    } catch (e) {
-      await pool.query("UPDATE credit_recovery_codes SET used_at=NOW() WHERE id=$1", [id]);
-      throw e;
-    }
-    res.json({ ok: true, mensagem: "Se o e-mail estiver cadastrado, enviaremos um código de recuperação." });
-  } catch (e) {
-    const status = e.status || 500;
-    res.status(status).json({ mensagem: status >= 500 ? e.message : e.message });
-  }
-});
+app.post("/api/creditos/recuperar/solicitar", (req, res) => res.status(410).json({ mensagem: "Recuperação por código desativada. Consulte o suporte." }));
 
-app.post("/api/creditos/recuperar/confirmar", async (req, res) => {
-  const limit = useRateLimit(recoveryRateStore, "verify:" + clientIp(req), 12);
-  if (!limit.allowed) return res.status(429).json({ mensagem: "Muitas tentativas. Solicite um novo código mais tarde." });
-  try {
-    requireDatabase();
-    const email = normalizeEmail(req.body && req.body.email);
-    const code = String(req.body && req.body.codigo || "").trim();
-    if (!/^\d{6}$/.test(code)) throw Object.assign(new Error("Digite o código de 6 números enviado ao seu e-mail."), { status: 400 });
-    const found = await pool.query(
-      "SELECT id,account_id,code_hash FROM credit_recovery_codes WHERE LOWER(email)=LOWER($1) AND used_at IS NULL AND expires_at>NOW() ORDER BY created_at DESC LIMIT 1",
-      [email]
-    );
-    if (!found.rowCount) throw Object.assign(new Error("Código inválido ou expirado."), { status: 400 });
-    const row = found.rows[0];
-    if (!secureEqual(row.code_hash, recoveryCodeHash(row.id, code))) throw Object.assign(new Error("Código inválido ou expirado."), { status: 400 });
-    const client = await pool.connect();
-    try {
-      await client.query("BEGIN");
-      const used = await client.query("UPDATE credit_recovery_codes SET used_at=NOW() WHERE id=$1 AND used_at IS NULL RETURNING account_id", [row.id]);
-      if (!used.rowCount) throw Object.assign(new Error("Código já utilizado."), { status: 400 });
-      const bal = await client.query("SELECT balance FROM credit_accounts WHERE id=$1", [row.account_id]);
-      await client.query("COMMIT");
-      res.json({ ok: true, accountToken: signAccountToken(row.account_id), creditos: Number(bal.rows[0].balance) || 0 });
-    } catch (e) {
-      await client.query("ROLLBACK");
-      throw e;
-    } finally { client.release(); }
-  } catch (e) {
-    res.status(e.status || 500).json({ mensagem: e.message || "Não foi possível recuperar os créditos." });
-  }
-});
+app.post("/api/creditos/recuperar/confirmar", (req, res) => res.status(410).json({ mensagem: "Recuperação por código desativada. Consulte o suporte." }));
 
 app.post("/api/admin/credito-teste", async (req, res) => {
   try {
@@ -2128,8 +2050,7 @@ app.post("/api/pagamento/pix/criar", async (req, res) => {
   let account;
   try {
     account = await ensureAccount(req.body && req.body.accountToken);
-    // Vincula o e-mail antes de criar a cobrança. Assim, os créditos comprados
-    // poderão ser recuperados em outro aparelho após a confirmação do PIX.
+    // Vincula o e-mail à compra para identificação e eventual atendimento pelo suporte.
     await bindRecoveryEmail(account.id, req.body && req.body.email);
   }
   catch (err) { return res.status(err.status || 503).json({ error: "conta_creditos", mensagem: err.message }); }
