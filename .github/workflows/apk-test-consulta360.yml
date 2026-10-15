@@ -22,8 +22,10 @@ jobs:
           gradle-version: "8.9"
       - name: Install Android SDK
         run: |
-          echo "y" | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+          SDKMGR="$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools" -name sdkmanager -type f | head -1)"
+          test -n "$SDKMGR" || (echo "sdkmanager not found" && exit 1)
+          yes | "$SDKMGR" --licenses > /dev/null || true
+          "$SDKMGR" "platforms;android-35" "build-tools;35.0.0"
       - name: Build APK
         working-directory: apk-test
         run: gradle --no-daemon assembleDebug
