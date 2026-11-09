@@ -39,5 +39,5 @@ jobs:
         run: node scripts/check-institutional-pages.js
       - name: Verificar contrato do checkout Pix sem cobrar
         run: node scripts/check-pix-checkout.js
-      - name: Testar sem banco, API ou pagamentos
-        run: node --test dev-preview/preview.test.js
+      - name: Testar prévia e ciclo fictício de compra
+        run: node --test dev-preview/preview.test.js dev-preview/payment-flow.test.js
