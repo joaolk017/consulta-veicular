@@ -25,6 +25,7 @@ for(const amount of ['18,90']){
  assert.ok(home.includes(amount),'Preço não encontrado na home: '+amount);
 }
 const server=read('server.js');
+assert.ok(contents['termos.html'].includes('não há uma rotina automática de expiração'),'Termos não esclarecem expiração de créditos');
 for(const [id,amount] of [['consulta-completa','18,90'],['pacote-2','32,90'],['pacote-3','44,90']]){
  const match=server.match(new RegExp('"'+id+'"[^\\n]*amount: *([0-9]+[.][0-9]+)'));
  assert.ok(match,'Produto não encontrado no servidor: '+id);
