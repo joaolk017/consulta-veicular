@@ -26,7 +26,7 @@ for(const amount of ['18,90']){
 }
 const server=read('server.js');
 for(const [id,amount] of [['consulta-completa','18,90'],['pacote-2','32,90'],['pacote-3','44,90']]){
- const match=server.match(new RegExp('"'+id+'"\\\\s*:\\\\s*\\\\{[^}]*amount:\\\\s*(\\\\d+\\\\.\\\\d+)'));
+ const match=server.match(new RegExp('"'+id+'"[^\\n]*amount: *([0-9]+[.][0-9]+)'));
  assert.ok(match,'Produto não encontrado no servidor: '+id);
  const formatted=Number(match[1]).toFixed(2).replace('.',',');
  assert.equal(formatted,amount,'Preço configurado divergente: '+id);
