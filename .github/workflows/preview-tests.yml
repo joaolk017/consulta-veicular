@@ -9,6 +9,7 @@ on:
       - 'server.js'
       - 'index.html'
       - 'scripts/check-real-ui.js'
+      - 'scripts/check-inline-javascript.js'
       - 'scripts/check-commercial-claims.js'
       - 'scripts/check-institutional-pages.js'
       - 'scripts/check-pix-checkout.js'
@@ -49,6 +50,8 @@ jobs:
         run: node scripts/audit-route-contracts.js
       - name: Verificar interface real sem executar integrações
         run: node scripts/check-real-ui.js
+      - name: Compilar JavaScript inline da página real sem executar integrações
+        run: node scripts/check-inline-javascript.js
       - name: Conferir preço e comunicação comercial
         run: node scripts/check-commercial-claims.js
       - name: Validar páginas institucionais
