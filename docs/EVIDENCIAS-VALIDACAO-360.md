@@ -57,3 +57,8 @@ Nenhum teste descrito aqui autoriza sozinho publicação automática.
 - Execução GitHub Actions #110 concluída com sucesso nos jobs `preview-tests` e `postgres-integration`.
 - O teste `scripts/check-checkout-disclosures.js` agora exige rótulo acessível e `type=email`, além de produto, valor, placa, avisos sobre cobrança única, fontes de dados, confirmação do Pix e links de suporte/reembolso antes do botão de pagamento.
 - Esta aprovação é estática e automatizada: não demonstra que uma compra real foi processada, nem substitui revisão em navegador e celular.
+
+## Ensaio de backup e restauração — 09/11/2026
+- Execução GitHub Actions #114: `preview-tests` e `postgres-integration` concluídos com sucesso.
+- Etapa `Ensaiar backup e restauração em banco PostgreSQL descartável` aprovada: `pg_dump -Fc` do banco fictício, criação de banco separado, `pg_restore` e comparação das quantidades de registros em `vehicle_queries` e `credit_accounts`.
+- Esse ensaio não acessou o banco de produção, não comprova que existe backup real restaurável no Render e não verifica integridade de todos os campos ou demais tabelas.
