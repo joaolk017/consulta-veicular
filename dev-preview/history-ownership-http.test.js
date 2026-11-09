@@ -15,9 +15,13 @@ async function main(){
  const pool=new Pool({connectionString:process.env.TEST_DATABASE_URL});
  const app=express();
  try{
+  await pool.query('CREATE TABLE IF NOT EXISTS vehicle_queries(id UUID PRIMARY KEY,account_id UUID NOT NULL,plate TEXT NOT NULL,status TEXT NOT NULL,created_at TIMESTAMPTZ DEFAULT NOW(),completed_at TIMESTAMPTZ,result_json JSONB)');
   await pool.query('ALTER TABLE credit_accounts ADD COLUMN IF NOT EXISTS email TEXT');
   await pool.query('ALTER TABLE vehicle_queries ADD COLUMN IF NOT EXISTS credit_consumed BOOLEAN DEFAULT TRUE');
   await pool.query('INSERT INTO credit_accounts(id,email,balance) VALUES($1,$2,2),($3,$4,4) ON CONFLICT(id) DO UPDATE SET email=EXCLUDED.email,balance=EXCLUDED.balance',[A,'a@example.test',B,'b@example.test']);
+  for(const [id,owner] of [['00000000-0000-4000-8000-0000000000a2',A],['00000000-0000-4000-8000-0000000000b3',B]]){
+   await pool.query('INSERT INTO vehicle_queries(id,account_id,plate,status,result_json) VALUES($1,$2,$3,$4,$5) ON CONFLICT(id) DO NOTHING',[id,owner,'ABC1D23','completed',{plate:'ABC1D23'}]);
+  }
   vm.runInNewContext(src.slice(a,b),{app,pool,requireDatabase:()=>{},enforceSensitiveRateLimit:()=>true,verifyAccountToken:auth.verifyAccountToken},{timeout:1000});
   const server=app.listen(0,'127.0.0.1');await new Promise(ok=>server.once('listening',ok));
   try{
