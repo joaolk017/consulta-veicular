@@ -44,6 +44,8 @@ assert.ok(home.includes("$('pixFormPrice').textContent=p.price")&&home.includes(
 assert.ok(home.includes('+2 créditos por R$ 24,90')&&home.includes('ADICIONAR +2 CRÉDITOS · R$ 24,90'),'Oferta pós-consulta sem preço transparente');
 assert.ok(home.includes('Cada consulta utiliza 1 crédito')&&home.includes('comparativo depende dos dados'),'Condições dos pacotes ausentes');
 for(const value of ['ECONOMIZE R$ 4,90','ECONOMIZE R$ 11,80','R$ 16,45 por consulta','R$ 14,97 por consulta']) assert.ok(home.includes(value),'Preço unitário/economia ausente: '+value);
+for(const unit of ['2 consultas <b>R$ 16,45/un.</b>','3 consultas <b>R$ 14,97/un.</b>']) assert.ok(home.includes(unit),'Comparativo unitário incorreto: '+unit);
+for(const old of ['R$ 17,45/un.','R$ 16,63/un.']) assert.ok(!home.includes(old),'Preço antigo no comparativo: '+old);
 for(const old of ['ECONOMIZE R$ 2,90','ECONOMIZE R$ 6,80','R$ 17,45 por consulta','R$ 16,63 por consulta']) assert.ok(!home.includes(old),'Valor antigo encontrado: '+old);
 assert.ok(home.includes('Economize R$ 4,90')&&home.includes('Economize R$ 11,80'),'Economias da vitrine incorretas');
 console.log('Transparência: 6 páginas, identificação, links legais, caráter privado e preço inicial verificados estaticamente. Preços de pacotes dependem do checkout; dados cadastrais não validados externamente.');
