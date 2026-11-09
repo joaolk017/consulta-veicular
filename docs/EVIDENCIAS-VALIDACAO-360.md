@@ -26,3 +26,10 @@
 6. Não prometer aprovação do Google Ads.
 
 Nenhum teste descrito aqui autoriza sozinho publicação automática.
+
+## Auditoria adicional — 09/11/2026
+- GitHub Actions #84, commit `f8cf49b2e1268b03b6e1a86d8d4da72bee91963b`: execução concluída com sucesso.
+- Preços da vitrine, quadro comparativo, descontos, valores unitários, catálogo de quatro produtos e resumo do Pix cobertos por testes estáticos.
+- Auditoria textual da página principal: não foram encontradas as expressões exatas `100% seguro`, `instantâneo`, `ilimitado`, `todos os dados` ou `histórico completo`. Essa busca textual **não comprova** conformidade integral com as políticas do Google Ads.
+- A funcionalidade de comparativo é anunciada e vinculada a `/minhas-consultas.html#comparar`; ainda é necessário teste funcional real e confirmação de que não cobra créditos extras.
+- Persistem os bloqueios de backup restaurável, identidade comercial e teste ponta a ponta do checkout real.
