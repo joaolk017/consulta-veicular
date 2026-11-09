@@ -51,6 +51,22 @@ async function credit(client, id, product, cents, qty) {
     assert.equal(pending.rows[0].credited_at,null);
     const balance=await db.query('SELECT balance FROM credit_accounts WHERE id=$1',[account]);
     assert.equal(balance.rows[0].balance,expected);
-    console.log('Postgres descartável: 4 produtos, idempotência, rollback de valor inválido e saldo aprovados.');
+    // Simula duas notificações simultâneas com conexões independentes.
+    const concurrentId='test-concurrent';
+    await db.query('INSERT INTO payments(correlation_id,account_id,product,cents,credits) VALUES($1,$2,$3,$4,$5)',[concurrentId,account,'consulta-completa',1890,1]);
+    const db2=new Client({connectionString:url});
+    await db2.connect();
+    try {
+      const outcomes=await Promise.all([
+        credit(db,concurrentId,'consulta-completa',1890,1),
+        credit(db2,concurrentId,'consulta-completa',1890,1)
+      ]);
+      assert.deepEqual(outcomes.sort(),[false,true],'Apenas uma confirmação concorrente deve creditar');
+      const final=await db.query('SELECT balance FROM credit_accounts WHERE id=$1',[account]);
+      assert.equal(final.rows[0].balance,expected+1);
+      const tx=await db.query("SELECT COUNT(*)::int AS n FROM credit_transactions WHERE type='purchase' AND reference=$1",[concurrentId]);
+      assert.equal(tx.rows[0].n,1);
+    } finally { await db2.end(); }
+    console.log('Postgres descartável: 4 produtos, idempotência, concorrência, rollback e saldo aprovados.');
   } finally { await db.end(); }
 })().catch(e=>{console.error(e);process.exitCode=1;});
