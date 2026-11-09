@@ -21,7 +21,7 @@ for(const file of ['contato.html','privacidade.html','termos.html','reembolso.ht
 for(const file of ['contato.html','privacidade.html','termos.html','reembolso.html']){
  assert.ok(about.includes('/'+file),'Página sobre deve ter link para '+file);
 }
-for(const amount of ['18,90','32,90','44,90']){
+for(const amount of ['18,90']){
  assert.ok(home.includes(amount),'Preço não encontrado na home: '+amount);
 }
-console.log('Transparência: 6 páginas, identificação, links legais, caráter privado e preços verificados estaticamente. Dados cadastrais não validados externamente.');
+console.log('Transparência: 6 páginas, identificação, links legais, caráter privado e preço inicial verificados estaticamente. Preços de pacotes dependem do checkout; dados cadastrais não validados externamente.');
