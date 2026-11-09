@@ -5,6 +5,7 @@
 ## Verificações confirmadas
 - [x] Alterações isoladas em `dev/transformacao-profissional-360`; produção em `main`.
 - [x] GitHub Actions #73: validações de interface, transparência, crédito e webhook com Woovi simulada aprovadas.
+- [x] Serviço Render de produção `consulta-veicular` identificado: branch `main`, publicação automática por commit ativada. **Qualquer merge em main pode disparar deploy.**
 - [x] Banco Render de produção `consulta-veicular-db` identificado e disponível; PostgreSQL 18.
 - [x] Preços de pacotes da vitrine de desenvolvimento alinhados ao servidor: R$ 18,90, R$ 32,90 e R$ 44,90.
 
@@ -20,7 +21,7 @@
 ## Procedimento de publicação quando desbloqueado
 1. Reexecutar GitHub Actions no commit exato candidato.
 2. Registrar hash do commit de `main`, status do backup e horário de manutenção.
-3. Revisar PR #7 e somente então fazer merge autorizado; confirmar comportamento do Render.
+3. Revisar PR #7 e somente então fazer merge autorizado; **o Render publica automaticamente commits em main**, portanto preparar janela de monitoramento e rollback antes do merge.
 4. Fazer smoke tests públicos sem dados sensíveis e monitorar erros e cobranças.
 5. Se falhar, interromper novas mudanças e aplicar rollback de aplicação conforme procedimento validado; não reverter dados sem análise.
 
