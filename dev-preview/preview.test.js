@@ -91,3 +91,19 @@ test('Sem integrações de produção na prévia', () => {
   assert.match(fs.readFileSync(indexFile, 'utf8'), /Plataforma privada e independente/);
   assert.match(fs.readFileSync(checkoutFile, 'utf8'), /sem vínculo com DETRAN/);
 });
+
+test('Interface real de desenvolvimento abre somente em modo visual seguro', async () => {
+  const r = await request('/site-real');
+  assert.equal(r.status, 200);
+  assert.match(r.headers.get('content-security-policy'), /script-src 'none'/);
+  assert.match(r.headers.get('content-security-policy'), /connect-src 'none'/);
+  assert.match(r.headers.get('content-security-policy'), /form-action 'none'/);
+  assert.match(r.headers.get('x-robots-tag'), /noindex/);
+  const html = await r.text();
+  assert.match(html, /PRÉVIA VISUAL REAL/);
+  assert.match(html, /Consulta Veicular 360/);
+  const blocked = await request('/api/pagamento/pix/criar', { method: 'POST' });
+  assert.equal(blocked.status, 405);
+  const privateFile = await request('/server.js');
+  assert.equal(privateFile.status, 404);
+});
