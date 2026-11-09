@@ -54,6 +54,8 @@ jobs:
         run: node scripts/check-inline-javascript.js
       - name: Conferir preço e comunicação comercial
         run: node scripts/check-commercial-claims.js
+      - name: Auditar transparência comercial para Google Ads
+        run: node scripts/check-ads-transparency.js
       - name: Validar páginas institucionais
         run: node scripts/check-institutional-pages.js
       - name: Verificar contrato do checkout Pix sem cobrar
