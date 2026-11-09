@@ -11,4 +11,9 @@ assert.match(html, /prefers-reduced-motion/, 'Respeitar preferência de moviment
 for (const required of ['id="btn"', 'onclick="consultar()"', 'id="pacotes"']) {
   assert.ok(html.includes(required), 'Elemento existente foi removido: ' + required);
 }
+assert.match(html, /id="cv360-disclosure-title"/, 'Aviso de transparência ausente');
+assert.match(html, /sem vínculo com DETRAN, SENATRAN ou GOV.BR/, 'Aviso de independência ausente');
+for (const page of ['/contato.html', '/termos.html', '/privacidade.html', '/reembolso.html']) {
+  assert.ok(html.includes('href="' + page + '"'), 'Link institucional ausente: ' + page);
+}
 console.log('Interface real: acessibilidade incremental e elementos críticos preservados.');
