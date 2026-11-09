@@ -40,3 +40,17 @@
 - Nenhum dado foi lido ou alterado; nenhuma regra de rede foi flexibilizada.
 - **Não abrir o banco à internet para resolver o teste.** Validar estrutura e plano de restauração por um caminho autorizado e seguro (por exemplo, execução dentro da rede privada ou ambiente de testes com acesso restrito), antes de liberar publicação.
 - GitHub Actions #111: `preview-tests` e `postgres-integration` aprovados, mas isso não valida backup/restauração nem conectividade ao banco de produção.
+
+## Conferência do candidato de publicação — 09/11/2026
+- PR #7 consultado novamente: **aberto, rascunho, não mesclado**, base `main`; `mergeable=true` não significa autorização para publicar.
+- GitHub Actions #120: jobs `preview-tests` e `postgres-integration` aprovados; verificações de preço/créditos no checkout Pix, webhook simulado, titularidade de relatórios e ensaio de backup em PostgreSQL descartável.
+- Render PostgreSQL oficial: `available`, PostgreSQL 18, 1 GB, sem alta disponibilidade e com allowlist de IPs vazia. Metadados não informam se há backup recuperável.
+- **Status: publicação bloqueada**. Não alterar `main`, o banco, a allowlist, os segredos ou gerar cobranças reais para concluir os testes.
+
+### Evidências exigidas para retirar cada bloqueio
+1. **Backup de produção:** registrar método, data, responsável e resultado de restauração em banco separado; validar contagens e conteúdo sem expor dados reais em logs.
+2. **Recebedor Pix e empresa:** verificar documentos e dados reais do recebedor com a identificação exibida nas páginas; não registrar segredos nem dados pessoais sensíveis no repositório.
+3. **Compra isolada:** registrar valores e créditos dos três pacotes, confirmação Woovi, idempotência e possibilidade de estorno; não usar o banco de produção.
+4. **Interface e publicidade:** registrar testes visuais em celular e desktop e conferir afirmações sobre cobertura, prazo, fonte de dados e política de reembolso.
+5. **Rollback:** identificar commit anterior da `main`, confirmar como reimplantar a versão anterior e separar rollback de código de eventual restauração de dados; jamais restaurar produção sem análise de transações posteriores.
+6. **Liberação:** revisar o diff final do PR #7, reexecutar testes no commit exato e obter aprovação explícita antes de mesclar.
