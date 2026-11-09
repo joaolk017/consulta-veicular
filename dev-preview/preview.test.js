@@ -139,7 +139,8 @@ test('Reabrir histórico fictício não consome crédito adicional', async () =>
   const r = await request('/jornada-demo');
   const html = await r.text();
   assert.ok(html.includes('Reabrir relatório fictício'));
-  assert.ok(html.includes("button.addEventListener('click',()=>{el('reportPlate').textContent=item;show(4)})"));
+  assert.ok(html.includes("button.addEventListener('click',()=>{el('reportPlate').textContent=item;"));
+  assert.ok(html.includes("el('reportNumber').textContent=String(index+1).padStart(3,'0');show(4)"));
   assert.equal((html.match(/state.credits--/g)||[]).length, 1);
 });
 
