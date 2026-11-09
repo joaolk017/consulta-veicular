@@ -39,3 +39,10 @@ Nenhum teste descrito aqui autoriza sozinho publicação automática.
 - `dev-preview/report-ownership-http.test.js` extrai a rota real `GET /api/minhas-consultas/:id` do `server.js` e a executa em Express com PostgreSQL 18 descartável.
 - Sete cenários: leitura autorizada por A e B, tentativas cruzadas A→B e B→A retornando 404, ausência de token retornando 401, relatório pendente retornando 409 e ID inexistente retornando 404.
 - Limitação: a verificação do token é simulada e não testa o aplicativo completo nem o gerenciamento real de sessões. Nenhuma conta ou dado de produção foi usado.
+
+## Autenticação real e isolamento — 09/11/2026
+- Execução GitHub Actions #98 reprovou porque o teste ainda utilizava quatro tokens fictícios após a adoção da assinatura real; corrigido no commit `51bda7c2f8575c6dbb02e1eba5aae5b159a0a1a5`.
+- Execução #100: `preview-tests` aprovado e etapa `Testar isolamento HTTP de relatórios entre duas contas` aprovada no job PostgreSQL; execução global ainda em andamento quando consultada.
+- O teste usa as funções reais `signAccountToken` e `verifyAccountToken` extraídas do `server.js`, chave HMAC exclusiva de teste e banco PostgreSQL 18 descartável.
+- Oito cenários HTTP incluem titularidade de duas contas, token ausente, token adulterado, relatório pendente e ID inexistente.
+- Não houve teste com clientes reais, nem verificação completa de navegação, recuperação de conta ou pagamento real.
