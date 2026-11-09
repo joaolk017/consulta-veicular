@@ -48,6 +48,14 @@ test('Checkout de demonstração não apresenta pagamento funcional', async () =
   assert.match(html, /NÃO EXISTE PAGAMENTO/);
   assert.match(html, /R\$ 0,00/);
 });
+test('Transparência informa independência e limitações sem promessas', async () => {
+  const r = await request('/transparencia');
+  assert.equal(r.status, 200);
+  const html = await r.text();
+  assert.match(html, /plataforma privada e independente/);
+  assert.match(html, /não há garantia de cobertura completa/);
+  assert.match(html, /não representam aprovação/);
+});
 test('Endpoint mock aceita placa brasileira válida', async () => {
   const r = await request('/api/demo-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plate: 'ABC1D23' }) });
   assert.equal(r.status, 200);
