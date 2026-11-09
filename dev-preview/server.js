@@ -30,10 +30,10 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' });
     return res.end(req.method === 'HEAD' ? undefined : 'ok');
   }
-  if (pathname !== '/') {
+  if (pathname !== '/' && pathname !== '/checkout-demo') {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end();
   }
-  fs.readFile(file, (error, html) => {
+  fs.readFile(pathname === '/checkout-demo' ? path.join(__dirname, 'checkout-demo.html') : file, (error, html) => {
     if (error) { res.writeHead(500); return res.end(); }
     res.writeHead(200, {
       'Content-Type': 'text/html; charset=utf-8',
