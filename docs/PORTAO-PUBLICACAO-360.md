@@ -26,3 +26,11 @@
 5. Se falhar, interromper novas mudanças e aplicar rollback de aplicação conforme procedimento validado; não reverter dados sem análise.
 
 **Não é autorização para merge, deploy, criar cobranças ou alterar o banco.**
+
+## Revisão do portão de publicação — 09/11/2026
+- GitHub Actions #101: jobs `preview-tests` e `postgres-integration` concluídos com sucesso no commit `02f316e9541fa332cffc9e7292bb99b4e3a54957`.
+- PR #7 continua aberto, em rascunho e não mesclado; branch de produção `main` permanece separada.
+- Render confirma `autoDeploy=yes` por commit na `main`: qualquer merge pode publicar automaticamente. **Não mesclar sem liberação expressa e verificações finais.**
+- PostgreSQL de produção `consulta-veicular-db` está disponível, PostgreSQL 18, 1 GB, sem alta disponibilidade. A consulta de metadados **não comprova backup restaurável**.
+- Pendências de liberação: backup com restauração verificada, identidade empresarial e recebedor Pix, navegação real desktop/mobile, teste ponta a ponta de pagamento com credenciais isoladas, verificação de dados de provedores, rollback e revisão de políticas do Google Ads.
+- Nenhuma alteração de infraestrutura ou de produção foi feita nesta revisão.
