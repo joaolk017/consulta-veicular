@@ -7,6 +7,8 @@ on:
       - 'dev-preview/**'
       - 'scripts/audit-route-contracts.js'
       - 'server.js'
+      - 'index.html'
+      - 'scripts/check-real-ui.js'
       - '.github/workflows/preview-tests.yml'
   workflow_dispatch:
 permissions:
@@ -22,5 +24,7 @@ jobs:
           node-version: '22'
       - name: Auditar contratos do servidor sem iniciar produção
         run: node scripts/audit-route-contracts.js
+      - name: Verificar interface real sem executar integrações
+        run: node scripts/check-real-ui.js
       - name: Testar sem banco, API ou pagamentos
         run: node --test dev-preview/preview.test.js
