@@ -9,6 +9,7 @@ on:
       - 'server.js'
       - 'index.html'
       - 'scripts/check-real-ui.js'
+      - 'scripts/check-commercial-claims.js'
       - '.github/workflows/preview-tests.yml'
   workflow_dispatch:
 permissions:
@@ -26,5 +27,7 @@ jobs:
         run: node scripts/audit-route-contracts.js
       - name: Verificar interface real sem executar integrações
         run: node scripts/check-real-ui.js
+      - name: Conferir preço e comunicação comercial
+        run: node scripts/check-commercial-claims.js
       - name: Testar sem banco, API ou pagamentos
         run: node --test dev-preview/preview.test.js
