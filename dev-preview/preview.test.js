@@ -56,6 +56,15 @@ test('Transparência informa independência e limitações sem promessas', async
   assert.match(html, /não há garantia de cobertura completa/);
   assert.match(html, /não representam aprovação/);
 });
+test('Painel público é apenas ilustrativo e não possui dados reais', async () => {
+  const r = await request('/admin-demo');
+  assert.equal(r.status, 200);
+  assert.match(r.headers.get('x-robots-tag'), /noindex/);
+  const html = await r.text();
+  assert.match(html, /DADOS 100% FICTÍCIOS/);
+  assert.match(html, /não concede acesso administrativo/);
+  assert.doesNotMatch(html, /DATABASE_URL|FALCON_TOKEN|OPENPIX_APP_ID/);
+});
 test('Endpoint mock aceita placa brasileira válida', async () => {
   const r = await request('/api/demo-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plate: 'ABC1D23' }) });
   assert.equal(r.status, 200);
