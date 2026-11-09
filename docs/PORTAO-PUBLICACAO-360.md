@@ -34,3 +34,9 @@
 - PostgreSQL de produção `consulta-veicular-db` está disponível, PostgreSQL 18, 1 GB, sem alta disponibilidade. A consulta de metadados **não comprova backup restaurável**.
 - Pendências de liberação: backup com restauração verificada, identidade empresarial e recebedor Pix, navegação real desktop/mobile, teste ponta a ponta de pagamento com credenciais isoladas, verificação de dados de provedores, rollback e revisão de políticas do Google Ads.
 - Nenhuma alteração de infraestrutura ou de produção foi feita nesta revisão.
+
+## Auditoria de conectividade do banco — 09/11/2026
+- Consulta somente leitura ao catálogo `information_schema.columns` do PostgreSQL de produção foi **bloqueada** pelo Render: allowlist de IPs vazia impede conexões externas por esta integração.
+- Nenhum dado foi lido ou alterado; nenhuma regra de rede foi flexibilizada.
+- **Não abrir o banco à internet para resolver o teste.** Validar estrutura e plano de restauração por um caminho autorizado e seguro (por exemplo, execução dentro da rede privada ou ambiente de testes com acesso restrito), antes de liberar publicação.
+- GitHub Actions #111: `preview-tests` e `postgres-integration` aprovados, mas isso não valida backup/restauração nem conectividade ao banco de produção.
