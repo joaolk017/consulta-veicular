@@ -134,3 +134,11 @@ test('Pacotes fictícios permitem consumir saldo em múltiplos relatórios e his
   for (const marker of ['id="nextPlate"','id="history"','id="more"','state.credits--','state.history.push(plate)','state.credits===0','document.createElement(\'li\')']) assert.ok(html.includes(marker), marker);
   assert.equal(html.includes('fetch('), false);
 });
+
+test('Reabrir histórico fictício não consome crédito adicional', async () => {
+  const r = await request('/jornada-demo');
+  const html = await r.text();
+  assert.ok(html.includes('Reabrir relatório fictício'));
+  assert.ok(html.includes("button.addEventListener('click',()=>{el('reportPlate').textContent=item;show(4)})"));
+  assert.equal((html.match(/state.credits--/g)||[]).length, 1);
+});
