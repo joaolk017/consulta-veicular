@@ -118,3 +118,12 @@ test('Checkout demonstrativo oferece pacotes corretos sem integração de pagame
   assert.ok(html.includes('Total cobrado: R$ 0,00'));
   for (const marker of ['fetch(', 'XMLHttpRequest', 'WebSocket', '<form']) assert.equal(html.includes(marker), false, marker);
 });
+
+test('Jornada interativa fictícia mostra etapas e nunca integra pagamentos reais', async () => {
+  const r = await request('/jornada-demo');
+  assert.equal(r.status, 200);
+  assert.ok(r.headers.get('x-robots-tag').includes('noindex'));
+  const html = await r.text();
+  for (const value of ['ETAPA 1 DE 4','ETAPA 2 DE 4','ETAPA 3 DE 4','ETAPA 4 DE 4','SEM-COBRANCA','Dados simulados','cents:1890','cents:3290','cents:4490']) assert.ok(html.includes(value), value);
+  for (const forbidden of ['fetch(', 'XMLHttpRequest', 'WebSocket', 'localStorage', 'sessionStorage', '<form', 'DATABASE_URL', 'OPENPIX_APP_ID']) assert.equal(html.includes(forbidden), false, forbidden);
+});
