@@ -107,3 +107,14 @@ test('Interface real de desenvolvimento abre somente em modo visual seguro', asy
   const privateFile = await request('/server.js');
   assert.equal(privateFile.status, 404);
 });
+
+test('Checkout demonstrativo oferece pacotes com preços e créditos corretos sem integração de pagamento', async () => {
+  const r = await request('/checkout-demo');
+  const html = await r.text();
+  assert.match(html, /2 consultas — R\\$ 32,90/);
+  assert.match(html, /3 consultas — R\\$ 44,90/);
+  assert.match(html, /'pacote-2':\\{credits:2,cents:3290\\}/);
+  assert.match(html, /'pacote-3':\\{credits:3,cents:4490\\}/);
+  assert.match(html, /Total cobrado: R\\$ 0,00/);
+  assert.doesNotMatch(html, /fetch\\(|XMLHttpRequest|WebSocket|<form/i);
+});
