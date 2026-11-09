@@ -54,3 +54,10 @@
 4. **Interface e publicidade:** registrar testes visuais em celular e desktop e conferir afirmações sobre cobertura, prazo, fonte de dados e política de reembolso.
 5. **Rollback:** identificar commit anterior da `main`, confirmar como reimplantar a versão anterior e separar rollback de código de eventual restauração de dados; jamais restaurar produção sem análise de transações posteriores.
 6. **Liberação:** revisar o diff final do PR #7, reexecutar testes no commit exato e obter aprovação explícita antes de mesclar.
+
+## Prévia interativa e revisão de liberação — 09/11/2026
+- GitHub Actions **#152**, commit `ad454629f746cf6e552d9b47e999e1d4782625e3`: execução completa aprovada após atualizar o teste de reabertura do histórico. A falha da execução #150 foi de uma asserção textual desatualizada; o job PostgreSQL já havia passado.
+- Render `consulta-veicular-360-preview`: deploy `dep-dbp2s2etlv9c73dk9jpg` com status `live`. A página `/jornada-demo` permite pacote, pagamento fictício, saldo, consumo e reabertura de relatórios fictícios, com avisos explícitos de não serem documentos oficiais.
+- A prévia é isolada, não valida pagamento real, provedores, banco de produção, nem aprovação do Google Ads. A rota `/site-real` continua apenas visual, com scripts e formulários bloqueados.
+- **Permanecem pendentes**: backup recuperável da produção comprovado; identidade comercial e recebedor Pix; evidências visuais mobile/desktop; escopo dos dados dos fornecedores; teste controlado do pagamento real em ambiente seguro; rollback e aprovação expressa de merge/deploy.
+- **Decisão:** publicação em `main` continua BLOQUEADA. Nenhuma mudança na produção foi autorizada ou executada.
