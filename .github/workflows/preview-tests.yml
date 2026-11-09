@@ -124,3 +124,20 @@ jobs:
         env:
           TEST_DATABASE_URL: postgresql://test_user:test_password@127.0.0.1:5432/test_db
         run: node dev-preview/history-ownership-http.test.js
+      - name: Ensaiar backup e restauração em banco PostgreSQL descartável
+        shell: bash
+        run: |
+          set -euo pipefail
+          container="$(docker ps --filter ancestor=postgres:18 --format '{{.ID}}' | head -n 1)"
+          test -n "$container"
+          docker exec "$container" pg_dump -U test_user -d test_db -Fc -f /tmp/consulta360-test.backup
+          docker exec "$container" createdb -U test_user consulta360_restaurado
+          docker exec "$container" pg_restore -U test_user -d consulta360_restaurado --no-owner --no-acl /tmp/consulta360-test.backup
+          original="$(docker exec "$container" psql -U test_user -d test_db -At -c 'SELECT COUNT(*) FROM vehicle_queries')"
+          restored="$(docker exec "$container" psql -U test_user -d consulta360_restaurado -At -c 'SELECT COUNT(*) FROM vehicle_queries')"
+          test "$original" = "$restored"
+          test "$restored" -ge 2
+          original_accounts="$(docker exec "$container" psql -U test_user -d test_db -At -c 'SELECT COUNT(*) FROM credit_accounts')"
+          restored_accounts="$(docker exec "$container" psql -U test_user -d consulta360_restaurado -At -c 'SELECT COUNT(*) FROM credit_accounts')"
+          test "$original_accounts" = "$restored_accounts"
+          echo "Backup e restauração fictícios aprovados; nenhuma conexão com produção."
