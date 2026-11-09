@@ -11,6 +11,7 @@ on:
       - 'scripts/check-real-ui.js'
       - 'scripts/check-commercial-claims.js'
       - 'scripts/check-institutional-pages.js'
+      - 'scripts/check-pix-checkout.js'
       - 'contato.html'
       - 'termos.html'
       - 'privacidade.html'
@@ -36,5 +37,7 @@ jobs:
         run: node scripts/check-commercial-claims.js
       - name: Validar páginas institucionais
         run: node scripts/check-institutional-pages.js
+      - name: Verificar contrato do checkout Pix sem cobrar
+        run: node scripts/check-pix-checkout.js
       - name: Testar sem banco, API ou pagamentos
         run: node --test dev-preview/preview.test.js
