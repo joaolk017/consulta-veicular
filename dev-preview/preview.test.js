@@ -142,3 +142,9 @@ test('Reabrir histórico fictício não consome crédito adicional', async () =>
   assert.ok(html.includes("button.addEventListener('click',()=>{el('reportPlate').textContent=item;show(4)})"));
   assert.equal((html.match(/state.credits--/g)||[]).length, 1);
 });
+
+test('Relatório fictício deixa explícito que não é documento oficial', async () => {
+  const r = await request('/jornada-demo');
+  const html = await r.text();
+  for (const phrase of ['EXEMPLO FICTÍCIO — NÃO É CONSULTA VEICULAR','não é documento oficial','id="reportNumber"','role="region"']) assert.ok(html.includes(phrase), phrase);
+});
