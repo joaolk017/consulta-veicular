@@ -140,4 +140,12 @@ jobs:
           original_accounts="$(docker exec "$container" psql -U test_user -d test_db -At -c 'SELECT COUNT(*) FROM credit_accounts')"
           restored_accounts="$(docker exec "$container" psql -U test_user -d consulta360_restaurado -At -c 'SELECT COUNT(*) FROM credit_accounts')"
           test "$original_accounts" = "$restored_accounts"
+          # Além da contagem, comparar o conteúdo integral das linhas de cada tabela crítica.
+          for table in vehicle_queries credit_accounts; do
+            sql="SELECT md5(COALESCE(string_agg(row_to_json(t)::text, E'\\n' ORDER BY t.id::text), '')) FROM ${table} t"
+            source_hash="$(docker exec "$container" psql -U test_user -d test_db -At -c "$sql")"
+            restored_hash="$(docker exec "$container" psql -U test_user -d consulta360_restaurado -At -c "$sql")"
+            test "$source_hash" = "$restored_hash"
+            echo "Conteúdo restaurado idêntico: ${table}"
+          done
           echo "Backup e restauração fictícios aprovados; nenhuma conexão com produção."
