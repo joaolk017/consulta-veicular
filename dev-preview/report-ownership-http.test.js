@@ -38,11 +38,11 @@ async function main(){
    async function get(id,token){const r=await fetch('http://127.0.0.1:'+server.address().port+'/api/minhas-consultas/'+id,{headers:token?{'X-Credit-Account':token}:{}});return {status:r.status,body:await r.json()};}
    assert.equal((await get(reportA,tokenA)).status,200,'Titular A deve ler seu relatório');
    assert.equal((await get(reportB,tokenB)).status,200,'Titular B deve ler seu relatório');
-   assert.equal((await get(reportA,'token-B')).status,404,'B não pode ler relatório de A');
-   assert.equal((await get(reportB,'token-A')).status,404,'A não pode ler relatório de B');
+   assert.equal((await get(reportA,tokenB)).status,404,'B não pode ler relatório de A');
+   assert.equal((await get(reportB,tokenA)).status,404,'A não pode ler relatório de B');
    assert.equal((await get(reportA)).status,401,'Acesso sem token deve falhar');
-   assert.equal((await get(pending,'token-A')).status,409,'Relatório pendente não pode ser exibido');
-   assert.equal((await get('00000000-0000-4000-8000-000000000099','token-A')).status,404,'Relatório inexistente não deve aparecer');
+   assert.equal((await get(pending,tokenA)).status,409,'Relatório pendente não pode ser exibido');
+   assert.equal((await get('00000000-0000-4000-8000-000000000099',tokenA)).status,404,'Relatório inexistente não deve aparecer');
    assert.equal((await get(reportA,tokenA+'tampered')).status,401,'Token com assinatura adulterada deve falhar');
    console.log('Isolamento entre duas contas: oito cenários HTTP com PostgreSQL descartável e assinatura HMAC real aprovados.');
   }finally{await new Promise(ok=>server.close(ok));}
