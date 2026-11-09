@@ -10,6 +10,11 @@ on:
       - 'index.html'
       - 'scripts/check-real-ui.js'
       - 'scripts/check-commercial-claims.js'
+      - 'scripts/check-institutional-pages.js'
+      - 'contato.html'
+      - 'termos.html'
+      - 'privacidade.html'
+      - 'reembolso.html'
       - '.github/workflows/preview-tests.yml'
   workflow_dispatch:
 permissions:
@@ -29,5 +34,7 @@ jobs:
         run: node scripts/check-real-ui.js
       - name: Conferir preço e comunicação comercial
         run: node scripts/check-commercial-claims.js
+      - name: Validar páginas institucionais
+        run: node scripts/check-institutional-pages.js
       - name: Testar sem banco, API ou pagamentos
         run: node --test dev-preview/preview.test.js
