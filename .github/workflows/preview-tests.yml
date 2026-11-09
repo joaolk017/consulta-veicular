@@ -20,6 +20,19 @@ on:
       - 'privacidade.html'
       - 'reembolso.html'
       - '.github/workflows/preview-tests.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'dev-preview/**'
+      - 'scripts/**'
+      - 'server.js'
+      - 'index.html'
+      - 'contato.html'
+      - 'termos.html'
+      - 'privacidade.html'
+      - 'reembolso.html'
+      - '.github/workflows/preview-tests.yml'
   workflow_dispatch:
 permissions:
   contents: read
