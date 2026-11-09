@@ -33,6 +33,12 @@ for(const [id,amount] of [['consulta-completa','18,90'],['pacote-2','32,90'],['p
  assert.equal(formatted,amount,'Preço configurado divergente: '+id);
  assert.ok(home.includes('R$ '+formatted),'Preço da vitrine divergente: '+id);
 }
+for(const [id,price] of [['consulta-completa','18,90'],['pacote-2','32,90'],['pacote-3','44,90'],['upsell-2','24,90']]) {
+ const escaped=id.replace(/[.*+?^$\{\}()|[\]\\]/g,'\\assert.ok(home.includes('+2 créditos por R$ 24,90')');
+ const re=new RegExp("'"+escaped+"'\\s*:\\s*\\{[^}]*price\\s*:\\s*'R\\$ "+price+"'");
+ assert.ok(re.test(home),'Preço do modal Pix diverge do servidor: '+id);
+}
+assert.ok(home.includes("$('pixFormPrice').textContent=p.price")&&home.includes("$('pixCheckoutSummary')"),'Resumo do Pix não acompanha preço selecionado');
 assert.ok(home.includes('+2 créditos por R$ 24,90')&&home.includes('ADICIONAR +2 CRÉDITOS · R$ 24,90'),'Oferta pós-consulta sem preço transparente');
 assert.ok(home.includes('Cada consulta utiliza 1 crédito')&&home.includes('comparativo depende dos dados'),'Condições dos pacotes ausentes');
 for(const value of ['ECONOMIZE R$ 4,90','ECONOMIZE R$ 11,80','R$ 16,45 por consulta','R$ 14,97 por consulta']) assert.ok(home.includes(value),'Preço unitário/economia ausente: '+value);
