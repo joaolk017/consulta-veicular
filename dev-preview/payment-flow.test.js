@@ -47,3 +47,36 @@ test('Oferta adicional fictícia libera exatamente dois créditos', () => {
   confirmMockPayment(p, 'evt-upsell', 2490);
   assert.equal(p.credits, 2);
 });
+
+test('Repetição com identificador diferente não credita novamente', () => {
+  const p = createPurchase({ product: 'consulta-completa', plate: 'ABC1D23', email: 'teste@example.com' });
+  confirmMockPayment(p, 'evt-original', 1890);
+  confirmMockPayment(p, 'evt-repetido', 1890);
+  assert.equal(p.credits, 1);
+});
+test('Valor divergente em evento repetido é recusado', () => {
+  const p = createPurchase({ product: 'pacote-2', plate: 'ABC1D23', email: 'teste@example.com' });
+  confirmMockPayment(p, 'evt-1', 3290);
+  assert.throws(() => confirmMockPayment(p, 'evt-1', 1), /Valor divergente/);
+  assert.equal(p.credits, 2);
+});
+test('Evento sem identificador não confirma pagamento', () => {
+  const p = createPurchase({ product: 'consulta-completa', plate: 'ABC1D23', email: 'teste@example.com' });
+  assert.throws(() => confirmMockPayment(p, '', 1890), /Evento inválido/);
+  assert.equal(p.status, 'pending');
+  assert.equal(p.credits, 0);
+});
+test('Produtos fictícios mantêm valores e quantidades exatos', () => {
+  for (const [product, amount, credits] of [
+    ['consulta-completa', 1890, 1], ['pacote-2', 3290, 2],
+    ['pacote-3', 4490, 3], ['upsell-2', 2490, 2]
+  ]) {
+    const p = createPurchase({ product, plate: 'ABC1D23', email: 'teste@example.com' });
+    assert.equal(p.amountCents, amount);
+    confirmMockPayment(p, 'evt-' + product, amount);
+    assert.equal(p.credits, credits);
+    for (let i = 0; i < credits; i++) deliverMockReport(p);
+    assert.equal(p.credits, 0);
+    assert.throws(() => deliverMockReport(p), /créditos insuficientes/);
+  }
+});
