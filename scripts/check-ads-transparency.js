@@ -34,9 +34,11 @@ for(const [id,amount] of [['consulta-completa','18,90'],['pacote-2','32,90'],['p
  assert.ok(home.includes('R$ '+formatted),'Preço da vitrine divergente: '+id);
 }
 for(const [id,price] of [['consulta-completa','18,90'],['pacote-2','32,90'],['pacote-3','44,90'],['upsell-2','24,90']]) {
- const escaped=id.replace(/[.*+?^$\{\}()|[\]\\]/g,'\\assert.ok(home.includes('+2 créditos por R$ 24,90')');
- const re=new RegExp("'"+escaped+"'\\s*:\\s*\\{[^}]*price\\s*:\\s*'R\\$ "+price+"'");
- assert.ok(re.test(home),'Preço do modal Pix diverge do servidor: '+id);
+ const expected="'"+id+"':{label:";
+ const start=home.indexOf(expected);
+ assert.ok(start>=0,'Produto não encontrado no modal Pix: '+id);
+ const section=home.slice(start,start+180);
+ assert.ok(section.includes("price:'R$ "+price+"'"),'Preço do modal Pix diverge do servidor: '+id);
 }
 assert.ok(home.includes("$('pixFormPrice').textContent=p.price")&&home.includes("$('pixCheckoutSummary')"),'Resumo do Pix não acompanha preço selecionado');
 assert.ok(home.includes('+2 créditos por R$ 24,90')&&home.includes('ADICIONAR +2 CRÉDITOS · R$ 24,90'),'Oferta pós-consulta sem preço transparente');
