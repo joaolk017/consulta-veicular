@@ -1,0 +1,22 @@
+name: Validar prévia isolada
+on:
+  push:
+    branches:
+      - dev/transformacao-profissional-360
+    paths:
+      - 'dev-preview/**'
+      - '.github/workflows/preview-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preview-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Testar sem banco, API ou pagamentos
+        run: node --test dev-preview/preview.test.js
