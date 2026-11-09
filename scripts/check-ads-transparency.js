@@ -26,13 +26,14 @@ for(const amount of ['18,90']){
 }
 const server=read('server.js');
 assert.ok(contents['termos.html'].includes('não há uma rotina automática de expiração'),'Termos não esclarecem expiração de créditos');
-for(const [id,amount] of [['consulta-completa','18,90'],['pacote-2','32,90'],['pacote-3','44,90']]){
+for(const [id,amount] of [['consulta-completa','18,90'],['pacote-2','32,90'],['pacote-3','44,90'],['upsell-2','24,90']]){
  const match=server.match(new RegExp('"'+id+'"[^\\n]*amount: *([0-9]+[.][0-9]+)'));
  assert.ok(match,'Produto não encontrado no servidor: '+id);
  const formatted=Number(match[1]).toFixed(2).replace('.',',');
  assert.equal(formatted,amount,'Preço configurado divergente: '+id);
  assert.ok(home.includes('R$ '+formatted),'Preço da vitrine divergente: '+id);
 }
+assert.ok(home.includes('+2 créditos por R$ 24,90')&&home.includes('ADICIONAR +2 CRÉDITOS · R$ 24,90'),'Oferta pós-consulta sem preço transparente');
 assert.ok(home.includes('Cada consulta utiliza 1 crédito')&&home.includes('comparativo depende dos dados'),'Condições dos pacotes ausentes');
 for(const value of ['ECONOMIZE R$ 4,90','ECONOMIZE R$ 11,80','R$ 16,45 por consulta','R$ 14,97 por consulta']) assert.ok(home.includes(value),'Preço unitário/economia ausente: '+value);
 for(const old of ['ECONOMIZE R$ 2,90','ECONOMIZE R$ 6,80','R$ 17,45 por consulta','R$ 16,63 por consulta']) assert.ok(!home.includes(old),'Valor antigo encontrado: '+old);
