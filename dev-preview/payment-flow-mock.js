@@ -1,7 +1,7 @@
 'use strict';
 // Simulação local do ciclo de compra. NÃO acessa Woovi, API ou banco de produção.
 const { randomUUID } = require('node:crypto');
-const PRODUCTS = Object.freeze({ consulta: 1890, pacote2: 3290, pacote3: 4490 });
+const PRODUCTS = Object.freeze({ 'consulta-completa': 1890, 'pacote-2': 3290, 'pacote-3': 4490, 'upsell-2': 2490 });
 function createPurchase({ product, plate, email }) {
   if (!Object.hasOwn(PRODUCTS, product)) throw Error('Produto inválido');
   if (typeof plate !== 'string' || !/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(plate)) throw Error('Placa inválida');
@@ -15,7 +15,7 @@ function confirmMockPayment(purchase, eventId, paidAmountCents) {
   purchase.confirmedEvents.add(eventId);
   if (purchase.status === 'pending') {
     purchase.status = 'paid';
-    purchase.credits = purchase.product === 'pacote3' ? 3 : purchase.product === 'pacote2' ? 2 : 1;
+    purchase.credits = purchase.product === 'pacote-3' ? 3 : (purchase.product === 'pacote-2' || purchase.product === 'upsell-2') ? 2 : 1;
   }
   return purchase;
 }
