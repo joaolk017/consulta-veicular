@@ -32,5 +32,6 @@ for(const [id,amount] of [['consulta-completa','18,90'],['pacote-2','32,90'],['p
  assert.equal(formatted,amount,'Preço configurado divergente: '+id);
  assert.ok(home.includes('R$ '+formatted),'Preço da vitrine divergente: '+id);
 }
+assert.ok(home.includes('Cada consulta utiliza 1 crédito')&&home.includes('comparativo depende dos dados'),'Condições dos pacotes ausentes');
 assert.ok(home.includes('Economize R$ 4,90')&&home.includes('Economize R$ 11,80'),'Economias da vitrine incorretas');
 console.log('Transparência: 6 páginas, identificação, links legais, caráter privado e preço inicial verificados estaticamente. Preços de pacotes dependem do checkout; dados cadastrais não validados externamente.');
