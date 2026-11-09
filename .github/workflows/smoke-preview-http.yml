@@ -1,0 +1,22 @@
+name: Smoke HTTP da prévia isolada
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev/transformacao-profissional-360
+    paths:
+      - 'scripts/smoke-preview-http.js'
+      - '.github/workflows/smoke-preview-http.yml'
+permissions:
+  contents: read
+jobs:
+  smoke-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar HTTP da prévia sem pagamentos
+        run: node scripts/smoke-preview-http.js
