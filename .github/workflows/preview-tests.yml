@@ -12,6 +12,7 @@ on:
       - 'scripts/check-commercial-claims.js'
       - 'scripts/check-institutional-pages.js'
       - 'scripts/check-pix-checkout.js'
+      - 'scripts/check-pix-webhook.js'
       - 'contato.html'
       - 'termos.html'
       - 'privacidade.html'
@@ -39,5 +40,7 @@ jobs:
         run: node scripts/check-institutional-pages.js
       - name: Verificar contrato do checkout Pix sem cobrar
         run: node scripts/check-pix-checkout.js
+      - name: Verificar proteções do webhook Pix
+        run: node scripts/check-pix-webhook.js
       - name: Testar prévia e ciclo fictício de compra
         run: node --test dev-preview/preview.test.js dev-preview/payment-flow.test.js
