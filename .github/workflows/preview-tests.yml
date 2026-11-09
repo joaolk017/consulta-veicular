@@ -39,7 +39,7 @@ permissions:
 jobs:
   preview-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -63,3 +63,5 @@ jobs:
         run: node scripts/check-wallet-idempotency.js
       - name: Testar prévia e ciclo fictício de compra
         run: node --test dev-preview/preview.test.js dev-preview/payment-flow.test.js
+      - name: Testar acesso HTTP à prévia pública do Render
+        run: node scripts/smoke-preview-http.js
