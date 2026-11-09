@@ -58,6 +58,8 @@ jobs:
         run: node scripts/check-ads-transparency.js
       - name: Validar páginas institucionais
         run: node scripts/check-institutional-pages.js
+      - name: Auditar avisos antes de gerar Pix no checkout real
+        run: node scripts/check-checkout-disclosures.js
       - name: Verificar contrato do checkout Pix sem cobrar
         run: node scripts/check-pix-checkout.js
       - name: Verificar proteções do webhook Pix
