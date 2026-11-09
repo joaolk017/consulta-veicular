@@ -1279,8 +1279,16 @@ html body section.hero .hero-grid>.cv-photo-hero .cv-photo-glow{pointer-events:n
  html body section.hero .cv-product:not(.cv-product--consult){padding:12px!important}
  html body section.hero .cv-product:not(.cv-product--consult) .cv-package{padding:8px 10px!important}
 }
+</style>
+<style id="cv360-accessibility-update">
+/* Melhoria incremental na interface REAL: foco visível e navegação por teclado. */
+.cv360-skip{position:absolute;left:12px;top:-100px;z-index:99999;padding:12px 18px;background:#fff;color:#08233f;border:3px solid #1677e8;border-radius:10px;font-weight:800;text-decoration:none}
+.cv360-skip:focus{top:12px}
+:where(a,button,input,select,textarea,summary):focus-visible{outline:3px solid #6bd0ff;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){html:focus-within{scroll-behavior:auto!important}}
 </style></head>
 <body>
+<a class="cv360-skip" href="#consultCard">Pular para a consulta por placa</a>
 <div id="appSplash" class="app-splash" aria-hidden="true"><img src="/file_00000000d76c820e88ceb6c39ce70f0d.png" alt=""></div>
 <section class="hero">
 <svg class="hero-car-outline" viewBox="0 0 980 390" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
