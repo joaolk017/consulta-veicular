@@ -62,3 +62,8 @@ Nenhum teste descrito aqui autoriza sozinho publicação automática.
 - Execução GitHub Actions #114: `preview-tests` e `postgres-integration` concluídos com sucesso.
 - Etapa `Ensaiar backup e restauração em banco PostgreSQL descartável` aprovada: `pg_dump -Fc` do banco fictício, criação de banco separado, `pg_restore` e comparação das quantidades de registros em `vehicle_queries` e `credit_accounts`.
 - Esse ensaio não acessou o banco de produção, não comprova que existe backup real restaurável no Render e não verifica integridade de todos os campos ou demais tabelas.
+
+## Integridade de restauração — GitHub Actions #117 (09/11/2026)
+- Jobs `preview-tests` e `postgres-integration`: sucesso.
+- O ensaio `pg_dump`/`pg_restore` passou a comparar também hashes determinísticos das linhas completas das tabelas fictícias `vehicle_queries` e `credit_accounts`, além das contagens.
+- Escopo limitado ao banco descartável da CI; não comprova backup real do Render nem integridade de todas as tabelas de produção.
