@@ -52,3 +52,8 @@ Nenhum teste descrito aqui autoriza sozinho publicação automática.
 - Teste `dev-preview/history-ownership-http.test.js` aprovado: extrai a rota HTTP real `GET /api/minhas-consultas`, usa funções reais de assinatura/verificação de token e PostgreSQL 18 descartável.
 - Duas contas fictícias retornam somente seus históricos, e-mails e saldos; token ausente e adulterado são rejeitados.
 - Escopo limitado a cenários simulados, sem navegação completa ou dados de produção.
+
+## Checkout Pix — reforço da auditoria estática — 09/11/2026
+- Execução GitHub Actions #110 concluída com sucesso nos jobs `preview-tests` e `postgres-integration`.
+- O teste `scripts/check-checkout-disclosures.js` agora exige rótulo acessível e `type=email`, além de produto, valor, placa, avisos sobre cobrança única, fontes de dados, confirmação do Pix e links de suporte/reembolso antes do botão de pagamento.
+- Esta aprovação é estática e automatizada: não demonstra que uma compra real foi processada, nem substitui revisão em navegador e celular.
