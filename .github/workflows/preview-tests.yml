@@ -14,6 +14,7 @@ on:
       - 'scripts/check-pix-checkout.js'
       - 'scripts/check-pix-webhook.js'
       - 'scripts/check-payment-products.js'
+      - 'scripts/check-wallet-idempotency.js'
       - 'contato.html'
       - 'termos.html'
       - 'privacidade.html'
@@ -45,5 +46,7 @@ jobs:
         run: node scripts/check-pix-webhook.js
       - name: Comparar produtos e preços da simulação com produção
         run: node scripts/check-payment-products.js
+      - name: Verificar transação e idempotência de créditos
+        run: node scripts/check-wallet-idempotency.js
       - name: Testar prévia e ciclo fictício de compra
         run: node --test dev-preview/preview.test.js dev-preview/payment-flow.test.js
