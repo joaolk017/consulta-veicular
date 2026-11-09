@@ -24,4 +24,13 @@ for(const file of ['contato.html','privacidade.html','termos.html','reembolso.ht
 for(const amount of ['18,90']){
  assert.ok(home.includes(amount),'Preço não encontrado na home: '+amount);
 }
+const server=read('server.js');
+for(const [id,amount] of [['consulta-completa','18,90'],['pacote-2','32,90'],['pacote-3','44,90']]){
+ const match=server.match(new RegExp('"'+id+'"\\\\s*:\\\\s*\\\\{[^}]*amount:\\\\s*(\\\\d+\\\\.\\\\d+)'));
+ assert.ok(match,'Produto não encontrado no servidor: '+id);
+ const formatted=Number(match[1]).toFixed(2).replace('.',',');
+ assert.equal(formatted,amount,'Preço configurado divergente: '+id);
+ assert.ok(home.includes('R$ '+formatted),'Preço da vitrine divergente: '+id);
+}
+assert.ok(home.includes('Economize R$ 4,90')&&home.includes('Economize R$ 11,80'),'Economias da vitrine incorretas');
 console.log('Transparência: 6 páginas, identificação, links legais, caráter privado e preço inicial verificados estaticamente. Preços de pacotes dependem do checkout; dados cadastrais não validados externamente.');
