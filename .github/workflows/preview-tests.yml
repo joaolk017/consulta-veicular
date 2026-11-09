@@ -10,6 +10,7 @@ on:
       - 'index.html'
       - 'minhas-consultas.html'
       - 'scripts/check-comparator-no-charge.js'
+      - 'scripts/check-report-ownership.js'
       - 'scripts/check-real-ui.js'
       - 'scripts/check-inline-javascript.js'
       - 'scripts/check-commercial-claims.js'
@@ -60,6 +61,8 @@ jobs:
         run: node scripts/check-ads-transparency.js
       - name: Verificar que comparador não cobra novas consultas
         run: node scripts/check-comparator-no-charge.js
+      - name: Auditar titularidade dos relatórios
+        run: node scripts/check-report-ownership.js
       - name: Validar páginas institucionais
         run: node scripts/check-institutional-pages.js
       - name: Auditar avisos antes de gerar Pix no checkout real
