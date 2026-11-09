@@ -26,4 +26,17 @@ for (const route of ['/api/pagamento/pix/criar', '/api/pagamento/pix/status', '/
   assert.ok(server.includes(route), 'Endpoint de pagamento ausente: ' + route);
 }
 assert.match(server, /PAYMENT_SIGNING_SECRET/, 'Assinatura de pagamento deve ser revisada');
+// A cobrança real deve usar o catálogo do servidor, nunca preço/créditos informados pelo navegador.
+const createStart = server.indexOf('app.post("/api/pagamento/pix/criar"');
+const createEnd = server.indexOf('app.post("/api/pagamento/pix/webhook"', createStart);
+assert.ok(createStart >= 0 && createEnd > createStart, 'Rota de criação de Pix ausente');
+const createRoute = server.slice(createStart, createEnd);
+assert.match(createRoute, /paymentProduct\(String\(\(req\.body && req\.body\.produto\)/, 'Produto deve ser resolvido no catálogo do servidor');
+assert.match(createRoute, /createOpenPixCharge\(\{ correlationID, plate, product \}\)/, 'Woovi deve receber produto do catálogo');
+assert.match(createRoute, /product\.cents, product\.credits/, 'Valor e créditos gravados devem vir do catálogo');
+assert.match(createRoute, /if \(!product\) return res\.status\(400\)/, 'Produtos desconhecidos devem ser recusados');
+assert.match(createRoute, /await pool\.query\("INSERT INTO payments/, 'Cobrança precisa ser registrada localmente');
+assert.ok(createRoute.indexOf('await pool.query("INSERT INTO payments') < createRoute.indexOf('const paymentToken = signPaymentToken'), 'Não emitir token de pagamento antes de registrar a cobrança');
+assert.doesNotMatch(createRoute, /(?:amount|cents|credits):\s*req\.body\./, 'Valores e créditos não podem vir do navegador');
+
 console.log('Checkout Pix: ' + checks.length + ' verificações estáticas e endpoints preservados. Necessário teste real em ambiente seguro antes da publicação.');
