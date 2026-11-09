@@ -56,9 +56,9 @@ async function main(){
   expected+=1;
   const balance=await db.query('SELECT balance FROM credit_accounts WHERE id=$1',[account]);
   assert.equal(balance.rows[0].balance,expected);
-  const count=await db.query("SELECT COUNT(*)::int AS n FROM credit_transactions WHERE type='purchase'");
+  const count=await db.query("SELECT COUNT(*)::int AS n FROM credit_transactions WHERE type='purchase' AND account_id=$1",[account]);
   assert.equal(count.rows[0].n,5);
-  const events=await db.query("SELECT COUNT(*)::int AS n FROM funnel_events WHERE event_name='pix_pago'");
+  const events=await db.query("SELECT COUNT(*)::int AS n FROM funnel_events WHERE event_name='pix_pago' AND correlation_id LIKE 'cv-real-test-%'");
   assert.equal(events.rows[0].n,5);
   const bad='cv-real-test-bad';
   await db.query('INSERT INTO payments(correlation_id,account_id,product,cents,credits) VALUES($1,$2,$3,$4,$5)',[bad,account,'consulta-completa',1890,1]);
