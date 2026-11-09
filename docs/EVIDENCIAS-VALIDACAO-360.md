@@ -46,3 +46,9 @@ Nenhum teste descrito aqui autoriza sozinho publicação automática.
 - O teste usa as funções reais `signAccountToken` e `verifyAccountToken` extraídas do `server.js`, chave HMAC exclusiva de teste e banco PostgreSQL 18 descartável.
 - Oito cenários HTTP incluem titularidade de duas contas, token ausente, token adulterado, relatório pendente e ID inexistente.
 - Não houve teste com clientes reais, nem verificação completa de navegação, recuperação de conta ou pagamento real.
+
+## Isolamento do histórico, saldo e e-mail — 09/11/2026
+- Execução GitHub Actions #106: jobs `preview-tests` e `postgres-integration` concluídos com sucesso.
+- Teste `dev-preview/history-ownership-http.test.js` aprovado: extrai a rota HTTP real `GET /api/minhas-consultas`, usa funções reais de assinatura/verificação de token e PostgreSQL 18 descartável.
+- Duas contas fictícias retornam somente seus históricos, e-mails e saldos; token ausente e adulterado são rejeitados.
+- Escopo limitado a cenários simulados, sem navegação completa ou dados de produção.
