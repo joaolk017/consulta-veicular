@@ -16,4 +16,8 @@ assert.match(html, /sem vínculo com DETRAN, SENATRAN ou GOV.BR/, 'Aviso de inde
 for (const page of ['/contato.html', '/termos.html', '/privacidade.html', '/reembolso.html']) {
   assert.ok(html.includes('href="' + page + '"'), 'Link institucional ausente: ' + page);
 }
+assert.match(html, /class="cv360-checkout-disclosure"/, 'Resumo de condições do checkout ausente');
+assert.match(html, /Antes de gerar seu Pix/, 'Orientação pré-pagamento ausente');
+assert.match(html, /A liberação ocorre após a confirmação do Pix/, 'Condição de entrega ausente');
+assert.match(html, /id="pixCreate"[^>]+onclick="gerarPix\(\)"/, 'Ação Pix existente foi modificada');
 console.log('Interface real: acessibilidade incremental e elementos críticos preservados.');
