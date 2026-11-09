@@ -67,3 +67,8 @@ Nenhum teste descrito aqui autoriza sozinho publicação automática.
 - Jobs `preview-tests` e `postgres-integration`: sucesso.
 - O ensaio `pg_dump`/`pg_restore` passou a comparar também hashes determinísticos das linhas completas das tabelas fictícias `vehicle_queries` e `credit_accounts`, além das contagens.
 - Escopo limitado ao banco descartável da CI; não comprova backup real do Render nem integridade de todas as tabelas de produção.
+
+## Checkout Pix e integração — GitHub Actions #120 (09/11/2026)
+- Jobs `preview-tests` e `postgres-integration`: sucesso.
+- Auditoria estática ampliada da rota real de criação de Pix: catálogo do servidor define produto, centavos e créditos; produto inválido é recusado; registro de pagamento antecede assinatura do token.
+- Ensaio de recuperação do banco descartável permanece aprovado. Esses testes não substituem compra Pix real, validação do recebedor ou backup restaurável de produção.
