@@ -33,3 +33,9 @@ Nenhum teste descrito aqui autoriza sozinho publicação automática.
 - Auditoria textual da página principal: não foram encontradas as expressões exatas `100% seguro`, `instantâneo`, `ilimitado`, `todos os dados` ou `histórico completo`. Essa busca textual **não comprova** conformidade integral com as políticas do Google Ads.
 - A funcionalidade de comparativo é anunciada e vinculada a `/minhas-consultas.html#comparar`; ainda é necessário teste funcional real e confirmação de que não cobra créditos extras.
 - Persistem os bloqueios de backup restaurável, identidade comercial e teste ponta a ponta do checkout real.
+
+## Teste de isolamento HTTP entre contas — 09/11/2026
+- Execução GitHub Actions #95, commit `0712381162e6ee6afb9107c78290c27532ee2dc0`: etapa `Testar isolamento HTTP de relatórios entre duas contas` concluída com sucesso; a execução global ainda estava em andamento no momento do registro.
+- `dev-preview/report-ownership-http.test.js` extrai a rota real `GET /api/minhas-consultas/:id` do `server.js` e a executa em Express com PostgreSQL 18 descartável.
+- Sete cenários: leitura autorizada por A e B, tentativas cruzadas A→B e B→A retornando 404, ausência de token retornando 401, relatório pendente retornando 409 e ID inexistente retornando 404.
+- Limitação: a verificação do token é simulada e não testa o aplicativo completo nem o gerenciamento real de sessões. Nenhuma conta ou dado de produção foi usado.
