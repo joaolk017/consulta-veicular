@@ -5,6 +5,8 @@ on:
       - dev/transformacao-profissional-360
     paths:
       - 'dev-preview/**'
+      - 'scripts/audit-route-contracts.js'
+      - 'server.js'
       - '.github/workflows/preview-tests.yml'
   workflow_dispatch:
 permissions:
@@ -18,5 +20,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Auditar contratos do servidor sem iniciar produção
+        run: node scripts/audit-route-contracts.js
       - name: Testar sem banco, API ou pagamentos
         run: node --test dev-preview/preview.test.js
