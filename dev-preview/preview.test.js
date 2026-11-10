@@ -159,3 +159,15 @@ test('Jornada demonstra identidade premium responsiva sem ocultar aviso fictíci
   const r=await request('/jornada-demo'); const html=await r.text();
   for (const phrase of ['Identidade visual da prévia','@media(max-width:620px)','SIMULAÇÃO 100% FICTÍCIA','sem cobranças ou dados reais','color-scheme:light']) assert.ok(html.includes(phrase),phrase);
 });
+
+// Protege contra regressões de transparência pré-compra na jornada fictícia.
+test('Jornada exige placa informada e esclarece limites antes da simulação', async () => {
+  const response = await request('/jornada-demo');
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /id="plate"[^>]*placeholder="ABC1D23"/);
+  assert.doesNotMatch(html, /id="plate"[^>]*value="ABC1D23"/);
+  assert.match(html, /Antes de continuar:/);
+  assert.match(html, /disponibilidade e conteúdo dependem dos provedores/);
+  assert.match(html, /sem pagamento, sem acesso a bases de veículos/);
+});
