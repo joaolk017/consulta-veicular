@@ -16,7 +16,7 @@
 - [ ] **Dados e provedores:** confirmar contratualmente quais campos são fornecidos e quais alegações podem ser comprovadas.
 - [ ] **Woovi real:** teste controlado e autorizado de ponta a ponta, com plano de estorno, sem usar banco de produção para ensaios.
 - [ ] **Release/rollback:** validar procedimento de reversão do deploy e de recuperação dos dados, com responsáveis e critérios de parada.
-- [ ] **Aprovação explícita de publicação** após revisão do diff e evidências.
+- [x] **Autorização do proprietário para publicação oficial:** concedida na conversa em 09/11/2026; a execução continua condicionada aos demais requisitos técnicos e comerciais deste documento.
 
 ## Procedimento de publicação quando desbloqueado
 1. Reexecutar GitHub Actions no commit exato candidato.
@@ -25,7 +25,7 @@
 4. Fazer smoke tests públicos sem dados sensíveis e monitorar erros e cobranças.
 5. Se falhar, interromper novas mudanças e aplicar rollback de aplicação conforme procedimento validado; não reverter dados sem análise.
 
-**Não é autorização para merge, deploy, criar cobranças ou alterar o banco.**
+**Autorização posterior:** o proprietário autorizou a publicação oficial, condicionada à verificação dos requisitos de segurança. Este documento não autoriza criar cobranças de teste ou alterar o banco real.
 
 ## Revisão do portão de publicação — 09/11/2026
 - GitHub Actions #101: jobs `preview-tests` e `postgres-integration` concluídos com sucesso no commit `02f316e9541fa332cffc9e7292bb99b4e3a54957`.
@@ -53,7 +53,7 @@
 3. **Compra isolada:** registrar valores e créditos dos três pacotes, confirmação Woovi, idempotência e possibilidade de estorno; não usar o banco de produção.
 4. **Interface e publicidade:** registrar testes visuais em celular e desktop e conferir afirmações sobre cobertura, prazo, fonte de dados e política de reembolso.
 5. **Rollback:** identificar commit anterior da `main`, confirmar como reimplantar a versão anterior e separar rollback de código de eventual restauração de dados; jamais restaurar produção sem análise de transações posteriores.
-6. **Liberação:** revisar o diff final do PR #7, reexecutar testes no commit exato e obter aprovação explícita antes de mesclar.
+6. **Liberação:** revisar o diff final do PR #7, reexecutar testes no commit exato e aplicar a autorização já concedida pelo proprietário somente quando todos os requisitos estiverem comprovados; se o escopo ou risco mudar materialmente, pedir nova aprovação.
 
 ## Prévia interativa e revisão de liberação — 09/11/2026
 - GitHub Actions **#152**, commit `ad454629f746cf6e552d9b47e999e1d4782625e3`: execução completa aprovada após atualizar o teste de reabertura do histórico. A falha da execução #150 foi de uma asserção textual desatualizada; o job PostgreSQL já havia passado.
@@ -61,3 +61,10 @@
 - A prévia é isolada, não valida pagamento real, provedores, banco de produção, nem aprovação do Google Ads. A rota `/site-real` continua apenas visual, com scripts e formulários bloqueados.
 - **Permanecem pendentes**: backup recuperável da produção comprovado; identidade comercial e recebedor Pix; evidências visuais mobile/desktop; escopo dos dados dos fornecedores; teste controlado do pagamento real em ambiente seguro; rollback e aprovação expressa de merge/deploy.
 - **Decisão:** publicação em `main` continua BLOQUEADA. Nenhuma mudança na produção foi autorizada ou executada.
+
+## Atualização da candidatura — 09/11/2026, após autorização oficial
+- Proprietário autorizou expressamente publicar a versão oficial, sem confirmações repetidas para melhorias rotineiras. A autorização está **registrada**, mas a publicação continua condicionada às salvaguardas técnicas acima.
+- Commit candidato atual: `cdab6ddfc3ad05ba5b29b96bc708afa6ea2a82e2` na branch isolada.
+- GitHub Actions **#159**: concluído com sucesso. Deploy de prévia `dep-dbp63ugm7kps739uqjrg`: **live**, com melhorias de foco acessível e layout de histórico móvel.
+- Ainda **não** há evidência de backup restaurável de produção, titularidade comercial/Pix, pagamento real isolado e rollback validado. Não confundir sucesso de CI com aprovação para operar pagamentos.
+- A autorização do proprietário não dispensa esses controles. Nenhum merge em `main` ou deploy oficial foi executado nesta etapa.
