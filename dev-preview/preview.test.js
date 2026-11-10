@@ -149,3 +149,8 @@ test('Relatório fictício deixa explícito que não é documento oficial', asyn
   const html = await r.text();
   for (const phrase of ['EXEMPLO FICTÍCIO — NÃO É CONSULTA VEICULAR','não é documento oficial','id="reportNumber"','role="region"']) assert.ok(html.includes(phrase), phrase);
 });
+
+test('Jornada demonstra foco visível e transição acessível entre etapas', async () => {
+  const r=await request('/jornada-demo'); const html=await r.text();
+  for (const phrase of ['button:focus-visible','aria-live="assertive"','aria-hidden','heading.focus({preventScroll:true})','@media(prefers-reduced-motion:reduce)']) assert.ok(html.includes(phrase),phrase);
+});
