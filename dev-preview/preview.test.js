@@ -154,3 +154,8 @@ test('Jornada demonstra foco visível e transição acessível entre etapas', as
   const r=await request('/jornada-demo'); const html=await r.text();
   for (const phrase of ['button:focus-visible','aria-live="assertive"','aria-hidden','heading.focus({preventScroll:true})','@media(prefers-reduced-motion:reduce)']) assert.ok(html.includes(phrase),phrase);
 });
+
+test('Jornada demonstra identidade premium responsiva sem ocultar aviso fictício', async () => {
+  const r=await request('/jornada-demo'); const html=await r.text();
+  for (const phrase of ['Identidade visual da prévia','@media(max-width:620px)','SIMULAÇÃO 100% FICTÍCIA','sem cobranças ou dados reais','color-scheme:light']) assert.ok(html.includes(phrase),phrase);
+});
