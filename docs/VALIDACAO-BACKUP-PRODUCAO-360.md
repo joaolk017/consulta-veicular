@@ -26,3 +26,10 @@
 - [ ] Custo e eventual janela de manutenção aprovados.
 
 **Se algum item falhar, não mesclar PR #7 nem publicar alterações na produção.**
+
+## Complemento — consulta automatizada disponível (09/11/2026)
+- Consulta somente leitura à API Render confirmou: banco disponível, PostgreSQL 18, plano `0.1c-256mb`, armazenamento de 1 GB, sem alta disponibilidade, acesso externo não liberado.
+- A integração atual não expõe uma operação de listar pontos de recuperação ou executar recuperação pontual; portanto **não é possível confirmar a existência de um ponto restaurável somente por esses metadados**.
+- Não confundir plano de computação do PostgreSQL com plano da equipe/workspace nem inferir janela de retenção sem consultar a política aplicável ao banco.
+- A próxima verificação precisa confirmar a disponibilidade real de recuperação e seus limites em canal autorizado; não executar restauração de produção nem abrir IPs.
+- GitHub Actions #154: sucesso, porém valida apenas testes isolados, não a recuperação real da produção.
