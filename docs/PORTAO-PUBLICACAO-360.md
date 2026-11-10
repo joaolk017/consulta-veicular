@@ -68,3 +68,9 @@
 - GitHub Actions **#159**: concluído com sucesso. Deploy de prévia `dep-dbp63ugm7kps739uqjrg`: **live**, com melhorias de foco acessível e layout de histórico móvel.
 - Ainda **não** há evidência de backup restaurável de produção, titularidade comercial/Pix, pagamento real isolado e rollback validado. Não confundir sucesso de CI com aprovação para operar pagamentos.
 - A autorização do proprietário não dispensa esses controles. Nenhum merge em `main` ou deploy oficial foi executado nesta etapa.
+
+## Transparência pré-compra e verificação de prévia — 09/11/2026
+- Commit `d93cc412149713b2a05bd2682820cb2771782093`: demonstração não pré-preenche placa e explicita antes do pagamento fictício que a disponibilidade de dados depende de provedores e que não há consulta real.
+- GitHub Actions **#162**: `success`. Render prévia deploy `dep-dbp65ds9v7es73anku40`: `live`.
+- Essas verificações não comprovam conformidade Google Ads, identidade do recebedor Pix, dados fornecidos por terceiros, backup/restauração de produção nem testes de cobrança real.
+- Portão oficial permanece **BLOQUEADO**, apesar da autorização expressa do proprietário. Não mesclar `main` até resolver os bloqueios materiais.
