@@ -74,3 +74,9 @@
 - GitHub Actions **#162**: `success`. Render prévia deploy `dep-dbp65ds9v7es73anku40`: `live`.
 - Essas verificações não comprovam conformidade Google Ads, identidade do recebedor Pix, dados fornecidos por terceiros, backup/restauração de produção nem testes de cobrança real.
 - Portão oficial permanece **BLOQUEADO**, apesar da autorização expressa do proprietário. Não mesclar `main` até resolver os bloqueios materiais.
+
+## Auditoria de acompanhamento — 11/11/2026
+- PR #7 consultado: aberto, em rascunho, base `main`, origem `dev/transformacao-profissional-360`, 136 commits e 39 arquivos alterados; comparação `main...dev/transformacao-profissional-360` confirma 136 commits à frente e zero atrás. **Não foi mesclado.**
+- GitHub Actions **#169** do commit `0eb917e7e6fd0c03b012d5786474724f9bebc6f2`: `completed/success`. A validação cobre a prévia isolada; não é evidência de cobrança real, backup restaurado ou conformidade Google Ads.
+- Requisitos de liberação ainda sem comprovação: backup restaurável de produção testado em ambiente separado; identidade comercial e recebedor Pix; contrato/cobertura dos provedores; checkout real isolado; revisão visual móvel/desktop; rollback e monitoramento.
+- Esta atualização é apenas documental e não altera `main`, serviços Render, banco, credenciais ou pagamentos.
