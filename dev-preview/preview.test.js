@@ -171,3 +171,16 @@ test('Jornada exige placa informada e esclarece limites antes da simulação', a
   assert.match(html, /disponibilidade e conteúdo dependem dos provedores/);
   assert.match(html, /sem pagamento, sem acesso a bases de veículos/);
 });
+
+// Garante que a simulação não avance com placa inválida nem mostre um Pix real.
+test('Jornada bloqueia placa inválida e sinaliza pagamento inteiramente fictício', async () => {
+  const response = await request('/jornada-demo');
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /Informe uma placa no formato brasileiro/);
+  assert.match(html, /Informe uma placa fictícia válida/);
+  assert.match(html, /role="alert" aria-live="assertive"/);
+  assert.match(html, /Não existe QR Code, chave Pix, cobrança ou integração com intermediadores/);
+  assert.match(html, /DEMO-SEM-COBRANCA/);
+  assert.doesNotMatch(html, /<iframe\b/i);
+});
