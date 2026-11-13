@@ -80,3 +80,10 @@
 - GitHub Actions **#169** do commit `0eb917e7e6fd0c03b012d5786474724f9bebc6f2`: `completed/success`. A validação cobre a prévia isolada; não é evidência de cobrança real, backup restaurado ou conformidade Google Ads.
 - Requisitos de liberação ainda sem comprovação: backup restaurável de produção testado em ambiente separado; identidade comercial e recebedor Pix; contrato/cobertura dos provedores; checkout real isolado; revisão visual móvel/desktop; rollback e monitoramento.
 - Esta atualização é apenas documental e não altera `main`, serviços Render, banco, credenciais ou pagamentos.
+
+## Verificação de 13/11/2026
+- Comparação GitHub `main...dev/transformacao-profissional-360`: **138 commits à frente, zero atrás**; base `main` em `8b089e347dd92ba2f2e82e0bdb8a9eee11c027dd` no momento da consulta.
+- PR #7: **aberto**, checklist de publicação ainda incompleto; nenhuma evidência nova foi obtida para desbloquear produção.
+- GitHub Actions **#172** (`43239357312`): `completed/success` associado ao commit `5146c079cc518ea1e1f645d18627efa1548551e5`. Isso valida o escopo da rotina, **não** backup real, pagamento real ou aprovação Google Ads.
+- Os requisitos de backup com restauração, identidade/recebedor Pix, testes de compra isolados, dados dos provedores, revisão visual e rollback continuam pendentes. Não foram executados testes de produção.
+- Registro exclusivamente documental nesta branch; `main`, PostgreSQL real, credenciais, pagamentos e deploy oficial não foram modificados.
