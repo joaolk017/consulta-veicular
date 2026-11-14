@@ -1,0 +1,151 @@
+name: Validar prévia isolada
+on:
+  push:
+    branches:
+      - dev/transformacao-profissional-360
+    paths:
+      - 'dev-preview/**'
+      - 'scripts/audit-route-contracts.js'
+      - 'server.js'
+      - 'index.html'
+      - 'minhas-consultas.html'
+      - 'scripts/check-comparator-no-charge.js'
+      - 'scripts/check-report-ownership.js'
+      - 'scripts/check-real-ui.js'
+      - 'scripts/check-inline-javascript.js'
+      - 'scripts/check-commercial-claims.js'
+      - 'scripts/check-institutional-pages.js'
+      - 'scripts/check-pix-checkout.js'
+      - 'scripts/check-pix-webhook.js'
+      - 'scripts/check-payment-products.js'
+      - 'scripts/check-wallet-idempotency.js'
+      - 'contato.html'
+      - 'termos.html'
+      - 'privacidade.html'
+      - 'reembolso.html'
+      - '.github/workflows/preview-tests.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'dev-preview/**'
+      - 'scripts/**'
+      - 'server.js'
+      - 'index.html'
+      - 'contato.html'
+      - 'termos.html'
+      - 'privacidade.html'
+      - 'reembolso.html'
+      - '.github/workflows/preview-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preview-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Auditar contratos do servidor sem iniciar produção
+        run: node scripts/audit-route-contracts.js
+      - name: Verificar interface real sem executar integrações
+        run: node scripts/check-real-ui.js
+      - name: Compilar JavaScript inline da página real sem executar integrações
+        run: node scripts/check-inline-javascript.js
+      - name: Conferir preço e comunicação comercial
+        run: node scripts/check-commercial-claims.js
+      - name: Auditar transparência comercial para Google Ads
+        run: node scripts/check-ads-transparency.js
+      - name: Verificar que comparador não cobra novas consultas
+        run: node scripts/check-comparator-no-charge.js
+      - name: Auditar titularidade dos relatórios
+        run: node scripts/check-report-ownership.js
+      - name: Validar páginas institucionais
+        run: node scripts/check-institutional-pages.js
+      - name: Auditar avisos antes de gerar Pix no checkout real
+        run: node scripts/check-checkout-disclosures.js
+      - name: Verificar contrato do checkout Pix sem cobrar
+        run: node scripts/check-pix-checkout.js
+      - name: Verificar proteções do webhook Pix
+        run: node scripts/check-pix-webhook.js
+      - name: Comparar produtos e preços da simulação com produção
+        run: node scripts/check-payment-products.js
+      - name: Verificar transação e idempotência de créditos
+        run: node scripts/check-wallet-idempotency.js
+      - name: Testar prévia e ciclo fictício de compra
+        run: node --test dev-preview/preview.test.js dev-preview/payment-flow.test.js
+      - name: Testar acesso HTTP à prévia pública do Render
+        run: node scripts/smoke-preview-http.js
+
+  postgres-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test_user -d test_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar cliente PostgreSQL para testes
+        run: npm install --no-save --package-lock=false --ignore-scripts pg@8
+      - name: Testar créditos e transações no Postgres descartável
+        env:
+          TEST_DATABASE_URL: postgresql://test_user:test_password@127.0.0.1:5432/test_db
+        run: node dev-preview/postgres-integration.test.js
+      - name: Testar função real de crédito contra Postgres descartável
+        env:
+          TEST_DATABASE_URL: postgresql://test_user:test_password@127.0.0.1:5432/test_db
+        run: node dev-preview/real-credit-function.test.js
+      - name: Testar webhook HTTP real com Woovi simulada
+        env:
+          TEST_DATABASE_URL: postgresql://test_user:test_password@127.0.0.1:5432/test_db
+        run: node dev-preview/real-webhook-http.test.js
+      - name: Testar isolamento HTTP de relatórios entre duas contas
+        env:
+          TEST_DATABASE_URL: postgresql://test_user:test_password@127.0.0.1:5432/test_db
+        run: node dev-preview/report-ownership-http.test.js
+      - name: Testar isolamento HTTP do histórico e saldo entre contas
+        env:
+          TEST_DATABASE_URL: postgresql://test_user:test_password@127.0.0.1:5432/test_db
+        run: node dev-preview/history-ownership-http.test.js
+      - name: Ensaiar backup e restauração em banco PostgreSQL descartável
+        shell: bash
+        run: |
+          set -euo pipefail
+          container="$(docker ps --filter ancestor=postgres:18 --format '{{.ID}}' | head -n 1)"
+          test -n "$container"
+          docker exec "$container" pg_dump -U test_user -d test_db -Fc -f /tmp/consulta360-test.backup
+          docker exec "$container" createdb -U test_user consulta360_restaurado
+          docker exec "$container" pg_restore -U test_user -d consulta360_restaurado --no-owner --no-acl /tmp/consulta360-test.backup
+          original="$(docker exec "$container" psql -U test_user -d test_db -At -c 'SELECT COUNT(*) FROM vehicle_queries')"
+          restored="$(docker exec "$container" psql -U test_user -d consulta360_restaurado -At -c 'SELECT COUNT(*) FROM vehicle_queries')"
+          test "$original" = "$restored"
+          test "$restored" -ge 2
+          original_accounts="$(docker exec "$container" psql -U test_user -d test_db -At -c 'SELECT COUNT(*) FROM credit_accounts')"
+          restored_accounts="$(docker exec "$container" psql -U test_user -d consulta360_restaurado -At -c 'SELECT COUNT(*) FROM credit_accounts')"
+          test "$original_accounts" = "$restored_accounts"
+          # Além da contagem, comparar o conteúdo integral das linhas de cada tabela crítica.
+          for table in vehicle_queries credit_accounts; do
+            sql="SELECT md5(COALESCE(string_agg(row_to_json(t)::text, E'\\n' ORDER BY t.id::text), '')) FROM ${table} t"
+            source_hash="$(docker exec "$container" psql -U test_user -d test_db -At -c "$sql")"
+            restored_hash="$(docker exec "$container" psql -U test_user -d consulta360_restaurado -At -c "$sql")"
+            test "$source_hash" = "$restored_hash"
+            echo "Conteúdo restaurado idêntico: ${table}"
+          done
+          echo "Backup e restauração fictícios aprovados; nenhuma conexão com produção."
