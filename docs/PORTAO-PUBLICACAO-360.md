@@ -87,3 +87,10 @@
 - GitHub Actions **#172** (`43239357312`): `completed/success` associado ao commit `5146c079cc518ea1e1f645d18627efa1548551e5`. Isso valida o escopo da rotina, **não** backup real, pagamento real ou aprovação Google Ads.
 - Os requisitos de backup com restauração, identidade/recebedor Pix, testes de compra isolados, dados dos provedores, revisão visual e rollback continuam pendentes. Não foram executados testes de produção.
 - Registro exclusivamente documental nesta branch; `main`, PostgreSQL real, credenciais, pagamentos e deploy oficial não foram modificados.
+
+## Acompanhamento — 14/11/2026
+- PR #7: `open`, `draft=true`, `merged=false`; 139 commits e 39 arquivos alterados no momento da consulta.
+- Comparação `main...dev/transformacao-profissional-360`: 139 commits à frente, zero atrás. `main` no commit `8b089e347dd92ba2f2e82e0bdb8a9eee11c027dd`.
+- GitHub Actions execução **#173** (`43445618373`), commit `d1d4b9892ee6cb03f54b746e06e970b38f335686`: `completed/success` na rotina `Validar prévia isolada`.
+- Resultado não comprova backup restaurável de produção, identidade do recebedor Pix, integração real isolada, cobertura de dados, revisão manual mobile/desktop ou rollback testado.
+- Publicação oficial permanece **BLOQUEADA**. Este registro é documental, sem alteração de `main`, PostgreSQL, Render de produção, credenciais ou pagamentos.
