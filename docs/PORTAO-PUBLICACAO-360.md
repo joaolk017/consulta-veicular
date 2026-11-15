@@ -94,3 +94,9 @@
 - GitHub Actions execução **#173** (`43445618373`), commit `d1d4b9892ee6cb03f54b746e06e970b38f335686`: `completed/success` na rotina `Validar prévia isolada`.
 - Resultado não comprova backup restaurável de produção, identidade do recebedor Pix, integração real isolada, cobertura de dados, revisão manual mobile/desktop ou rollback testado.
 - Publicação oficial permanece **BLOQUEADA**. Este registro é documental, sem alteração de `main`, PostgreSQL, Render de produção, credenciais ou pagamentos.
+
+## Acompanhamento — 15/11/2026
+- Comparação `main...dev/transformacao-profissional-360` antes desta atualização: **140 commits à frente, zero atrás**; base `main` em `8b089e347dd92ba2f2e82e0bdb8a9eee11c027dd`.
+- GitHub Actions **#174** (`43608682291`), para commit `02f453834d24db8e8d5c7f7464a66fe62e19c868`: `completed/success` (workflow `Validar prévia isolada`). Resultado não comprova operação real.
+- PR #7 segue com checklist de publicação pendente; não há evidências novas para desbloquear backup/restauração, identidade comercial e Pix, escopo dos provedores, checkout isolado, revisão visual e rollback.
+- Atualização exclusivamente documental na branch de desenvolvimento. Não mesclar `main`, publicar produção, alterar PostgreSQL/segredos ou realizar cobrança.
