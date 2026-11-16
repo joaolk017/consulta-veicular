@@ -100,3 +100,10 @@
 - GitHub Actions **#174** (`43608682291`), para commit `02f453834d24db8e8d5c7f7464a66fe62e19c868`: `completed/success` (workflow `Validar prévia isolada`). Resultado não comprova operação real.
 - PR #7 segue com checklist de publicação pendente; não há evidências novas para desbloquear backup/restauração, identidade comercial e Pix, escopo dos provedores, checkout isolado, revisão visual e rollback.
 - Atualização exclusivamente documental na branch de desenvolvimento. Não mesclar `main`, publicar produção, alterar PostgreSQL/segredos ou realizar cobrança.
+
+## Acompanhamento — 16/11/2026
+- PR #7 consultado: `open`, `draft=true`, `merged=false`, base `main`, origem `dev/transformacao-profissional-360`; head anterior à presente atualização `6b52d9ee111e628f04808d7dfe69140eaf750553`.
+- Comparação `main...dev/transformacao-profissional-360`: **141 commits à frente, zero atrás**, antes desta atualização; `main` em `8b089e347dd92ba2f2e82e0bdb8a9eee11c027dd`.
+- GitHub Actions **#175**, execução [`43725302345`](https://github.com/joaolk017/consulta-veicular/actions/runs/43725302345), commit `6b52d9ee111e628f04808d7dfe69140eaf750553`: `completed/success`. Jobs `postgres-integration` e `preview-tests` concluídos com sucesso, incluindo simulações de webhook Woovi e backup/restauração em PostgreSQL **descartável**.
+- Essa execução não comprova backup restaurável da produção, titularidade comercial/recebedor Pix, integração real isolada, escopo contratado dos provedores, revisão visual manual ou rollback testado. Checklist do PR segue pendente; publicação permanece **BLOQUEADA**.
+- Registro exclusivamente documental na branch de desenvolvimento; nenhum merge, deploy, alteração de banco/rede, segredos ou cobrança foi realizado. O commit documental novo ainda requer CI próprio.
