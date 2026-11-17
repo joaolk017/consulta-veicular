@@ -1,0 +1,17 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const html = fs.readFileSync(path.join(__dirname,'..','minhas-consultas.html'),'utf8');
+const start = html.indexOf('var Escolha360 = (function () {');
+const end = html.indexOf('function demo(){',start);
+assert.ok(start>=0&&end>start,'Comparador Escolha360 não localizado');
+const compare = html.slice(html.indexOf('function compare(){',start),end);
+assert.ok(compare.startsWith('function compare(){'),'Função de comparação não localizada');
+assert.ok(compare.includes('chosen.length<2||chosen.length>3'),'Comparador deve limitar a 2–3 veículos');
+assert.ok(compare.includes('Promise.all(chosen.map('),'Comparador deve buscar relatórios já existentes');
+assert.ok(compare.includes('fetch("/api/minhas-consultas/"+encodeURIComponent(id)'),'Comparador deve usar rota de leitura do histórico');
+assert.ok(compare.includes('"X-Credit-Account":token'),'Comparador deve autenticar acesso ao histórico');
+for(const forbidden of ['/api/consulta','/api/pix','/api/pagamento','consumeCredit(','gerarPix(','abrirPix(']) assert.ok(!compare.includes(forbidden),'Comparador não deve iniciar cobrança ou consumir créditos: '+forbidden);
+assert.ok(html.includes('q.status==="completed"&&q.relatorio_disponivel'),'Somente relatórios liberados devem ser selecionáveis');
+assert.ok(html.includes('não realiza novas consultas'),'Aviso de não realizar novas consultas ausente');
+console.log('Comparador: verificações estáticas de leitura e ausência de cobrança aprovadas.');
